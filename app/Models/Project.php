@@ -33,7 +33,7 @@ class Project extends Model
     }
 
     /**
-     * @return BelongsTo<User, Project>
+     * @return BelongsTo<User, $this>
      */
     public function creator(): BelongsTo
     {

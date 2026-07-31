@@ -33,7 +33,7 @@ class User extends Authenticatable
     use HasFactory, Notifiable;
 
     /**
-     * @return HasMany<Project, User>
+     * @return HasMany<Project, $this>
      */
     public function projects(): HasMany
     {
