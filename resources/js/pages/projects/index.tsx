@@ -88,10 +88,7 @@ export default function ProjectsIndex({ projects }: ProjectsPageProps) {
                             Enter the basic information for the new project.
                         </p>
 
-                        <form
-                            onSubmit={submit}
-                            className="mt-6 space-y-5"
-                        >
+                        <form onSubmit={submit} className="mt-6 space-y-5">
                             <div className="space-y-2">
                                 <Label htmlFor="project_code">
                                     Project Code
@@ -117,18 +114,13 @@ export default function ProjectsIndex({ projects }: ProjectsPageProps) {
                             </div>
 
                             <div className="space-y-2">
-                                <Label htmlFor="name">
-                                    Project Name
-                                </Label>
+                                <Label htmlFor="name">Project Name</Label>
 
                                 <Input
                                     id="name"
                                     value={form.data.name}
                                     onChange={(event) =>
-                                        form.setData(
-                                            'name',
-                                            event.target.value,
-                                        )
+                                        form.setData('name', event.target.value)
                                     }
                                     placeholder="Example: ASRS Warehouse Upgrade"
                                 />
@@ -141,9 +133,7 @@ export default function ProjectsIndex({ projects }: ProjectsPageProps) {
                             </div>
 
                             <div className="space-y-2">
-                                <Label htmlFor="description">
-                                    Description
-                                </Label>
+                                <Label htmlFor="description">Description</Label>
 
                                 <textarea
                                     id="description"
@@ -167,9 +157,7 @@ export default function ProjectsIndex({ projects }: ProjectsPageProps) {
                             </div>
 
                             <div className="space-y-2">
-                                <Label htmlFor="status">
-                                    Status
-                                </Label>
+                                <Label htmlFor="status">Status</Label>
 
                                 <select
                                     id="status"
@@ -182,25 +170,15 @@ export default function ProjectsIndex({ projects }: ProjectsPageProps) {
                                     }
                                     className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                                 >
-                                    <option value="planned">
-                                        Planned
-                                    </option>
+                                    <option value="planned">Planned</option>
 
-                                    <option value="active">
-                                        Active
-                                    </option>
+                                    <option value="active">Active</option>
 
-                                    <option value="on_hold">
-                                        On Hold
-                                    </option>
+                                    <option value="on_hold">On Hold</option>
 
-                                    <option value="completed">
-                                        Completed
-                                    </option>
+                                    <option value="completed">Completed</option>
 
-                                    <option value="archived">
-                                        Archived
-                                    </option>
+                                    <option value="archived">Archived</option>
                                 </select>
 
                                 {form.errors.status && (
@@ -236,9 +214,7 @@ export default function ProjectsIndex({ projects }: ProjectsPageProps) {
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label htmlFor="end_date">
-                                        End Date
-                                    </Label>
+                                    <Label htmlFor="end_date">End Date</Label>
 
                                     <Input
                                         id="end_date"
@@ -292,9 +268,7 @@ export default function ProjectsIndex({ projects }: ProjectsPageProps) {
 
                         {projects.length === 0 ? (
                             <div className="p-10 text-center">
-                                <p className="font-medium">
-                                    No projects yet
-                                </p>
+                                <p className="font-medium">No projects yet</p>
 
                                 <p className="mt-1 text-sm text-muted-foreground">
                                     Use the form to create your first project.
