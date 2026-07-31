@@ -42,7 +42,7 @@ class ProjectController extends Controller
         ]);
     }
 
-        /**
+    /**
      * Display one project and its drawings.
      */
     public function show(Project $project): Response

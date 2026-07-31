@@ -1,8 +1,8 @@
 <?php
 
+use App\Http\Controllers\DrawingController;
 use App\Http\Controllers\ProjectController;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\DrawingController;
 
 Route::inertia('/', 'welcome')->name('home');
 
@@ -24,7 +24,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         DrawingController::class,
         'store',
     ])->name('drawings.store');
-    
+
 });
 
 require __DIR__.'/settings.php';
