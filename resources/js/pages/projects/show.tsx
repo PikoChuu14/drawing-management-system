@@ -1,10 +1,11 @@
+import type { FormEvent } from 'react';
+import { Head, Link, useForm } from '@inertiajs/react';
+
+import AppLayout from '@/layouts/app-layout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
-import { Head, Link, useForm } from '@inertiajs/react';
-import type { FormEvent } from 'react';
 
 type Drawing = {
     id: number;
