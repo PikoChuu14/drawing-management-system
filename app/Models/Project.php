@@ -4,7 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property-read Carbon|null $start_date
+ * @property-read Carbon|null $end_date
+ */
 class Project extends Model
 {
     /**
