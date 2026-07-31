@@ -33,7 +33,7 @@ class User extends Authenticatable
     use HasFactory, Notifiable;
 
     /**
-     * Get the projects created by this user.
+     * @return HasMany<Project, User>
      */
     public function projects(): HasMany
     {
