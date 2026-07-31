@@ -42,9 +42,7 @@ type ProjectShowProps = {
     project: Project;
 };
 
-export default function ProjectShow({
-    project,
-}: ProjectShowProps) {
+export default function ProjectShow({ project }: ProjectShowProps) {
     const breadcrumbs: BreadcrumbItem[] = [
         {
             title: 'Projects',
@@ -132,10 +130,7 @@ export default function ProjectShow({
                             Add a drawing record to this project.
                         </p>
 
-                        <form
-                            onSubmit={submit}
-                            className="mt-6 space-y-5"
-                        >
+                        <form onSubmit={submit} className="mt-6 space-y-5">
                             <div className="space-y-2">
                                 <Label htmlFor="drawing_number">
                                     Drawing Number
@@ -161,9 +156,7 @@ export default function ProjectShow({
                             </div>
 
                             <div className="space-y-2">
-                                <Label htmlFor="title">
-                                    Drawing Title
-                                </Label>
+                                <Label htmlFor="title">Drawing Title</Label>
 
                                 <Input
                                     id="title"
@@ -185,9 +178,7 @@ export default function ProjectShow({
                             </div>
 
                             <div className="space-y-2">
-                                <Label htmlFor="discipline">
-                                    Discipline
-                                </Label>
+                                <Label htmlFor="discipline">Discipline</Label>
 
                                 <select
                                     id="discipline"
@@ -200,17 +191,13 @@ export default function ProjectShow({
                                     }
                                     className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                                 >
-                                    <option value="">
-                                        Select discipline
-                                    </option>
+                                    <option value="">Select discipline</option>
 
                                     <option value="Architectural">
                                         Architectural
                                     </option>
 
-                                    <option value="Civil">
-                                        Civil
-                                    </option>
+                                    <option value="Civil">Civil</option>
 
                                     <option value="Mechanical">
                                         Mechanical
@@ -220,17 +207,11 @@ export default function ProjectShow({
                                         Electrical
                                     </option>
 
-                                    <option value="Control">
-                                        Control
-                                    </option>
+                                    <option value="Control">Control</option>
 
-                                    <option value="Process">
-                                        Process
-                                    </option>
+                                    <option value="Process">Process</option>
 
-                                    <option value="Other">
-                                        Other
-                                    </option>
+                                    <option value="Other">Other</option>
                                 </select>
 
                                 {form.errors.discipline && (
@@ -241,9 +222,7 @@ export default function ProjectShow({
                             </div>
 
                             <div className="space-y-2">
-                                <Label htmlFor="status">
-                                    Status
-                                </Label>
+                                <Label htmlFor="status">Status</Label>
 
                                 <select
                                     id="status"
@@ -256,17 +235,13 @@ export default function ProjectShow({
                                     }
                                     className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                                 >
-                                    <option value="draft">
-                                        Draft
-                                    </option>
+                                    <option value="draft">Draft</option>
 
                                     <option value="under_review">
                                         Under Review
                                     </option>
 
-                                    <option value="approved">
-                                        Approved
-                                    </option>
+                                    <option value="approved">Approved</option>
 
                                     <option value="superseded">
                                         Superseded
@@ -281,9 +256,7 @@ export default function ProjectShow({
                             </div>
 
                             <div className="space-y-2">
-                                <Label htmlFor="description">
-                                    Description
-                                </Label>
+                                <Label htmlFor="description">Description</Label>
 
                                 <textarea
                                     id="description"
@@ -376,9 +349,7 @@ export default function ProjectShow({
                                                 className="border-b last:border-b-0"
                                             >
                                                 <td className="px-6 py-4 font-mono font-medium">
-                                                    {
-                                                        drawing.drawing_number
-                                                    }
+                                                    {drawing.drawing_number}
                                                 </td>
 
                                                 <td className="px-6 py-4">
@@ -408,9 +379,7 @@ export default function ProjectShow({
 
                                                 <td className="px-6 py-4">
                                                     <p>
-                                                        {
-                                                            drawing.creator_name
-                                                        }
+                                                        {drawing.creator_name}
                                                     </p>
 
                                                     <p className="text-xs text-muted-foreground">
