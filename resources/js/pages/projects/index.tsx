@@ -1,4 +1,4 @@
-import { Head, useForm } from '@inertiajs/react';
+import { Head, Link, useForm } from '@inertiajs/react';
 import type { FormEvent } from 'react';
 
 import { Button } from '@/components/ui/button';
@@ -312,9 +312,12 @@ export default function ProjectsIndex({ projects }: ProjectsPageProps) {
                                                 </td>
 
                                                 <td className="px-6 py-4">
-                                                    <p className="font-medium">
+                                                    <Link
+                                                        href={`/projects/${project.id}`}
+                                                        className="font-medium hover:underline"
+                                                    >
                                                         {project.name}
-                                                    </p>
+                                                    </Link>
 
                                                     {project.description && (
                                                         <p className="mt-1 max-w-md text-muted-foreground">

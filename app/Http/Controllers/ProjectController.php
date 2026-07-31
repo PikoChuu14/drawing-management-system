@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Drawing;
 use App\Models\Project;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
@@ -38,6 +39,49 @@ class ProjectController extends Controller
 
         return Inertia::render('projects/index', [
             'projects' => $projectData,
+        ]);
+    }
+
+        /**
+     * Display one project and its drawings.
+     */
+    public function show(Project $project): Response
+    {
+        $project->load([
+            'creator:id,name',
+            'drawings' => function ($query): void {
+                $query
+                    ->with('creator:id,name')
+                    ->latest();
+            },
+        ]);
+
+        return Inertia::render('projects/show', [
+            'project' => [
+                'id' => $project->id,
+                'project_code' => $project->project_code,
+                'name' => $project->name,
+                'description' => $project->description,
+                'status' => $project->status,
+                'start_date' => $project->start_date?->format('Y-m-d'),
+                'end_date' => $project->end_date?->format('Y-m-d'),
+                'creator_name' => $project->creator->name,
+
+                'drawings' => $project->drawings
+                    ->map(function (Drawing $drawing): array {
+                        return [
+                            'id' => $drawing->id,
+                            'drawing_number' => $drawing->drawing_number,
+                            'title' => $drawing->title,
+                            'discipline' => $drawing->discipline,
+                            'status' => $drawing->status,
+                            'description' => $drawing->description,
+                            'creator_name' => $drawing->creator->name,
+                            'created_at' => $drawing->created_at
+                                ->format('Y-m-d H:i'),
+                        ];
+                    }),
+            ],
         ]);
     }
 
