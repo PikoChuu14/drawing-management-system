@@ -9,52 +9,206 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use Illuminate\Database\Eloquent\Builder;
 
 class ProjectController extends Controller
 {
     /**
-     * Display all projects.
+     * Display and filter all projects.
      */
-    public function index(): Response
+    public function index(Request $request): Response
     {
+        $validated = $request->validate([
+            'search' => [
+                'nullable',
+                'string',
+                'max:100',
+            ],
+            'status' => [
+                'nullable',
+                'in:planned,active,on_hold,completed,archived',
+            ],
+        ]);
+
+        $search = trim(
+            (string) ($validated['search'] ?? ''),
+        );
+
+        $status = (string) ($validated['status'] ?? '');
+
         $projects = Project::query()
             ->with('creator:id,name')
+            ->withCount('drawings')
+
+            // Only apply search when the user entered something.
+            ->when(
+                $search !== '',
+                function (Builder $query) use ($search): void {
+                    $query->where(
+                        function (Builder $query) use ($search): void {
+                            $query
+                                ->where(
+                                    'project_code',
+                                    'like',
+                                    "%{$search}%",
+                                )
+                                ->orWhere(
+                                    'name',
+                                    'like',
+                                    "%{$search}%",
+                                )
+                                ->orWhere(
+                                    'description',
+                                    'like',
+                                    "%{$search}%",
+                                );
+                        },
+                    );
+                },
+            )
+
+            // Only filter status when one has been selected.
+            ->when(
+                $status !== '',
+                function (Builder $query) use ($status): void {
+                    $query->where('status', $status);
+                },
+            )
+
             ->latest()
-            ->get();
-
-        $projectData = [];
-
-        foreach ($projects as $project) {
-            $projectData[] = [
-                'id' => $project->id,
-                'project_code' => $project->project_code,
-                'name' => $project->name,
-                'description' => $project->description,
-                'status' => $project->status,
-                'start_date' => $project->start_date?->format('Y-m-d'),
-                'end_date' => $project->end_date?->format('Y-m-d'),
-                'creator_name' => $project->creator->name,
-            ];
-        }
+            ->get()
+            ->map(function (Project $project): array {
+                return [
+                    'id' => $project->id,
+                    'project_code' => $project->project_code,
+                    'name' => $project->name,
+                    'description' => $project->description,
+                    'status' => $project->status,
+                    'start_date' => $project->start_date
+                        ?->format('Y-m-d'),
+                    'end_date' => $project->end_date
+                        ?->format('Y-m-d'),
+                    'creator_name' => $project->creator->name,
+                    'drawing_count' => $project->drawings_count,
+                ];
+            });
 
         return Inertia::render('projects/index', [
-            'projects' => $projectData,
+            'projects' => $projects,
+
+            // Return the current filters so React can retain them.
+            'filters' => [
+                'search' => $search,
+                'status' => $status,
+            ],
         ]);
     }
 
     /**
-     * Display one project and its drawings.
+     * Display one project and filter its drawings.
      */
-    public function show(Project $project): Response
-    {
-        $project->load([
-            'creator:id,name',
-            'drawings' => function ($query): void {
-                $query
-                    ->with('creator:id,name')
-                    ->latest();
-            },
+    public function show(
+        Request $request,
+        Project $project,
+    ): Response {
+        $validated = $request->validate([
+            'search' => [
+                'nullable',
+                'string',
+                'max:100',
+            ],
+            'discipline' => [
+                'nullable',
+                'in:Architectural,Civil,Mechanical,Electrical,Control,Process,Other',
+            ],
+            'drawing_status' => [
+                'nullable',
+                'in:draft,under_review,approved,superseded',
+            ],
         ]);
+
+        $search = trim(
+            (string) ($validated['search'] ?? ''),
+        );
+
+        $discipline = (string) (
+            $validated['discipline'] ?? ''
+        );
+
+        $drawingStatus = (string) (
+            $validated['drawing_status'] ?? ''
+        );
+
+        $project->load('creator:id,name');
+
+        $totalDrawings = $project->drawings()->count();
+
+        $drawings = $project->drawings()
+            ->with('creator:id,name')
+
+            ->when(
+                $search !== '',
+                function (Builder $query) use ($search): void {
+                    $query->where(
+                        function (Builder $query) use ($search): void {
+                            $query
+                                ->where(
+                                    'drawing_number',
+                                    'like',
+                                    "%{$search}%",
+                                )
+                                ->orWhere(
+                                    'title',
+                                    'like',
+                                    "%{$search}%",
+                                )
+                                ->orWhere(
+                                    'description',
+                                    'like',
+                                    "%{$search}%",
+                                );
+                        },
+                    );
+                },
+            )
+
+            ->when(
+                $discipline !== '',
+                function (Builder $query) use ($discipline): void {
+                    $query->where(
+                        'discipline',
+                        $discipline,
+                    );
+                },
+            )
+
+            ->when(
+                $drawingStatus !== '',
+                function (Builder $query) use ($drawingStatus): void {
+                    $query->where(
+                        'status',
+                        $drawingStatus,
+                    );
+                },
+            )
+
+            ->latest()
+            ->get()
+            ->map(function (Drawing $drawing): array {
+                return [
+                    'id' => $drawing->id,
+                    'drawing_number' =>
+                        $drawing->drawing_number,
+                    'title' => $drawing->title,
+                    'discipline' => $drawing->discipline,
+                    'status' => $drawing->status,
+                    'description' => $drawing->description,
+                    'creator_name' =>
+                        $drawing->creator->name,
+                    'created_at' => $drawing->created_at
+                        ->format('Y-m-d H:i'),
+                ];
+            });
 
         return Inertia::render('projects/show', [
             'project' => [
@@ -63,24 +217,19 @@ class ProjectController extends Controller
                 'name' => $project->name,
                 'description' => $project->description,
                 'status' => $project->status,
-                'start_date' => $project->start_date?->format('Y-m-d'),
-                'end_date' => $project->end_date?->format('Y-m-d'),
+                'start_date' => $project->start_date
+                    ?->format('Y-m-d'),
+                'end_date' => $project->end_date
+                    ?->format('Y-m-d'),
                 'creator_name' => $project->creator->name,
+                'total_drawings' => $totalDrawings,
+                'drawings' => $drawings,
+            ],
 
-                'drawings' => $project->drawings
-                    ->map(function (Drawing $drawing): array {
-                        return [
-                            'id' => $drawing->id,
-                            'drawing_number' => $drawing->drawing_number,
-                            'title' => $drawing->title,
-                            'discipline' => $drawing->discipline,
-                            'status' => $drawing->status,
-                            'description' => $drawing->description,
-                            'creator_name' => $drawing->creator->name,
-                            'created_at' => $drawing->created_at
-                                ->format('Y-m-d H:i'),
-                        ];
-                    }),
+            'filters' => [
+                'search' => $search,
+                'discipline' => $discipline,
+                'drawing_status' => $drawingStatus,
             ],
         ]);
     }

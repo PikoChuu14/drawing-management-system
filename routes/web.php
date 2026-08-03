@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\DrawingController;
 use App\Http\Controllers\ProjectController;
+use App\Http\Controllers\DrawingRevisionController;
 use Illuminate\Support\Facades\Route;
 
 Route::inertia('/', 'welcome')->name('home');
@@ -24,6 +25,21 @@ Route::middleware(['auth', 'verified'])->group(function () {
         DrawingController::class,
         'store',
     ])->name('drawings.store');
+
+    Route::get(
+        'projects/{project}/drawings/{drawing}',
+        [DrawingController::class, 'show'],
+    )->name('drawings.show');
+
+    Route::post(
+        'projects/{project}/drawings/{drawing}/revisions',
+        [DrawingRevisionController::class, 'store'],
+    )->name('revisions.store');
+
+    Route::get(
+        'projects/{project}/drawings/{drawing}/revisions/{revision}/download',
+        [DrawingRevisionController::class, 'download'],
+    )->name('revisions.download');
 
 });
 
