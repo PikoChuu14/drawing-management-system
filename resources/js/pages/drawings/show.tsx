@@ -35,6 +35,7 @@ type Drawing = {
     description: string | null;
     creator_name: string;
     revisions: Revision[];
+    issues: SiteIssue[];
 };
 
 type RevisionForm = {
@@ -47,6 +48,29 @@ type RevisionForm = {
 type DrawingShowProps = {
     project: Project;
     drawing: Drawing;
+};
+
+type SiteIssue = {
+    id: number;
+    issue_number: string | null;
+    title: string;
+    description: string;
+    location: string | null;
+    priority: string;
+    status: string;
+    resolution: string | null;
+    has_photo: boolean;
+    reported_by: string;
+    reported_at: string;
+    resolved_at: string | null;
+};
+
+type IssueForm = {
+    title: string;
+    description: string;
+    location: string;
+    priority: string;
+    photo: File | null;
 };
 
 function formatStatus(status: string): string {
@@ -105,6 +129,36 @@ export default function DrawingShow({ project, drawing }: DrawingShowProps) {
                 }
             },
         });
+    };
+
+    const issuePhotoInput = useRef<HTMLInputElement>(null);
+
+    const issueForm = useForm<IssueForm>({
+        title: '',
+        description: '',
+        location: '',
+        priority: 'medium',
+        photo: null,
+    });
+
+    const submitIssue = (event: FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+
+        issueForm.post(
+            `/projects/${project.id}/drawings/${drawing.id}/issues`,
+            {
+                forceFormData: true,
+                preserveScroll: true,
+
+                onSuccess: () => {
+                    issueForm.reset();
+
+                    if (issuePhotoInput.current) {
+                        issuePhotoInput.current.value = '';
+                    }
+                },
+            },
+        );
     };
 
     const deleteDrawing = () => {
@@ -443,6 +497,314 @@ export default function DrawingShow({ project, drawing }: DrawingShowProps) {
                         )}
                     </section>
                 </div>
+
+                <section className="grid gap-6 xl:grid-cols-[380px_1fr]">
+                    <div className="rounded-xl border bg-card p-6 shadow-sm">
+                        <h2 className="text-lg font-semibold">
+                            Report Site Issue
+                        </h2>
+
+                        <p className="mt-1 text-sm text-muted-foreground">
+                            Record a problem found at the site and link it
+                            to this drawing.
+                        </p>
+
+                        <form
+                            onSubmit={submitIssue}
+                            className="mt-6 space-y-5"
+                        >
+                            <div className="space-y-2">
+                                <Label htmlFor="issue_title">
+                                    Issue Title
+                                </Label>
+
+                                <Input
+                                    id="issue_title"
+                                    value={issueForm.data.title}
+                                    onChange={(event) =>
+                                        issueForm.setData(
+                                            'title',
+                                            event.target.value,
+                                        )
+                                    }
+                                    placeholder="Example: Support clashes with column"
+                                />
+
+                                {issueForm.errors.title && (
+                                    <p className="text-sm text-red-600">
+                                        {issueForm.errors.title}
+                                    </p>
+                                )}
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="issue_location">
+                                    Site Location
+                                </Label>
+
+                                <Input
+                                    id="issue_location"
+                                    value={issueForm.data.location}
+                                    onChange={(event) =>
+                                        issueForm.setData(
+                                            'location',
+                                            event.target.value,
+                                        )
+                                    }
+                                    placeholder="Example: Zone B, Row 4"
+                                />
+
+                                {issueForm.errors.location && (
+                                    <p className="text-sm text-red-600">
+                                        {issueForm.errors.location}
+                                    </p>
+                                )}
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="issue_priority">
+                                    Priority
+                                </Label>
+
+                                <select
+                                    id="issue_priority"
+                                    value={issueForm.data.priority}
+                                    onChange={(event) =>
+                                        issueForm.setData(
+                                            'priority',
+                                            event.target.value,
+                                        )
+                                    }
+                                    className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                                >
+                                    <option value="low">Low</option>
+                                    <option value="medium">
+                                        Medium
+                                    </option>
+                                    <option value="high">High</option>
+                                    <option value="critical">
+                                        Critical
+                                    </option>
+                                </select>
+
+                                {issueForm.errors.priority && (
+                                    <p className="text-sm text-red-600">
+                                        {issueForm.errors.priority}
+                                    </p>
+                                )}
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="issue_description">
+                                    Description
+                                </Label>
+
+                                <textarea
+                                    id="issue_description"
+                                    rows={5}
+                                    value={issueForm.data.description}
+                                    onChange={(event) =>
+                                        issueForm.setData(
+                                            'description',
+                                            event.target.value,
+                                        )
+                                    }
+                                    placeholder="Explain the problem and its effect..."
+                                    className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                                />
+
+                                {issueForm.errors.description && (
+                                    <p className="text-sm text-red-600">
+                                        {issueForm.errors.description}
+                                    </p>
+                                )}
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="issue_photo">
+                                    Site Photo
+                                </Label>
+
+                                <Input
+                                    ref={issuePhotoInput}
+                                    id="issue_photo"
+                                    type="file"
+                                    accept=".jpg,.jpeg,.png,.webp"
+                                    onChange={(event) =>
+                                        issueForm.setData(
+                                            'photo',
+                                            event.target.files?.[0] ??
+                                                null,
+                                        )
+                                    }
+                                />
+
+                                <p className="text-xs text-muted-foreground">
+                                    Optional JPG, PNG or WebP image. Maximum
+                                    5 MB.
+                                </p>
+
+                                {issueForm.errors.photo && (
+                                    <p className="text-sm text-red-600">
+                                        {issueForm.errors.photo}
+                                    </p>
+                                )}
+                            </div>
+
+                            {issueForm.progress && (
+                                <div className="space-y-2">
+                                    <div className="h-2 overflow-hidden rounded-full bg-muted">
+                                        <div
+                                            className="h-full bg-primary"
+                                            style={{
+                                                width: `${issueForm.progress.percentage ?? 0}%`,
+                                            }}
+                                        />
+                                    </div>
+
+                                    <p className="text-center text-xs text-muted-foreground">
+                                        {issueForm.progress.percentage ?? 0}%
+                                    </p>
+                                </div>
+                            )}
+
+                            <Button
+                                type="submit"
+                                disabled={issueForm.processing}
+                                className="w-full"
+                            >
+                                {issueForm.processing
+                                    ? 'Reporting...'
+                                    : 'Report Issue'}
+                            </Button>
+                        </form>
+                    </div>
+
+                    <div className="overflow-hidden rounded-xl border bg-card shadow-sm">
+                        <div className="border-b p-6">
+                            <h2 className="text-lg font-semibold">
+                                Site Issues
+                            </h2>
+
+                            <p className="mt-1 text-sm text-muted-foreground">
+                                {drawing.issues.length}{' '}
+                                {drawing.issues.length === 1
+                                    ? 'issue'
+                                    : 'issues'}{' '}
+                                linked to this drawing
+                            </p>
+                        </div>
+
+                        {drawing.issues.length === 0 ? (
+                            <div className="p-10 text-center">
+                                <p className="font-medium">
+                                    No site issues reported
+                                </p>
+
+                                <p className="mt-1 text-sm text-muted-foreground">
+                                    Report an issue when a drawing conflicts
+                                    with actual site conditions.
+                                </p>
+                            </div>
+                        ) : (
+                            <div className="divide-y">
+                                {drawing.issues.map((issue) => (
+                                    <article
+                                        key={issue.id}
+                                        className="p-6"
+                                    >
+                                        <div className="flex flex-col justify-between gap-4 md:flex-row">
+                                            <div className="min-w-0">
+                                                <div className="flex flex-wrap items-center gap-2">
+                                                    <p className="font-mono text-sm font-semibold">
+                                                        {issue.issue_number}
+                                                    </p>
+
+                                                    <span className="rounded-full border px-2 py-0.5 text-xs capitalize">
+                                                        {formatStatus(
+                                                            issue.priority,
+                                                        )}
+                                                    </span>
+
+                                                    <span className="rounded-full border px-2 py-0.5 text-xs capitalize">
+                                                        {formatStatus(
+                                                            issue.status,
+                                                        )}
+                                                    </span>
+                                                </div>
+
+                                                <h3 className="mt-3 font-semibold">
+                                                    {issue.title}
+                                                </h3>
+
+                                                <p className="mt-2 whitespace-pre-line text-sm text-muted-foreground">
+                                                    {issue.description}
+                                                </p>
+
+                                                {issue.location && (
+                                                    <p className="mt-3 text-sm">
+                                                        <span className="font-medium">
+                                                            Location:
+                                                        </span>{' '}
+                                                        {issue.location}
+                                                    </p>
+                                                )}
+
+                                                {issue.resolution && (
+                                                    <div className="mt-4 rounded-lg border bg-muted/30 p-4">
+                                                        <p className="text-sm font-medium">
+                                                            Resolution
+                                                        </p>
+
+                                                        <p className="mt-1 whitespace-pre-line text-sm text-muted-foreground">
+                                                            {issue.resolution}
+                                                        </p>
+                                                    </div>
+                                                )}
+
+                                                <p className="mt-4 text-xs text-muted-foreground">
+                                                    Reported by{' '}
+                                                    {issue.reported_by} on{' '}
+                                                    {issue.reported_at}
+                                                </p>
+                                            </div>
+
+                                            <div className="flex shrink-0 flex-wrap gap-2">
+                                                {issue.has_photo && (
+                                                    <Button
+                                                        asChild
+                                                        size="sm"
+                                                        variant="outline"
+                                                    >
+                                                        <a
+                                                            href={`/projects/${project.id}/drawings/${drawing.id}/issues/${issue.id}/photo`}
+                                                            target="_blank"
+                                                            rel="noreferrer"
+                                                        >
+                                                            View Photo
+                                                        </a>
+                                                    </Button>
+                                                )}
+
+                                                <Button
+                                                    asChild
+                                                    size="sm"
+                                                    variant="outline"
+                                                >
+                                                    <Link
+                                                        href={`/projects/${project.id}/drawings/${drawing.id}/issues/${issue.id}/edit`}
+                                                    >
+                                                        Update Issue
+                                                    </Link>
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    </article>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                </section>
             </div>
         </AppLayout>
     );

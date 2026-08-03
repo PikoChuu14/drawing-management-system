@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\SiteIssueController;
 use App\Http\Controllers\TrashController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DrawingController;
@@ -93,6 +94,26 @@ Route::middleware(['auth', 'verified'])->group(function () {
         'trash/drawings/{drawingId}/restore',
         [TrashController::class, 'restoreDrawing'],
     )->name('trash.drawings.restore');
+
+    Route::post(
+        'projects/{project}/drawings/{drawing}/issues',
+        [SiteIssueController::class, 'store'],
+    )->name('issues.store');
+
+    Route::get(
+        'projects/{project}/drawings/{drawing}/issues/{siteIssue}/edit',
+        [SiteIssueController::class, 'edit'],
+    )->name('issues.edit');
+
+    Route::put(
+        'projects/{project}/drawings/{drawing}/issues/{siteIssue}',
+        [SiteIssueController::class, 'update'],
+    )->name('issues.update');
+
+    Route::get(
+        'projects/{project}/drawings/{drawing}/issues/{siteIssue}/photo',
+        [SiteIssueController::class, 'photo'],
+    )->name('issues.photo');
 
 });
 

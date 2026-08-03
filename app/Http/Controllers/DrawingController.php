@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Drawing;
+use App\Models\SiteIssue;
 use App\Models\DrawingRevision;
 use App\Models\Project;
 use App\Models\User;
@@ -92,12 +93,22 @@ class DrawingController extends Controller
 
         $drawing->load([
             'creator:id,name',
+
             'revisions' => function ($query): void {
                 $query
                     ->with('uploader:id,name')
                     ->latest();
             },
+
+            'siteIssues' => function ($query): void {
+                $query
+                    ->with('reporter:id,name')
+                    ->latest();
+            },
         ]);
+
+        $revisions = $drawing->revisions()->get();
+        $issues = $drawing->siteIssues()->get();
 
         return Inertia::render('drawings/show', [
             'project' => [
@@ -115,7 +126,7 @@ class DrawingController extends Controller
                 'description' => $drawing->description,
                 'creator_name' => $drawing->creator->name,
 
-                'revisions' => $drawing->revisions
+                'revisions' => $revisions
                     ->map(function (DrawingRevision $revision): array {
                         return [
                             'id' => $revision->id,
@@ -129,6 +140,26 @@ class DrawingController extends Controller
                             'uploaded_by' => $revision->uploader?->name,
                             'uploaded_at' => $revision->created_at
                                 ->format('Y-m-d H:i'),
+                        ];
+                    }),
+
+                'issues' => $issues
+                    ->map(function (SiteIssue $issue): array {
+                        return [
+                            'id' => $issue->id,
+                            'issue_number' => $issue->issue_number,
+                            'title' => $issue->title,
+                            'description' => $issue->description,
+                            'location' => $issue->location,
+                            'priority' => $issue->priority,
+                            'status' => $issue->status,
+                            'resolution' => $issue->resolution,
+                            'has_photo' => $issue->photo_path !== null,
+                            'reported_by' => $issue->reporter->name,
+                            'reported_at' => $issue->created_at
+                                ->format('Y-m-d H:i'),
+                            'resolved_at' => $issue->resolved_at
+                                ?->format('Y-m-d H:i'),
                         ];
                     }),
             ],

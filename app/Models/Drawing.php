@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * @property-read int $id
+ * @property int $project_id
  */
 class Drawing extends Model
 {
@@ -51,5 +52,15 @@ class Drawing extends Model
     public function revisions(): HasMany
     {
         return $this->hasMany(DrawingRevision::class);
+    }
+
+    /**
+     * Get the site issues linked to this drawing.
+     *
+     * @return HasMany<SiteIssue, $this>
+     */
+    public function siteIssues(): HasMany
+    {
+        return $this->hasMany(SiteIssue::class);
     }
 }
