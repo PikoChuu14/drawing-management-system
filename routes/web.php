@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\TrashController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DrawingController;
 use App\Http\Controllers\DrawingRevisionController;
 use App\Http\Controllers\ProjectController;
@@ -8,7 +10,8 @@ use Illuminate\Support\Facades\Route;
 Route::inertia('/', 'welcome')->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::inertia('dashboard', 'dashboard')->name('dashboard');
+    Route::get('dashboard',[DashboardController::class, 'index'],
+        )->name('dashboard');
 
     Route::get('projects', [ProjectController::class, 'index'])
         ->name('projects.index');
@@ -40,6 +43,56 @@ Route::middleware(['auth', 'verified'])->group(function () {
         'projects/{project}/drawings/{drawing}/revisions/{revision}/download',
         [DrawingRevisionController::class, 'download'],
     )->name('revisions.download');
+
+    Route::get(
+        'projects/{project}/edit',
+        [ProjectController::class, 'edit'],
+    )->name('projects.edit');
+
+    Route::put(
+        'projects/{project}',
+        [ProjectController::class, 'update'],
+    )->name('projects.update');
+
+    Route::patch(
+        'projects/{project}/archive',
+        [ProjectController::class, 'archive'],
+    )->name('projects.archive');
+
+    Route::delete(
+        'projects/{project}',
+        [ProjectController::class, 'destroy'],
+    )->name('projects.destroy');
+
+    Route::get(
+        'projects/{project}/drawings/{drawing}/edit',
+        [DrawingController::class, 'edit'],
+    )->name('drawings.edit');
+
+    Route::put(
+        'projects/{project}/drawings/{drawing}',
+        [DrawingController::class, 'update'],
+    )->name('drawings.update');
+
+    Route::delete(
+        'projects/{project}/drawings/{drawing}',
+        [DrawingController::class, 'destroy'],
+    )->name('drawings.destroy');
+
+    Route::get(
+        'trash',
+        [TrashController::class, 'index'],
+    )->name('trash.index');
+
+    Route::patch(
+        'trash/projects/{projectId}/restore',
+        [TrashController::class, 'restoreProject'],
+    )->name('trash.projects.restore');
+
+    Route::patch(
+        'trash/drawings/{drawingId}/restore',
+        [TrashController::class, 'restoreDrawing'],
+    )->name('trash.drawings.restore');
 
 });
 

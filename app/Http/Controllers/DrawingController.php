@@ -134,4 +134,124 @@ class DrawingController extends Controller
             ],
         ]);
     }
+
+    /**
+     * Display the drawing edit form.
+     */
+    public function edit(
+        Project $project,
+        Drawing $drawing,
+    ): Response {
+        abort_unless(
+            $drawing->project_id === $project->id,
+            404,
+        );
+
+        return Inertia::render('drawings/edit', [
+            'project' => [
+                'id' => $project->id,
+                'project_code' => $project->project_code,
+                'name' => $project->name,
+            ],
+
+            'drawing' => [
+                'id' => $drawing->id,
+                'drawing_number' => $drawing->drawing_number,
+                'title' => $drawing->title,
+                'discipline' => $drawing->discipline,
+                'status' => $drawing->status,
+                'description' => $drawing->description,
+            ],
+        ]);
+    }
+
+    /**
+     * Update a drawing.
+     */
+    public function update(
+        Request $request,
+        Project $project,
+        Drawing $drawing,
+    ): RedirectResponse {
+        abort_unless(
+            $drawing->project_id === $project->id,
+            404,
+        );
+
+        $validated = $request->validate([
+            'drawing_number' => [
+                'required',
+                'string',
+                'max:100',
+
+                Rule::unique('drawings', 'drawing_number')
+                    ->where(
+                        fn ($query) => $query->where(
+                            'project_id',
+                            $project->id,
+                        ),
+                    )
+                    ->ignore($drawing),
+            ],
+
+            'title' => [
+                'required',
+                'string',
+                'max:255',
+            ],
+
+            'discipline' => [
+                'nullable',
+                Rule::in([
+                    'Architectural',
+                    'Civil',
+                    'Mechanical',
+                    'Electrical',
+                    'Control',
+                    'Process',
+                    'Other',
+                ]),
+            ],
+
+            'status' => [
+                'required',
+                Rule::in([
+                    'draft',
+                    'under_review',
+                    'approved',
+                    'superseded',
+                ]),
+            ],
+
+            'description' => [
+                'nullable',
+                'string',
+                'max:2000',
+            ],
+        ]);
+
+        $drawing->update($validated);
+
+        return to_route(
+            'drawings.show',
+            [$project, $drawing],
+        );
+    }
+
+    /**
+     * Move a drawing to the Trash.
+     */
+    public function destroy(
+        Project $project,
+        Drawing $drawing,
+    ): RedirectResponse {
+        abort_unless(
+            $drawing->project_id === $project->id,
+            404,
+        );
+
+        $drawing->delete();
+
+        return to_route('projects.show', $project);
+    }
 }

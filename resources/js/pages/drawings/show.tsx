@@ -1,4 +1,4 @@
-import { Head, Link, useForm } from '@inertiajs/react';
+import { Head, Link, router, useForm } from '@inertiajs/react';
 import { useRef } from 'react';
 import type { FormEvent } from 'react';
 
@@ -107,6 +107,18 @@ export default function DrawingShow({ project, drawing }: DrawingShowProps) {
         });
     };
 
+    const deleteDrawing = () => {
+        if (
+            window.confirm(
+                'Move this drawing to the Trash? Its revision files will be retained.',
+            )
+        ) {
+            router.delete(
+                `/projects/${project.id}/drawings/${drawing.id}`,
+            );
+        }
+    };
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={`${drawing.drawing_number} Revisions`} />
@@ -129,6 +141,24 @@ export default function DrawingShow({ project, drawing }: DrawingShowProps) {
                             <h1 className="mt-1 text-2xl font-semibold">
                                 {drawing.title}
                             </h1>
+
+                            <div className="mt-3 flex flex-wrap gap-2">
+                                <Button asChild variant="outline">
+                                    <Link
+                                        href={`/projects/${project.id}/drawings/${drawing.id}/edit`}
+                                    >
+                                        Edit Drawing
+                                    </Link>
+                                </Button>
+
+                                <Button
+                                    type="button"
+                                    variant="destructive"
+                                    onClick={deleteDrawing}
+                                >
+                                    Delete
+                                </Button>
+                            </div>
 
                             {drawing.description && (
                                 <p className="mt-2 max-w-3xl text-sm text-muted-foreground">

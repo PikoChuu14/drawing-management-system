@@ -1,5 +1,5 @@
 import { Link } from '@inertiajs/react';
-import { BookOpen, FolderGit2, FolderKanban, LayoutGrid } from 'lucide-react';
+import { BookOpen, FolderGit2, FolderKanban, Trash2, LayoutGrid } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
@@ -27,6 +27,11 @@ const mainNavItems: NavItem[] = [
         href: '/projects',
         icon: FolderKanban,
     },
+    {
+        title: 'Trash',
+        href: '/trash',
+        icon: Trash2,
+    }
 ];
 
 const footerNavItems: NavItem[] = [
