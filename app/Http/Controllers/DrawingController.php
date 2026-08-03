@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Project;
 use App\Models\Drawing;
+use App\Models\DrawingRevision;
+use App\Models\Project;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
-use App\Models\DrawingRevision;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -120,17 +120,13 @@ class DrawingController extends Controller
                         return [
                             'id' => $revision->id,
                             'revision_code' => $revision->revision_code,
-                            'original_filename' =>
-                                $revision->original_filename,
-                            'file_extension' =>
-                                $revision->file_extension,
+                            'original_filename' => $revision->original_filename,
+                            'file_extension' => $revision->file_extension,
                             'file_size' => $revision->file_size,
-                            'revision_notes' =>
-                                $revision->revision_notes,
+                            'revision_notes' => $revision->revision_notes,
                             'issued_at' => $revision->issued_at
                                 ?->format('Y-m-d'),
-                            'uploaded_by' =>
-                                $revision->uploader?->name,
+                            'uploaded_by' => $revision->uploader?->name,
                             'uploaded_at' => $revision->created_at
                                 ->format('Y-m-d H:i'),
                         ];

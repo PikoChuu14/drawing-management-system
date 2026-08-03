@@ -5,11 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\Drawing;
 use App\Models\Project;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
-use Illuminate\Database\Eloquent\Builder;
 
 class ProjectController extends Controller
 {
@@ -197,14 +197,12 @@ class ProjectController extends Controller
             ->map(function (Drawing $drawing): array {
                 return [
                     'id' => $drawing->id,
-                    'drawing_number' =>
-                        $drawing->drawing_number,
+                    'drawing_number' => $drawing->drawing_number,
                     'title' => $drawing->title,
                     'discipline' => $drawing->discipline,
                     'status' => $drawing->status,
                     'description' => $drawing->description,
-                    'creator_name' =>
-                        $drawing->creator->name,
+                    'creator_name' => $drawing->creator->name,
                     'created_at' => $drawing->created_at
                         ->format('Y-m-d H:i'),
                 ];

@@ -97,17 +97,14 @@ class DrawingRevisionController extends Controller
                 'uploaded_by' => $user->id,
                 'revision_code' => $validated['revision_code'],
                 'file_path' => $path,
-                'original_filename' =>
-                    $file->getClientOriginalName(),
+                'original_filename' => $file->getClientOriginalName(),
                 'mime_type' => $file->getMimeType() ?: null,
                 'file_extension' => strtolower(
                     $file->getClientOriginalExtension(),
                 ),
                 'file_size' => (int) $file->getSize(),
-                'revision_notes' =>
-                    $validated['revision_notes'] ?? null,
-                'issued_at' =>
-                    $validated['issued_at'] ?? null,
+                'revision_notes' => $validated['revision_notes'] ?? null,
+                'issued_at' => $validated['issued_at'] ?? null,
             ]);
         } catch (Throwable $exception) {
             // Avoid leaving an unused file if the database insert fails.
