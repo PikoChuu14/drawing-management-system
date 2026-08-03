@@ -1,4 +1,4 @@
-import { Head, Link, useForm } from '@inertiajs/react';
+import { Head, Link, router, useForm } from '@inertiajs/react';
 import type { FormEvent } from 'react';
 
 import { Button } from '@/components/ui/button';
@@ -28,6 +28,7 @@ type Project = {
     end_date: string | null;
     creator_name: string;
     drawings: Drawing[];
+    total_drawings: number;
 };
 
 type DrawingForm = {
@@ -38,11 +39,18 @@ type DrawingForm = {
     description: string;
 };
 
-type ProjectShowProps = {
-    project: Project;
+type DrawingFilters = {
+    search: string;
+    discipline: string;
+    drawing_status: string;
 };
 
-export default function ProjectShow({ project }: ProjectShowProps) {
+type ProjectShowProps = {
+    project: Project;
+    filters: DrawingFilters;
+};
+
+export default function ProjectShow({ project, filters }: ProjectShowProps) {
     const breadcrumbs: BreadcrumbItem[] = [
         {
             title: 'Projects',
@@ -62,6 +70,12 @@ export default function ProjectShow({ project }: ProjectShowProps) {
         description: '',
     });
 
+    const filterForm = useForm<DrawingFilters>({
+        search: filters.search,
+        discipline: filters.discipline,
+        drawing_status: filters.drawing_status,
+    });
+
     const submit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
 
@@ -72,6 +86,29 @@ export default function ProjectShow({ project }: ProjectShowProps) {
                 form.reset();
             },
         });
+    };
+
+    const submitFilters = (event: FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+
+        filterForm.get(`/projects/${project.id}`, {
+            preserveState: true,
+            preserveScroll: true,
+            replace: true,
+        });
+    };
+
+    const clearFilters = () => {
+        filterForm.reset();
+
+        router.get(
+            `/projects/${project.id}`,
+            {},
+            {
+                preserveScroll: true,
+                replace: true,
+            },
+        );
     };
 
     const formatStatus = (status: string) => {
@@ -298,11 +335,96 @@ export default function ProjectShow({ project }: ProjectShowProps) {
                             </h2>
 
                             <p className="mt-1 text-sm text-muted-foreground">
-                                {project.drawings.length}{' '}
-                                {project.drawings.length === 1
+                                Showing {project.drawings.length} of{' '}
+                                {project.total_drawings}{' '}
+                                {project.total_drawings === 1
                                     ? 'drawing'
                                     : 'drawings'}
                             </p>
+
+                            <form
+                                onSubmit={submitFilters}
+                                className="mt-5 grid gap-3 lg:grid-cols-[1fr_160px_160px_auto_auto]"
+                            >
+                                <Input
+                                    type="search"
+                                    value={filterForm.data.search}
+                                    onChange={(event) =>
+                                        filterForm.setData(
+                                            'search',
+                                            event.target.value,
+                                        )
+                                    }
+                                    placeholder="Search number, title or description..."
+                                    aria-label="Search drawings"
+                                />
+
+                                <select
+                                    value={filterForm.data.discipline}
+                                    onChange={(event) =>
+                                        filterForm.setData(
+                                            'discipline',
+                                            event.target.value,
+                                        )
+                                    }
+                                    aria-label="Filter drawing discipline"
+                                    className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                                >
+                                    <option value="">All disciplines</option>
+                                    <option value="Architectural">
+                                        Architectural
+                                    </option>
+                                    <option value="Civil">Civil</option>
+                                    <option value="Mechanical">
+                                        Mechanical
+                                    </option>
+                                    <option value="Electrical">
+                                        Electrical
+                                    </option>
+                                    <option value="Control">Control</option>
+                                    <option value="Process">Process</option>
+                                    <option value="Other">Other</option>
+                                </select>
+
+                                <select
+                                    value={filterForm.data.drawing_status}
+                                    onChange={(event) =>
+                                        filterForm.setData(
+                                            'drawing_status',
+                                            event.target.value,
+                                        )
+                                    }
+                                    aria-label="Filter drawing status"
+                                    className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                                >
+                                    <option value="">All statuses</option>
+                                    <option value="draft">Draft</option>
+                                    <option value="under_review">
+                                        Under Review
+                                    </option>
+                                    <option value="approved">Approved</option>
+                                    <option value="superseded">
+                                        Superseded
+                                    </option>
+                                </select>
+
+                                <Button
+                                    type="submit"
+                                    disabled={filterForm.processing}
+                                >
+                                    {filterForm.processing
+                                        ? 'Searching...'
+                                        : 'Search'}
+                                </Button>
+
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={clearFilters}
+                                >
+                                    Clear
+                                </Button>
+                            </form>
                         </div>
 
                         {project.drawings.length === 0 ? (
@@ -353,9 +475,12 @@ export default function ProjectShow({ project }: ProjectShowProps) {
                                                 </td>
 
                                                 <td className="px-6 py-4">
-                                                    <p className="font-medium">
+                                                    <Link
+                                                        href={`/projects/${project.id}/drawings/${drawing.id}`}
+                                                        className="font-medium hover:underline"
+                                                    >
                                                         {drawing.title}
-                                                    </p>
+                                                    </Link>
 
                                                     {drawing.description && (
                                                         <p className="mt-1 max-w-md text-muted-foreground">

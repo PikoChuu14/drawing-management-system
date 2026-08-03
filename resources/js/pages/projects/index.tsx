@@ -1,4 +1,4 @@
-import { Head, Link, useForm } from '@inertiajs/react';
+import { Head, Link, router, useForm } from '@inertiajs/react';
 import type { FormEvent } from 'react';
 
 import { Button } from '@/components/ui/button';
@@ -16,6 +16,7 @@ type Project = {
     start_date: string | null;
     end_date: string | null;
     creator_name: string;
+    drawing_count: number;
 };
 
 type ProjectForm = {
@@ -29,6 +30,12 @@ type ProjectForm = {
 
 type ProjectsPageProps = {
     projects: Project[];
+    filters: ProjectFilters;
+};
+
+type ProjectFilters = {
+    search: string;
+    status: string;
 };
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -38,7 +45,10 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-export default function ProjectsIndex({ projects }: ProjectsPageProps) {
+export default function ProjectsIndex({
+    projects,
+    filters,
+}: ProjectsPageProps) {
     const form = useForm<ProjectForm>({
         project_code: '',
         name: '',
@@ -46,6 +56,11 @@ export default function ProjectsIndex({ projects }: ProjectsPageProps) {
         status: 'active',
         start_date: '',
         end_date: '',
+    });
+
+    const filterForm = useForm<ProjectFilters>({
+        search: filters.search,
+        status: filters.status,
     });
 
     const submit = (event: FormEvent<HTMLFormElement>) => {
@@ -57,6 +72,29 @@ export default function ProjectsIndex({ projects }: ProjectsPageProps) {
                 form.reset();
             },
         });
+    };
+
+    const submitFilters = (event: FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+
+        filterForm.get('/projects', {
+            preserveState: true,
+            preserveScroll: true,
+            replace: true,
+        });
+    };
+
+    const clearFilters = () => {
+        filterForm.reset();
+
+        router.get(
+            '/projects',
+            {},
+            {
+                preserveScroll: true,
+                replace: true,
+            },
+        );
     };
 
     const formatStatus = (status: string) => {
@@ -256,14 +294,72 @@ export default function ProjectsIndex({ projects }: ProjectsPageProps) {
 
                     <section className="rounded-xl border bg-card shadow-sm">
                         <div className="border-b p-6">
-                            <h2 className="text-lg font-semibold">
-                                Existing Projects
-                            </h2>
+                            <div>
+                                <h2 className="text-lg font-semibold">
+                                    Existing Projects
+                                </h2>
 
-                            <p className="mt-1 text-sm text-muted-foreground">
-                                {projects.length} project
-                                {projects.length === 1 ? '' : 's'} registered
-                            </p>
+                                <p className="mt-1 text-sm text-muted-foreground">
+                                    {projects.length} matching{' '}
+                                    {projects.length === 1
+                                        ? 'project'
+                                        : 'projects'}
+                                </p>
+                            </div>
+
+                            <form
+                                onSubmit={submitFilters}
+                                className="mt-5 grid gap-3 md:grid-cols-[1fr_180px_auto_auto]"
+                            >
+                                <Input
+                                    type="search"
+                                    value={filterForm.data.search}
+                                    onChange={(event) =>
+                                        filterForm.setData(
+                                            'search',
+                                            event.target.value,
+                                        )
+                                    }
+                                    placeholder="Search code, name or description..."
+                                    aria-label="Search projects"
+                                />
+
+                                <select
+                                    value={filterForm.data.status}
+                                    onChange={(event) =>
+                                        filterForm.setData(
+                                            'status',
+                                            event.target.value,
+                                        )
+                                    }
+                                    aria-label="Filter project status"
+                                    className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                                >
+                                    <option value="">All statuses</option>
+                                    <option value="planned">Planned</option>
+                                    <option value="active">Active</option>
+                                    <option value="on_hold">On Hold</option>
+                                    <option value="completed">Completed</option>
+                                    <option value="archived">Archived</option>
+                                </select>
+
+                                <Button
+                                    type="submit"
+                                    disabled={filterForm.processing}
+                                >
+                                    {filterForm.processing
+                                        ? 'Searching...'
+                                        : 'Search'}
+                                </Button>
+
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={clearFilters}
+                                >
+                                    Clear
+                                </Button>
+                            </form>
                         </div>
 
                         {projects.length === 0 ? (
@@ -293,6 +389,14 @@ export default function ProjectsIndex({ projects }: ProjectsPageProps) {
 
                                             <th className="px-6 py-3 font-medium">
                                                 Dates
+                                            </th>
+
+                                            <th className="px-6 py-3 font-medium">
+                                                Drawings
+                                            </th>
+
+                                            <th className="px-6 py-3 font-medium">
+                                                Matching
                                             </th>
 
                                             <th className="px-6 py-3 font-medium">
@@ -346,6 +450,10 @@ export default function ProjectsIndex({ projects }: ProjectsPageProps) {
                                                         {project.end_date ??
                                                             'Not set'}
                                                     </p>
+                                                </td>
+
+                                                <td className="px-6 py-4">
+                                                    {project.drawing_count}
                                                 </td>
 
                                                 <td className="px-6 py-4">

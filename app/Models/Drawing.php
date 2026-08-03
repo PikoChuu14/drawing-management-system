@@ -4,7 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ * @property-read int $id
+ */
 class Drawing extends Model
 {
     /**
@@ -36,5 +40,13 @@ class Drawing extends Model
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    /**
+     * @return HasMany<DrawingRevision, $this>
+     */
+    public function revisions(): HasMany
+    {
+        return $this->hasMany(DrawingRevision::class);
     }
 }
