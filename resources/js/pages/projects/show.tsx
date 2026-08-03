@@ -43,14 +43,14 @@ type DrawingFilters = {
     search: string;
     discipline: string;
     drawing_status: string;
-}
+};
 
 type ProjectShowProps = {
     project: Project;
     filters: DrawingFilters;
 };
 
-export default function ProjectShow({ project , filters}: ProjectShowProps) {
+export default function ProjectShow({ project, filters }: ProjectShowProps) {
     const breadcrumbs: BreadcrumbItem[] = [
         {
             title: 'Projects',
@@ -88,9 +88,7 @@ export default function ProjectShow({ project , filters}: ProjectShowProps) {
         });
     };
 
-    const submitFilters = (
-        event: FormEvent<HTMLFormElement>,
-    ) => {
+    const submitFilters = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
 
         filterForm.get(`/projects/${project.id}`, {
@@ -404,9 +402,7 @@ export default function ProjectShow({ project , filters}: ProjectShowProps) {
                                     <option value="under_review">
                                         Under Review
                                     </option>
-                                    <option value="approved">
-                                        Approved
-                                    </option>
+                                    <option value="approved">Approved</option>
                                     <option value="superseded">
                                         Superseded
                                     </option>

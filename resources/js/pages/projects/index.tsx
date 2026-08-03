@@ -34,9 +34,9 @@ type ProjectsPageProps = {
 };
 
 type ProjectFilters = {
-    search:string;
-    status:string;
-}
+    search: string;
+    status: string;
+};
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -45,7 +45,10 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-export default function ProjectsIndex({ projects, filters }: ProjectsPageProps) {
+export default function ProjectsIndex({
+    projects,
+    filters,
+}: ProjectsPageProps) {
     const form = useForm<ProjectForm>({
         project_code: '',
         name: '',
@@ -71,9 +74,7 @@ export default function ProjectsIndex({ projects, filters }: ProjectsPageProps) 
         });
     };
 
-    const submitFilters = (
-        event: FormEvent<HTMLFormElement>,
-    ) => {
+    const submitFilters = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
 
         filterForm.get('/projects', {
@@ -338,9 +339,7 @@ export default function ProjectsIndex({ projects, filters }: ProjectsPageProps) 
                                     <option value="planned">Planned</option>
                                     <option value="active">Active</option>
                                     <option value="on_hold">On Hold</option>
-                                    <option value="completed">
-                                        Completed
-                                    </option>
+                                    <option value="completed">Completed</option>
                                     <option value="archived">Archived</option>
                                 </select>
 

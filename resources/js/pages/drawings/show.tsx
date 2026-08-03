@@ -65,10 +65,7 @@ function formatFileSize(bytes: number): string {
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-export default function DrawingShow({
-    project,
-    drawing,
-}: DrawingShowProps) {
+export default function DrawingShow({ project, drawing }: DrawingShowProps) {
     const fileInput = useRef<HTMLInputElement>(null);
 
     const breadcrumbs: BreadcrumbItem[] = [
@@ -96,28 +93,23 @@ export default function DrawingShow({
     const submit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
 
-        form.post(
-            `/projects/${project.id}/drawings/${drawing.id}/revisions`,
-            {
-                forceFormData: true,
-                preserveScroll: true,
+        form.post(`/projects/${project.id}/drawings/${drawing.id}/revisions`, {
+            forceFormData: true,
+            preserveScroll: true,
 
-                onSuccess: () => {
-                    form.reset();
+            onSuccess: () => {
+                form.reset();
 
-                    if (fileInput.current) {
-                        fileInput.current.value = '';
-                    }
-                },
+                if (fileInput.current) {
+                    fileInput.current.value = '';
+                }
             },
-        );
+        });
     };
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head
-                title={`${drawing.drawing_number} Revisions`}
-            />
+            <Head title={`${drawing.drawing_number} Revisions`} />
 
             <div className="flex flex-1 flex-col gap-6 p-4">
                 <header>
@@ -146,14 +138,10 @@ export default function DrawingShow({
                         </div>
 
                         <div className="text-sm">
-                            <p>
-                                Discipline:{' '}
-                                {drawing.discipline ?? 'Not set'}
-                            </p>
+                            <p>Discipline: {drawing.discipline ?? 'Not set'}</p>
 
                             <p className="capitalize">
-                                Status:{' '}
-                                {formatStatus(drawing.status)}
+                                Status: {formatStatus(drawing.status)}
                             </p>
 
                             <p className="text-muted-foreground">
@@ -173,10 +161,7 @@ export default function DrawingShow({
                             Add a PDF, DWG or DXF revision file.
                         </p>
 
-                        <form
-                            onSubmit={submit}
-                            className="mt-6 space-y-5"
-                        >
+                        <form onSubmit={submit} className="mt-6 space-y-5">
                             <div className="space-y-2">
                                 <Label htmlFor="revision_code">
                                     Revision Code
@@ -202,9 +187,7 @@ export default function DrawingShow({
                             </div>
 
                             <div className="space-y-2">
-                                <Label htmlFor="issued_at">
-                                    Issue Date
-                                </Label>
+                                <Label htmlFor="issued_at">Issue Date</Label>
 
                                 <Input
                                     id="issued_at"
@@ -226,9 +209,7 @@ export default function DrawingShow({
                             </div>
 
                             <div className="space-y-2">
-                                <Label htmlFor="file">
-                                    Revision File
-                                </Label>
+                                <Label htmlFor="file">Revision File</Label>
 
                                 <Input
                                     ref={fileInput}
@@ -238,8 +219,7 @@ export default function DrawingShow({
                                     onChange={(event) =>
                                         form.setData(
                                             'file',
-                                            event.target.files?.[0] ??
-                                                null,
+                                            event.target.files?.[0] ?? null,
                                         )
                                     }
                                 />
@@ -363,78 +343,70 @@ export default function DrawingShow({
                                     </thead>
 
                                     <tbody>
-                                        {drawing.revisions.map(
-                                            (revision) => (
-                                                <tr
-                                                    key={revision.id}
-                                                    className="border-b last:border-b-0"
-                                                >
-                                                    <td className="px-6 py-4">
-                                                        <p className="font-mono font-semibold">
-                                                            {
-                                                                revision.revision_code
-                                                            }
-                                                        </p>
+                                        {drawing.revisions.map((revision) => (
+                                            <tr
+                                                key={revision.id}
+                                                className="border-b last:border-b-0"
+                                            >
+                                                <td className="px-6 py-4">
+                                                    <p className="font-mono font-semibold">
+                                                        {revision.revision_code}
+                                                    </p>
 
-                                                        <p className="text-xs text-muted-foreground">
-                                                            Issued:{' '}
-                                                            {revision.issued_at ??
-                                                                'Not set'}
-                                                        </p>
-                                                    </td>
+                                                    <p className="text-xs text-muted-foreground">
+                                                        Issued:{' '}
+                                                        {revision.issued_at ??
+                                                            'Not set'}
+                                                    </p>
+                                                </td>
 
-                                                    <td className="px-6 py-4">
-                                                        <p className="max-w-64 break-all font-medium">
-                                                            {
-                                                                revision.original_filename
-                                                            }
-                                                        </p>
+                                                <td className="px-6 py-4">
+                                                    <p className="max-w-64 font-medium break-all">
+                                                        {
+                                                            revision.original_filename
+                                                        }
+                                                    </p>
 
-                                                        <p className="text-xs uppercase text-muted-foreground">
-                                                            {revision.file_extension ??
-                                                                'File'}{' '}
-                                                            ·{' '}
-                                                            {formatFileSize(
-                                                                revision.file_size,
-                                                            )}
-                                                        </p>
-                                                    </td>
+                                                    <p className="text-xs text-muted-foreground uppercase">
+                                                        {revision.file_extension ??
+                                                            'File'}{' '}
+                                                        ·{' '}
+                                                        {formatFileSize(
+                                                            revision.file_size,
+                                                        )}
+                                                    </p>
+                                                </td>
 
-                                                    <td className="px-6 py-4 text-muted-foreground">
-                                                        {revision.revision_notes ??
-                                                            'No notes'}
-                                                    </td>
+                                                <td className="px-6 py-4 text-muted-foreground">
+                                                    {revision.revision_notes ??
+                                                        'No notes'}
+                                                </td>
 
-                                                    <td className="px-6 py-4">
-                                                        <p>
-                                                            {
-                                                                revision.uploaded_by
-                                                            }
-                                                        </p>
+                                                <td className="px-6 py-4">
+                                                    <p>
+                                                        {revision.uploaded_by}
+                                                    </p>
 
-                                                        <p className="text-xs text-muted-foreground">
-                                                            {
-                                                                revision.uploaded_at
-                                                            }
-                                                        </p>
-                                                    </td>
+                                                    <p className="text-xs text-muted-foreground">
+                                                        {revision.uploaded_at}
+                                                    </p>
+                                                </td>
 
-                                                    <td className="px-6 py-4">
-                                                        <Button
-                                                            asChild
-                                                            variant="outline"
-                                                            size="sm"
+                                                <td className="px-6 py-4">
+                                                    <Button
+                                                        asChild
+                                                        variant="outline"
+                                                        size="sm"
+                                                    >
+                                                        <a
+                                                            href={`/projects/${project.id}/drawings/${drawing.id}/revisions/${revision.id}/download`}
                                                         >
-                                                            <a
-                                                                href={`/projects/${project.id}/drawings/${drawing.id}/revisions/${revision.id}/download`}
-                                                            >
-                                                                Download
-                                                            </a>
-                                                        </Button>
-                                                    </td>
-                                                </tr>
-                                            ),
-                                        )}
+                                                            Download
+                                                        </a>
+                                                    </Button>
+                                                </td>
+                                            </tr>
+                                        ))}
                                     </tbody>
                                 </table>
                             </div>
