@@ -164,6 +164,22 @@ class DrawingController extends Controller
                                 (string) $revision->file_extension,
                             ) === 'pdf',
 
+                            'can_view_dwg' => (
+                                strtolower(
+                                    (string) $revision->file_extension,
+                                ) === 'dwg'
+                                && $revision->translation_status === 'ready'
+                                && is_string($revision->aps_urn)
+                                && $revision->aps_urn !== ''
+                            ),
+
+                            'aps_urn' => (
+                                $revision->translation_status === 'ready'
+                                && is_string($revision->aps_urn)
+                            )
+                                ? $revision->aps_urn
+                                : null,
+
                         ];
                     },
                     $revisions->all(),
@@ -192,6 +208,19 @@ class DrawingController extends Controller
                     },
                     $issues->all(),
                 ),
+            ],
+
+            'apsViewer' => [
+                'token_url' => route('aps.viewer-token'),
+
+                'api' => strtoupper(
+                    (string) config(
+                        'services.aps.region',
+                        'US',
+                    ),
+                ) === 'EMEA'
+                    ? 'streamingV2_EU'
+                    : 'streamingV2',
             ],
         ]);
     }

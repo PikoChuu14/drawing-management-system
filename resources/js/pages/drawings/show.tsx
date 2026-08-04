@@ -1,6 +1,6 @@
 import { Head, Link, router, useForm } from '@inertiajs/react';
 import { useRef, useState, type FormEvent, } from 'react';
-
+import ApsViewer from '@/components/aps-viewer';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -36,6 +36,9 @@ type Revision = {
     translation_error: string | null;
     translation_requested_at: string | null;
     translation_completed_at: string | null;
+
+    can_view_dwg: boolean;
+    aps_urn:string | null;
 };
 
 type Drawing = {
@@ -60,6 +63,7 @@ type RevisionForm = {
 type DrawingShowProps = {
     project: Project;
     drawing: Drawing;
+    apsViewer: ApsViewerConfig;
 };
 
 type SiteIssue = {
@@ -85,6 +89,11 @@ type IssueForm = {
     photo: File | null;
 };
 
+type ApsViewerConfig = {
+    token_url: string;
+    api: string;
+};
+
 function formatStatus(status: string): string {
     return status.replaceAll('_', ' ');
 }
@@ -101,7 +110,7 @@ function formatFileSize(bytes: number): string {
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-export default function DrawingShow({ project, drawing }: DrawingShowProps) {
+export default function DrawingShow({ project, drawing, apsViewer }: DrawingShowProps) {
     const fileInput = useRef<HTMLInputElement>(null);
 
     const breadcrumbs: BreadcrumbItem[] = [
@@ -257,6 +266,11 @@ export default function DrawingShow({ project, drawing }: DrawingShowProps) {
             },
         );
     };
+
+    const [
+        dwgPreviewRevision,
+        setDwgPreviewRevision,
+    ] = useState<Revision | null>(null);
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -609,6 +623,7 @@ export default function DrawingShow({ project, drawing }: DrawingShowProps) {
                                                                 }
                                                                 onClick={() => {
                                                                     setPreviewRevision(revision);
+                                                                    setDwgPreviewRevision(null);
 
                                                                     window.setTimeout(() => {
                                                                         document
@@ -683,9 +698,42 @@ export default function DrawingShow({ project, drawing }: DrawingShowProps) {
                                                             'dwg' &&
                                                             revision.translation_status ===
                                                                 'ready' && (
-                                                                <span className="inline-flex h-8 items-center rounded-md border px-3 text-xs font-medium">
-                                                                    Ready for Viewer
-                                                                </span>
+                                                                revision.can_view_dwg &&
+                                                                    revision.aps_urn && (
+                                                                        <Button
+                                                                            type="button"
+                                                                            size="sm"
+                                                                            variant={
+                                                                                dwgPreviewRevision?.id ===
+                                                                                revision.id
+                                                                                    ? 'default'
+                                                                                    : 'outline'
+                                                                            }
+                                                                            onClick={() => {
+                                                                                setDwgPreviewRevision(
+                                                                                    revision,
+                                                                                );
+                                                                                                
+                                                                                setPreviewRevision(null);
+
+                                                                                window.setTimeout(() => {
+                                                                                    document
+                                                                                        .getElementById(
+                                                                                            'dwg-preview',
+                                                                                        )
+                                                                                        ?.scrollIntoView({
+                                                                                            behavior: 'smooth',
+                                                                                            block: 'start',
+                                                                                        });
+                                                                                }, 0);
+                                                                            }}
+                                                                        >
+                                                                            {dwgPreviewRevision?.id ===
+                                                                            revision.id
+                                                                                ? 'Viewing DWG'
+                                                                                : 'Preview DWG'}
+                                                                        </Button>
+                                                                    )
                                                             )}
 
                                                         <Button
@@ -709,6 +757,67 @@ export default function DrawingShow({ project, drawing }: DrawingShowProps) {
                         )}
                     </section>
                 </div>
+
+                {dwgPreviewRevision &&
+                    dwgPreviewRevision.aps_urn && (
+                        <section
+                            id="dwg-preview"
+                            className="scroll-mt-6 overflow-hidden rounded-xl border bg-card shadow-sm"
+                        >
+                            <div className="flex flex-col justify-between gap-4 border-b p-4 sm:flex-row sm:items-center md:p-6">
+                                <div className="min-w-0">
+                                    <p className="text-sm text-muted-foreground">
+                                        Interactive DWG Preview
+                                    </p>
+
+                                    <h2 className="mt-1 truncate text-lg font-semibold">
+                                        Revision{' '}
+                                        {dwgPreviewRevision.revision_code}{' '}
+                                        —{' '}
+                                        {dwgPreviewRevision.original_filename}
+                                    </h2>
+
+                                    <p className="mt-1 text-xs text-muted-foreground">
+                                        Use the Viewer controls to zoom, pan, select sheets, and inspect the translated drawing.
+                                    </p>
+                                </div>
+
+                                <div className="flex shrink-0 flex-wrap gap-2">
+                                    <Button
+                                        asChild
+                                        size="sm"
+                                        variant="outline"
+                                    >
+                                        <a
+                                            href={`/projects/${project.id}/drawings/${drawing.id}/revisions/${dwgPreviewRevision.id}/download`}
+                                        >
+                                            Download Original
+                                        </a>
+                                    </Button>
+
+                                    <Button
+                                        type="button"
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() =>
+                                            setDwgPreviewRevision(null)
+                                        }
+                                    >
+                                        Close Viewer
+                                    </Button>
+                                </div>
+                            </div>
+
+                            <div className="bg-muted/30 p-2 sm:p-4">
+                                <ApsViewer
+                                    key={dwgPreviewRevision.id}
+                                    urn={dwgPreviewRevision.aps_urn}
+                                    tokenUrl={apsViewer.token_url}
+                                    api={apsViewer.api}
+                                />
+                            </div>
+                        </section>
+                    )}
 
                 {previewRevision && (
                     <section

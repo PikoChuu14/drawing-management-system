@@ -6,6 +6,7 @@ use App\Http\Controllers\DrawingRevisionController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\SiteIssueController;
 use App\Http\Controllers\TrashController;
+use App\Http\Controllers\ApsViewerController;
 use Illuminate\Support\Facades\Route;
 
 Route::inertia('/', 'welcome')->name('home');
@@ -135,6 +136,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
             'refreshTranslationStatus',
         ],
     )->name('revisions.aps.status');
+
+    Route::get(
+        'aps/viewer-token',
+        [ApsViewerController::class, 'token'],
+    )->name('aps.viewer-token');
 
 });
 
