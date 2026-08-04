@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Symfony\Component\HttpFoundation\StreamedResponse;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Throwable;
 
 class DrawingRevisionController extends Controller
@@ -148,5 +149,58 @@ class DrawingRevisionController extends Controller
             $revision->file_path,
             $revision->original_filename,
         );
+    }
+
+    /**
+     * Display a PDF revision inside the browser.
+     */
+    public function preview(
+        Project $project,
+        Drawing $drawing,
+        DrawingRevision $revision,
+    ): BinaryFileResponse {
+        // Ensure the drawing belongs to the requested project.
+        abort_unless(
+            $drawing->project_id === $project->id,
+            404,
+        );
+
+        // Ensure the revision belongs to the requested drawing.
+        abort_unless(
+            $revision->drawing_id === $drawing->id,
+            404,
+        );
+
+        // Only PDF files may use this preview route.
+        abort_unless(
+            strtolower(
+                (string) $revision->file_extension,
+            ) === 'pdf',
+            404,
+        );
+
+        $disk = Storage::disk('local');
+
+        abort_unless(
+            $disk->exists($revision->file_path),
+            404,
+        );
+
+        $response = response()->file(
+            $disk->path($revision->file_path),
+            [
+                'Content-Type' => 'application/pdf',
+                'X-Content-Type-Options' => 'nosniff',
+                'Cache-Control' =>
+                    'private, no-store, max-age=0',
+            ],
+        );
+
+        $response->setContentDisposition(
+            'inline',
+            $revision->original_filename,
+        );
+
+        return $response;
     }
 }

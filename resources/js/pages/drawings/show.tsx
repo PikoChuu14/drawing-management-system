@@ -1,6 +1,6 @@
 import { Head, Link, router, useForm } from '@inertiajs/react';
-import { useRef } from 'react';
-import type { FormEvent } from 'react';
+import { useRef, useState, type FormEvent, } from 'react';
+
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -24,6 +24,7 @@ type Revision = {
     issued_at: string | null;
     uploaded_by: string;
     uploaded_at: string;
+    can_preview: boolean;
 };
 
 type Drawing = {
@@ -113,6 +114,13 @@ export default function DrawingShow({ project, drawing }: DrawingShowProps) {
         revision_notes: '',
         file: null,
     });
+
+    const [previewRevision, setPreviewRevision] =
+        useState<Revision | null>(null);
+
+    const getPreviewUrl = (revisionId: number) => {
+        return `/projects/${project.id}/drawings/${drawing.id}/revisions/${revisionId}/preview`;
+    };
 
     const submit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -475,17 +483,50 @@ export default function DrawingShow({ project, drawing }: DrawingShowProps) {
                                                 </td>
 
                                                 <td className="px-6 py-4">
-                                                    <Button
-                                                        asChild
-                                                        variant="outline"
-                                                        size="sm"
-                                                    >
-                                                        <a
-                                                            href={`/projects/${project.id}/drawings/${drawing.id}/revisions/${revision.id}/download`}
+                                                    <div className="flex flex-wrap gap-2">
+                                                        {revision.can_preview && (
+                                                            <Button
+                                                                type="button"
+                                                                size="sm"
+                                                                variant={
+                                                                    previewRevision?.id ===
+                                                                    revision.id
+                                                                        ? 'default'
+                                                                        : 'outline'
+                                                                }
+                                                                onClick={() => {
+                                                                    setPreviewRevision(revision);
+
+                                                                    window.setTimeout(() => {
+                                                                        document
+                                                                            .getElementById(
+                                                                                'pdf-preview',
+                                                                            )
+                                                                            ?.scrollIntoView({
+                                                                                behavior: 'smooth',
+                                                                                block: 'start',
+                                                                            });
+                                                                    }, 0);
+                                                                }}
+                                                            >
+                                                                {previewRevision?.id === revision.id
+                                                                    ? 'Viewing'
+                                                                    : 'Preview'}
+                                                            </Button>
+                                                        )}
+
+                                                        <Button
+                                                            asChild
+                                                            variant="outline"
+                                                            size="sm"
                                                         >
-                                                            Download
-                                                        </a>
-                                                    </Button>
+                                                            <a
+                                                                href={`/projects/${project.id}/drawings/${drawing.id}/revisions/${revision.id}/download`}
+                                                            >
+                                                                Download
+                                                            </a>
+                                                        </Button>
+                                                    </div>
                                                 </td>
                                             </tr>
                                         ))}
@@ -495,6 +536,57 @@ export default function DrawingShow({ project, drawing }: DrawingShowProps) {
                         )}
                     </section>
                 </div>
+
+                {previewRevision && (
+                    <section
+                        id="pdf-preview"
+                        className="scroll-mt-6 overflow-hidden rounded-xl border bg-card shadow-sm"
+                    >
+                        <div className="flex flex-col justify-between gap-4 border-b p-4 sm:flex-row sm:items-center md:p-6">
+                            <div className="min-w-0">
+                                <p className="text-sm text-muted-foreground">
+                                    PDF Preview
+                                </p>
+
+                                <h2 className="mt-1 truncate text-lg font-semibold">
+                                    Revision{' '}
+                                    {previewRevision.revision_code} —{' '}
+                                    {previewRevision.original_filename}
+                                </h2>
+                            </div>
+
+                            <div className="flex shrink-0 flex-wrap gap-2">
+                                <Button asChild size="sm" variant="outline">
+                                    <a
+                                        href={getPreviewUrl(previewRevision.id)}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                    >
+                                        Open in New Tab
+                                    </a>
+                                </Button>
+
+                                <Button
+                                    type="button"
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => setPreviewRevision(null)}
+                                >
+                                    Close Preview
+                                </Button>
+                            </div>
+                        </div>
+
+                        <div className="bg-muted/30 p-2 sm:p-4">
+                            <iframe
+                                key={previewRevision.id}
+                                src={getPreviewUrl(previewRevision.id)}
+                                title={`PDF preview for revision ${previewRevision.revision_code}`}
+                                className="h-[65vh] min-h-[420px] w-full rounded-lg border bg-white md:h-[75vh]"
+                            />
+                        </div>
+                    </section>
+                )}
 
                 <section className="grid gap-6 xl:grid-cols-[380px_1fr]">
                     <div className="rounded-xl border bg-card p-6 shadow-sm">

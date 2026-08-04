@@ -140,6 +140,11 @@ class DrawingController extends Controller
                             'uploaded_by' => $revision->uploader?->name,
                             'uploaded_at' => $revision->created_at
                                 ->format('Y-m-d H:i'),
+
+                            'can_preview' => strtolower(
+                                (string) $revision->file_extension,
+                            ) === 'pdf',
+                            
                         ];
                     }),
 

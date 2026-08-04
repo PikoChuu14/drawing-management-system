@@ -41,6 +41,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     )->name('revisions.store');
 
     Route::get(
+        'projects/{project}/drawings/{drawing}/revisions/{revision}/preview',
+        [DrawingRevisionController::class, 'preview'],
+    )->name('revisions.preview');
+
+    Route::get(
         'projects/{project}/drawings/{drawing}/revisions/{revision}/download',
         [DrawingRevisionController::class, 'download'],
     )->name('revisions.download');
