@@ -1,7 +1,8 @@
+import { Head, router } from '@inertiajs/react';
+
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
-import { Head, router } from '@inertiajs/react';
 
 type DeletedProject = {
     id: number;
@@ -32,10 +33,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-export default function Trash({
-    projects,
-    drawings,
-}: TrashProps) {
+export default function Trash({ projects, drawings }: TrashProps) {
     const restoreProject = (projectId: number) => {
         router.patch(
             `/trash/projects/${projectId}/restore`,
@@ -62,13 +60,11 @@ export default function Trash({
 
             <div className="flex flex-1 flex-col gap-6 p-4 md:p-6">
                 <header>
-                    <h1 className="text-2xl font-semibold">
-                        Deleted Items
-                    </h1>
+                    <h1 className="text-2xl font-semibold">Deleted Items</h1>
 
                     <p className="mt-1 text-sm text-muted-foreground">
-                        Restore projects and drawings that were
-                        deleted accidentally.
+                        Restore projects and drawings that were deleted
+                        accidentally.
                     </p>
                 </header>
 
@@ -80,9 +76,7 @@ export default function Trash({
 
                         <p className="mt-1 text-sm text-muted-foreground">
                             {projects.length} deleted{' '}
-                            {projects.length === 1
-                                ? 'project'
-                                : 'projects'}
+                            {projects.length === 1 ? 'project' : 'projects'}
                         </p>
                     </div>
 
@@ -95,18 +89,10 @@ export default function Trash({
                             <table className="w-full text-left text-sm">
                                 <thead className="border-b bg-muted/50">
                                     <tr>
-                                        <th className="px-6 py-3">
-                                            Code
-                                        </th>
-                                        <th className="px-6 py-3">
-                                            Project
-                                        </th>
-                                        <th className="px-6 py-3">
-                                            Deleted
-                                        </th>
-                                        <th className="px-6 py-3">
-                                            Action
-                                        </th>
+                                        <th className="px-6 py-3">Code</th>
+                                        <th className="px-6 py-3">Project</th>
+                                        <th className="px-6 py-3">Deleted</th>
+                                        <th className="px-6 py-3">Action</th>
                                     </tr>
                                 </thead>
 
@@ -157,9 +143,7 @@ export default function Trash({
 
                         <p className="mt-1 text-sm text-muted-foreground">
                             {drawings.length} deleted{' '}
-                            {drawings.length === 1
-                                ? 'drawing'
-                                : 'drawings'}
+                            {drawings.length === 1 ? 'drawing' : 'drawings'}
                         </p>
                     </div>
 
@@ -172,21 +156,11 @@ export default function Trash({
                             <table className="w-full text-left text-sm">
                                 <thead className="border-b bg-muted/50">
                                     <tr>
-                                        <th className="px-6 py-3">
-                                            Number
-                                        </th>
-                                        <th className="px-6 py-3">
-                                            Drawing
-                                        </th>
-                                        <th className="px-6 py-3">
-                                            Project
-                                        </th>
-                                        <th className="px-6 py-3">
-                                            Deleted
-                                        </th>
-                                        <th className="px-6 py-3">
-                                            Action
-                                        </th>
+                                        <th className="px-6 py-3">Number</th>
+                                        <th className="px-6 py-3">Drawing</th>
+                                        <th className="px-6 py-3">Project</th>
+                                        <th className="px-6 py-3">Deleted</th>
+                                        <th className="px-6 py-3">Action</th>
                                     </tr>
                                 </thead>
 
@@ -197,9 +171,7 @@ export default function Trash({
                                             className="border-b last:border-0"
                                         >
                                             <td className="px-6 py-4 font-mono">
-                                                {
-                                                    drawing.drawing_number
-                                                }
+                                                {drawing.drawing_number}
                                             </td>
 
                                             <td className="px-6 py-4 font-medium">
@@ -207,14 +179,10 @@ export default function Trash({
                                             </td>
 
                                             <td className="px-6 py-4">
-                                                <p>
-                                                    {drawing.project_name}
-                                                </p>
+                                                <p>{drawing.project_name}</p>
 
                                                 <p className="font-mono text-xs text-muted-foreground">
-                                                    {
-                                                        drawing.project_code
-                                                    }
+                                                    {drawing.project_code}
                                                 </p>
                                             </td>
 

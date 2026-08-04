@@ -37,15 +37,11 @@ class TrashController extends Controller
 
                 return [
                     'id' => $drawing->id,
-                    'drawing_number' =>
-                        $drawing->drawing_number,
+                    'drawing_number' => $drawing->drawing_number,
                     'title' => $drawing->title,
-                    'project_code' =>
-                        $project !== null ? $project->project_code : 'Unknown',
-                    'project_name' =>
-                        $project !== null ? $project->name : 'Unknown project',
-                    'project_deleted' =>
-                        $project?->trashed() ?? true,
+                    'project_code' => $project !== null ? $project->project_code : 'Unknown',
+                    'project_name' => $project !== null ? $project->name : 'Unknown project',
+                    'project_deleted' => $project?->trashed() ?? true,
                     'deleted_at' => $drawing->deleted_at
                         ?->format('Y-m-d H:i'),
                 ];
@@ -85,8 +81,7 @@ class TrashController extends Controller
 
         if ($project->trashed()) {
             return to_route('trash.index')->withErrors([
-                'restore' =>
-                    'Restore the parent project before restoring this drawing.',
+                'restore' => 'Restore the parent project before restoring this drawing.',
             ]);
         }
 

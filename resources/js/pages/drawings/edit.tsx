@@ -1,10 +1,11 @@
+import { Head, Link, useForm } from '@inertiajs/react';
+import type { FormEvent } from 'react';
+
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
-import { Head, Link, useForm } from '@inertiajs/react';
-import type { FormEvent } from 'react';
 
 type Project = {
     id: number;
@@ -34,10 +35,7 @@ type DrawingEditProps = {
     drawing: Drawing;
 };
 
-export default function DrawingEdit({
-    project,
-    drawing,
-}: DrawingEditProps) {
+export default function DrawingEdit({ project, drawing }: DrawingEditProps) {
     const breadcrumbs: BreadcrumbItem[] = [
         {
             title: 'Projects',
@@ -68,12 +66,9 @@ export default function DrawingEdit({
     const submit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
 
-        form.put(
-            `/projects/${project.id}/drawings/${drawing.id}`,
-            {
-                preserveScroll: true,
-            },
-        );
+        form.put(`/projects/${project.id}/drawings/${drawing.id}`, {
+            preserveScroll: true,
+        });
     };
 
     return (
@@ -82,18 +77,13 @@ export default function DrawingEdit({
 
             <div className="flex flex-1 justify-center p-4 md:p-6">
                 <section className="w-full max-w-2xl rounded-xl border bg-card p-6 shadow-sm">
-                    <h1 className="text-2xl font-semibold">
-                        Edit Drawing
-                    </h1>
+                    <h1 className="text-2xl font-semibold">Edit Drawing</h1>
 
                     <p className="mt-1 text-sm text-muted-foreground">
                         Update the drawing register information.
                     </p>
 
-                    <form
-                        onSubmit={submit}
-                        className="mt-6 space-y-5"
-                    >
+                    <form onSubmit={submit} className="mt-6 space-y-5">
                         <div className="space-y-2">
                             <Label htmlFor="drawing_number">
                                 Drawing Number
@@ -118,18 +108,13 @@ export default function DrawingEdit({
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="title">
-                                Drawing Title
-                            </Label>
+                            <Label htmlFor="title">Drawing Title</Label>
 
                             <Input
                                 id="title"
                                 value={form.data.title}
                                 onChange={(event) =>
-                                    form.setData(
-                                        'title',
-                                        event.target.value,
-                                    )
+                                    form.setData('title', event.target.value)
                                 }
                             />
 
@@ -141,9 +126,7 @@ export default function DrawingEdit({
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="discipline">
-                                Discipline
-                            </Label>
+                            <Label htmlFor="discipline">Discipline</Label>
 
                             <select
                                 id="discipline"
@@ -161,21 +144,11 @@ export default function DrawingEdit({
                                     Architectural
                                 </option>
                                 <option value="Civil">Civil</option>
-                                <option value="Mechanical">
-                                    Mechanical
-                                </option>
-                                <option value="Electrical">
-                                    Electrical
-                                </option>
-                                <option value="Control">
-                                    Control
-                                </option>
-                                <option value="Process">
-                                    Process
-                                </option>
-                                <option value="Other">
-                                    Other
-                                </option>
+                                <option value="Mechanical">Mechanical</option>
+                                <option value="Electrical">Electrical</option>
+                                <option value="Control">Control</option>
+                                <option value="Process">Process</option>
+                                <option value="Other">Other</option>
                             </select>
 
                             {form.errors.discipline && (
@@ -192,25 +165,16 @@ export default function DrawingEdit({
                                 id="status"
                                 value={form.data.status}
                                 onChange={(event) =>
-                                    form.setData(
-                                        'status',
-                                        event.target.value,
-                                    )
+                                    form.setData('status', event.target.value)
                                 }
                                 className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                             >
-                                <option value="draft">
-                                    Draft
-                                </option>
+                                <option value="draft">Draft</option>
                                 <option value="under_review">
                                     Under Review
                                 </option>
-                                <option value="approved">
-                                    Approved
-                                </option>
-                                <option value="superseded">
-                                    Superseded
-                                </option>
+                                <option value="approved">Approved</option>
+                                <option value="superseded">Superseded</option>
                             </select>
 
                             {form.errors.status && (
@@ -221,9 +185,7 @@ export default function DrawingEdit({
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="description">
-                                Description
-                            </Label>
+                            <Label htmlFor="description">Description</Label>
 
                             <textarea
                                 id="description"
@@ -246,11 +208,7 @@ export default function DrawingEdit({
                         </div>
 
                         <div className="flex justify-end gap-3">
-                            <Button
-                                asChild
-                                type="button"
-                                variant="outline"
-                            >
+                            <Button asChild type="button" variant="outline">
                                 <Link
                                     href={`/projects/${project.id}/drawings/${drawing.id}`}
                                 >
@@ -258,13 +216,8 @@ export default function DrawingEdit({
                                 </Link>
                             </Button>
 
-                            <Button
-                                type="submit"
-                                disabled={form.processing}
-                            >
-                                {form.processing
-                                    ? 'Saving...'
-                                    : 'Save Changes'}
+                            <Button type="submit" disabled={form.processing}>
+                                {form.processing ? 'Saving...' : 'Save Changes'}
                             </Button>
                         </div>
                     </form>

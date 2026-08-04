@@ -1,10 +1,11 @@
+import { Head, Link, useForm } from '@inertiajs/react';
+import type { FormEvent } from 'react';
+
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
-import { Head, Link, useForm } from '@inertiajs/react';
-import type { FormEvent } from 'react';
 
 type Project = {
     id: number;
@@ -29,9 +30,7 @@ type ProjectEditProps = {
     project: Project;
 };
 
-export default function ProjectEdit({
-    project,
-}: ProjectEditProps) {
+export default function ProjectEdit({ project }: ProjectEditProps) {
     const breadcrumbs: BreadcrumbItem[] = [
         {
             title: 'Projects',
@@ -71,23 +70,16 @@ export default function ProjectEdit({
             <div className="flex flex-1 justify-center p-4 md:p-6">
                 <section className="w-full max-w-2xl rounded-xl border bg-card p-6 shadow-sm">
                     <div>
-                        <h1 className="text-2xl font-semibold">
-                            Edit Project
-                        </h1>
+                        <h1 className="text-2xl font-semibold">Edit Project</h1>
 
                         <p className="mt-1 text-sm text-muted-foreground">
                             Update the project information and status.
                         </p>
                     </div>
 
-                    <form
-                        onSubmit={submit}
-                        className="mt-6 space-y-5"
-                    >
+                    <form onSubmit={submit} className="mt-6 space-y-5">
                         <div className="space-y-2">
-                            <Label htmlFor="project_code">
-                                Project Code
-                            </Label>
+                            <Label htmlFor="project_code">Project Code</Label>
 
                             <Input
                                 id="project_code"
@@ -108,18 +100,13 @@ export default function ProjectEdit({
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="name">
-                                Project Name
-                            </Label>
+                            <Label htmlFor="name">Project Name</Label>
 
                             <Input
                                 id="name"
                                 value={form.data.name}
                                 onChange={(event) =>
-                                    form.setData(
-                                        'name',
-                                        event.target.value,
-                                    )
+                                    form.setData('name', event.target.value)
                                 }
                             />
 
@@ -131,9 +118,7 @@ export default function ProjectEdit({
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="description">
-                                Description
-                            </Label>
+                            <Label htmlFor="description">Description</Label>
 
                             <textarea
                                 id="description"
@@ -162,28 +147,15 @@ export default function ProjectEdit({
                                 id="status"
                                 value={form.data.status}
                                 onChange={(event) =>
-                                    form.setData(
-                                        'status',
-                                        event.target.value,
-                                    )
+                                    form.setData('status', event.target.value)
                                 }
                                 className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                             >
-                                <option value="planned">
-                                    Planned
-                                </option>
-                                <option value="active">
-                                    Active
-                                </option>
-                                <option value="on_hold">
-                                    On Hold
-                                </option>
-                                <option value="completed">
-                                    Completed
-                                </option>
-                                <option value="archived">
-                                    Archived
-                                </option>
+                                <option value="planned">Planned</option>
+                                <option value="active">Active</option>
+                                <option value="on_hold">On Hold</option>
+                                <option value="completed">Completed</option>
+                                <option value="archived">Archived</option>
                             </select>
 
                             {form.errors.status && (
@@ -195,9 +167,7 @@ export default function ProjectEdit({
 
                         <div className="grid gap-4 sm:grid-cols-2">
                             <div className="space-y-2">
-                                <Label htmlFor="start_date">
-                                    Start Date
-                                </Label>
+                                <Label htmlFor="start_date">Start Date</Label>
 
                                 <Input
                                     id="start_date"
@@ -219,9 +189,7 @@ export default function ProjectEdit({
                             </div>
 
                             <div className="space-y-2">
-                                <Label htmlFor="end_date">
-                                    End Date
-                                </Label>
+                                <Label htmlFor="end_date">End Date</Label>
 
                                 <Input
                                     id="end_date"
@@ -244,23 +212,14 @@ export default function ProjectEdit({
                         </div>
 
                         <div className="flex justify-end gap-3">
-                            <Button
-                                asChild
-                                type="button"
-                                variant="outline"
-                            >
+                            <Button asChild type="button" variant="outline">
                                 <Link href={`/projects/${project.id}`}>
                                     Cancel
                                 </Link>
                             </Button>
 
-                            <Button
-                                type="submit"
-                                disabled={form.processing}
-                            >
-                                {form.processing
-                                    ? 'Saving...'
-                                    : 'Save Changes'}
+                            <Button type="submit" disabled={form.processing}>
+                                {form.processing ? 'Saving...' : 'Save Changes'}
                             </Button>
                         </div>
                     </form>

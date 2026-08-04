@@ -1,10 +1,11 @@
+import { Head, Link, useForm } from '@inertiajs/react';
+import type { FormEvent } from 'react';
+
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
-import { Head, Link, useForm } from '@inertiajs/react';
-import type { FormEvent } from 'react';
 
 type Project = {
     id: number;
@@ -45,11 +46,7 @@ type IssueEditProps = {
     issue: SiteIssue;
 };
 
-export default function IssueEdit({
-    project,
-    drawing,
-    issue,
-}: IssueEditProps) {
+export default function IssueEdit({ project, drawing, issue }: IssueEditProps) {
     const breadcrumbs: BreadcrumbItem[] = [
         {
             title: 'Projects',
@@ -78,9 +75,7 @@ export default function IssueEdit({
         resolution: issue.resolution ?? '',
     });
 
-    const submit = (
-        event: FormEvent<HTMLFormElement>,
-    ) => {
+    const submit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
 
         form.put(
@@ -107,28 +102,20 @@ export default function IssueEdit({
                         </h1>
 
                         <p className="mt-1 text-sm text-muted-foreground">
-                            Record progress and explain how the
-                            issue was resolved.
+                            Record progress and explain how the issue was
+                            resolved.
                         </p>
                     </div>
 
-                    <form
-                        onSubmit={submit}
-                        className="mt-6 space-y-5"
-                    >
+                    <form onSubmit={submit} className="mt-6 space-y-5">
                         <div className="space-y-2">
-                            <Label htmlFor="title">
-                                Issue Title
-                            </Label>
+                            <Label htmlFor="title">Issue Title</Label>
 
                             <Input
                                 id="title"
                                 value={form.data.title}
                                 onChange={(event) =>
-                                    form.setData(
-                                        'title',
-                                        event.target.value,
-                                    )
+                                    form.setData('title', event.target.value)
                                 }
                             />
 
@@ -140,18 +127,13 @@ export default function IssueEdit({
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="location">
-                                Location
-                            </Label>
+                            <Label htmlFor="location">Location</Label>
 
                             <Input
                                 id="location"
                                 value={form.data.location}
                                 onChange={(event) =>
-                                    form.setData(
-                                        'location',
-                                        event.target.value,
-                                    )
+                                    form.setData('location', event.target.value)
                                 }
                             />
 
@@ -164,9 +146,7 @@ export default function IssueEdit({
 
                         <div className="grid gap-4 sm:grid-cols-2">
                             <div className="space-y-2">
-                                <Label htmlFor="priority">
-                                    Priority
-                                </Label>
+                                <Label htmlFor="priority">Priority</Label>
 
                                 <select
                                     id="priority"
@@ -179,18 +159,10 @@ export default function IssueEdit({
                                     }
                                     className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs outline-none"
                                 >
-                                    <option value="low">
-                                        Low
-                                    </option>
-                                    <option value="medium">
-                                        Medium
-                                    </option>
-                                    <option value="high">
-                                        High
-                                    </option>
-                                    <option value="critical">
-                                        Critical
-                                    </option>
+                                    <option value="low">Low</option>
+                                    <option value="medium">Medium</option>
+                                    <option value="high">High</option>
+                                    <option value="critical">Critical</option>
                                 </select>
 
                                 {form.errors.priority && (
@@ -201,9 +173,7 @@ export default function IssueEdit({
                             </div>
 
                             <div className="space-y-2">
-                                <Label htmlFor="status">
-                                    Status
-                                </Label>
+                                <Label htmlFor="status">Status</Label>
 
                                 <select
                                     id="status"
@@ -216,18 +186,12 @@ export default function IssueEdit({
                                     }
                                     className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs outline-none"
                                 >
-                                    <option value="open">
-                                        Open
-                                    </option>
+                                    <option value="open">Open</option>
                                     <option value="in_progress">
                                         In Progress
                                     </option>
-                                    <option value="resolved">
-                                        Resolved
-                                    </option>
-                                    <option value="closed">
-                                        Closed
-                                    </option>
+                                    <option value="resolved">Resolved</option>
+                                    <option value="closed">Closed</option>
                                 </select>
 
                                 {form.errors.status && (
@@ -239,9 +203,7 @@ export default function IssueEdit({
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="description">
-                                Description
-                            </Label>
+                            <Label htmlFor="description">Description</Label>
 
                             <textarea
                                 id="description"
@@ -264,9 +226,7 @@ export default function IssueEdit({
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="resolution">
-                                Resolution
-                            </Label>
+                            <Label htmlFor="resolution">Resolution</Label>
 
                             <textarea
                                 id="resolution"
@@ -283,8 +243,8 @@ export default function IssueEdit({
                             />
 
                             <p className="text-xs text-muted-foreground">
-                                Required when marking the issue as
-                                Resolved or Closed.
+                                Required when marking the issue as Resolved or
+                                Closed.
                             </p>
 
                             {form.errors.resolution && (
@@ -295,11 +255,7 @@ export default function IssueEdit({
                         </div>
 
                         {issue.has_photo && (
-                            <Button
-                                asChild
-                                type="button"
-                                variant="outline"
-                            >
+                            <Button asChild type="button" variant="outline">
                                 <a
                                     href={`/projects/${project.id}/drawings/${drawing.id}/issues/${issue.id}/photo`}
                                     target="_blank"
@@ -311,11 +267,7 @@ export default function IssueEdit({
                         )}
 
                         <div className="flex justify-end gap-3">
-                            <Button
-                                asChild
-                                type="button"
-                                variant="outline"
-                            >
+                            <Button asChild type="button" variant="outline">
                                 <Link
                                     href={`/projects/${project.id}/drawings/${drawing.id}`}
                                 >
@@ -323,13 +275,8 @@ export default function IssueEdit({
                                 </Link>
                             </Button>
 
-                            <Button
-                                type="submit"
-                                disabled={form.processing}
-                            >
-                                {form.processing
-                                    ? 'Saving...'
-                                    : 'Save Issue'}
+                            <Button type="submit" disabled={form.processing}>
+                                {form.processing ? 'Saving...' : 'Save Issue'}
                             </Button>
                         </div>
                     </form>

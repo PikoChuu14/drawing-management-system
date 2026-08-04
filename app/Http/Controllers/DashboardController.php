@@ -64,29 +64,21 @@ class DashboardController extends Controller
                 return [
                     'id' => $revision->id,
                     'revision_code' => $revision->revision_code,
-                    'original_filename' =>
-                        $revision->original_filename,
+                    'original_filename' => $revision->original_filename,
                     'file_size' => $revision->file_size,
 
                     'drawing_id' => $revision->drawing->id,
-                    'drawing_number' =>
-                        $revision->drawing->drawing_number,
-                    'drawing_title' =>
-                        $revision->drawing->title,
+                    'drawing_number' => $revision->drawing->drawing_number,
+                    'drawing_title' => $revision->drawing->title,
 
-                    'project_id' =>
-                        $revision->drawing->project->id,
-                    'project_code' =>
-                        $revision->drawing->project->project_code,
-                    'project_name' =>
-                        $revision->drawing->project->name,
+                    'project_id' => $revision->drawing->project->id,
+                    'project_code' => $revision->drawing->project->project_code,
+                    'project_name' => $revision->drawing->project->name,
 
-                    'uploaded_by' =>
-                        $revision->uploader->name,
-                    'uploaded_at' =>
-                        $revision->created_at->format(
-                            'Y-m-d H:i',
-                        ),
+                    'uploaded_by' => $revision->uploader->name,
+                    'uploaded_at' => $revision->created_at->format(
+                        'Y-m-d H:i',
+                    ),
                 ];
             });
 
@@ -104,10 +96,9 @@ class DashboardController extends Controller
                     ->where('status', 'approved')
                     ->count(),
 
-                'total_revisions' =>
-                    DrawingRevision::query()
-                        ->whereHas('drawing.project')
-                        ->count(),
+                'total_revisions' => DrawingRevision::query()
+                    ->whereHas('drawing.project')
+                    ->count(),
             ],
 
             'drawingStatusCounts' => $drawingStatusCounts,

@@ -1,5 +1,3 @@
-import AppLayout from '@/layouts/app-layout';
-import type { BreadcrumbItem } from '@/types';
 import { Head, Link } from '@inertiajs/react';
 import {
     CheckCircle2,
@@ -8,6 +6,9 @@ import {
     Layers3,
     Plus,
 } from 'lucide-react';
+
+import AppLayout from '@/layouts/app-layout';
+import type { BreadcrumbItem } from '@/types';
 
 type DashboardSummary = {
     total_projects: number;
@@ -68,9 +69,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 function formatStatus(status: string): string {
     return status
         .replaceAll('_', ' ')
-        .replace(/\b\w/g, (character) =>
-            character.toUpperCase(),
-        );
+        .replace(/\b\w/g, (character) => character.toUpperCase());
 }
 
 function formatFileSize(bytes: number): string {
@@ -91,9 +90,10 @@ export default function Dashboard({
     recentProjects,
     recentRevisions,
 }: DashboardProps) {
-    const totalStatusDrawings = Object.values(
-        drawingStatusCounts,
-    ).reduce((total, count) => total + count, 0);
+    const totalStatusDrawings = Object.values(drawingStatusCounts).reduce(
+        (total, count) => total + count,
+        0,
+    );
 
     const statusItems = [
         {
@@ -144,8 +144,7 @@ export default function Dashboard({
                 summary.total_drawings === 0
                     ? 'No drawings yet'
                     : `${Math.round(
-                          (summary.approved_drawings /
-                              summary.total_drawings) *
+                          (summary.approved_drawings / summary.total_drawings) *
                               100,
                       )}% of drawings`,
             icon: CheckCircle2,
@@ -164,8 +163,8 @@ export default function Dashboard({
                         </h1>
 
                         <p className="mt-1 text-sm text-muted-foreground">
-                            Overview of projects, drawings and
-                            revision activity.
+                            Overview of projects, drawings and revision
+                            activity.
                         </p>
                     </div>
 
@@ -242,8 +241,7 @@ export default function Dashboard({
                                             </span>
 
                                             <span className="text-muted-foreground">
-                                                {status.count} (
-                                                {percentage}%)
+                                                {status.count} ({percentage}%)
                                             </span>
                                         </div>
 
@@ -261,8 +259,8 @@ export default function Dashboard({
 
                             {totalStatusDrawings === 0 && (
                                 <p className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
-                                    Register drawings to see their
-                                    status distribution.
+                                    Register drawings to see their status
+                                    distribution.
                                 </p>
                             )}
                         </div>
@@ -276,8 +274,7 @@ export default function Dashboard({
                                 </h2>
 
                                 <p className="mt-1 text-sm text-muted-foreground">
-                                    The latest projects added to the
-                                    system
+                                    The latest projects added to the system
                                 </p>
                             </div>
 
@@ -291,13 +288,11 @@ export default function Dashboard({
 
                         {recentProjects.length === 0 ? (
                             <div className="p-10 text-center">
-                                <p className="font-medium">
-                                    No projects yet
-                                </p>
+                                <p className="font-medium">No projects yet</p>
 
                                 <p className="mt-1 text-sm text-muted-foreground">
-                                    Create a project to begin
-                                    registering drawings.
+                                    Create a project to begin registering
+                                    drawings.
                                 </p>
                             </div>
                         ) : (
@@ -320,17 +315,12 @@ export default function Dashboard({
 
                                         <div className="shrink-0 text-right">
                                             <p className="text-sm capitalize">
-                                                {formatStatus(
-                                                    project.status,
-                                                )}
+                                                {formatStatus(project.status)}
                                             </p>
 
                                             <p className="mt-1 text-xs text-muted-foreground">
-                                                {
-                                                    project.drawing_count
-                                                }{' '}
-                                                {project.drawing_count ===
-                                                1
+                                                {project.drawing_count}{' '}
+                                                {project.drawing_count === 1
                                                     ? 'drawing'
                                                     : 'drawings'}
                                             </p>
@@ -349,20 +339,17 @@ export default function Dashboard({
                         </h2>
 
                         <p className="mt-1 text-sm text-muted-foreground">
-                            Latest drawing files uploaded to the
-                            system
+                            Latest drawing files uploaded to the system
                         </p>
                     </div>
 
                     {recentRevisions.length === 0 ? (
                         <div className="p-10 text-center">
-                            <p className="font-medium">
-                                No revisions uploaded
-                            </p>
+                            <p className="font-medium">No revisions uploaded</p>
 
                             <p className="mt-1 text-sm text-muted-foreground">
-                                Open a drawing and upload its first
-                                revision file.
+                                Open a drawing and upload its first revision
+                                file.
                             </p>
                         </div>
                     ) : (
@@ -393,82 +380,62 @@ export default function Dashboard({
                                 </thead>
 
                                 <tbody>
-                                    {recentRevisions.map(
-                                        (revision) => (
-                                            <tr
-                                                key={revision.id}
-                                                className="border-b last:border-b-0"
-                                            >
-                                                <td className="px-6 py-4">
-                                                    <Link
-                                                        href={`/projects/${revision.project_id}`}
-                                                        className="font-medium hover:underline"
-                                                    >
-                                                        {
-                                                            revision.project_name
-                                                        }
-                                                    </Link>
+                                    {recentRevisions.map((revision) => (
+                                        <tr
+                                            key={revision.id}
+                                            className="border-b last:border-b-0"
+                                        >
+                                            <td className="px-6 py-4">
+                                                <Link
+                                                    href={`/projects/${revision.project_id}`}
+                                                    className="font-medium hover:underline"
+                                                >
+                                                    {revision.project_name}
+                                                </Link>
 
-                                                    <p className="mt-1 font-mono text-xs text-muted-foreground">
-                                                        {
-                                                            revision.project_code
-                                                        }
-                                                    </p>
-                                                </td>
+                                                <p className="mt-1 font-mono text-xs text-muted-foreground">
+                                                    {revision.project_code}
+                                                </p>
+                                            </td>
 
-                                                <td className="px-6 py-4">
-                                                    <Link
-                                                        href={`/projects/${revision.project_id}/drawings/${revision.drawing_id}`}
-                                                        className="font-medium hover:underline"
-                                                    >
-                                                        {
-                                                            revision.drawing_title
-                                                        }
-                                                    </Link>
+                                            <td className="px-6 py-4">
+                                                <Link
+                                                    href={`/projects/${revision.project_id}/drawings/${revision.drawing_id}`}
+                                                    className="font-medium hover:underline"
+                                                >
+                                                    {revision.drawing_title}
+                                                </Link>
 
-                                                    <p className="mt-1 font-mono text-xs text-muted-foreground">
-                                                        {
-                                                            revision.drawing_number
-                                                        }
-                                                    </p>
-                                                </td>
+                                                <p className="mt-1 font-mono text-xs text-muted-foreground">
+                                                    {revision.drawing_number}
+                                                </p>
+                                            </td>
 
-                                                <td className="px-6 py-4 font-mono font-semibold">
-                                                    {
-                                                        revision.revision_code
-                                                    }
-                                                </td>
+                                            <td className="px-6 py-4 font-mono font-semibold">
+                                                {revision.revision_code}
+                                            </td>
 
-                                                <td className="px-6 py-4">
-                                                    <p className="max-w-64 truncate">
-                                                        {
-                                                            revision.original_filename
-                                                        }
-                                                    </p>
+                                            <td className="px-6 py-4">
+                                                <p className="max-w-64 truncate">
+                                                    {revision.original_filename}
+                                                </p>
 
-                                                    <p className="mt-1 text-xs text-muted-foreground">
-                                                        {formatFileSize(
-                                                            revision.file_size,
-                                                        )}
-                                                    </p>
-                                                </td>
+                                                <p className="mt-1 text-xs text-muted-foreground">
+                                                    {formatFileSize(
+                                                        revision.file_size,
+                                                    )}
+                                                </p>
+                                            </td>
 
-                                                <td className="px-6 py-4">
-                                                    <p>
-                                                        {
-                                                            revision.uploaded_by
-                                                        }
-                                                    </p>
+                                            <td className="px-6 py-4">
+                                                <p>{revision.uploaded_by}</p>
 
-                                                    <p className="mt-1 text-xs text-muted-foreground">
-                                                        {
-                                                            revision.uploaded_at
-                                                        }
-                                                    </p>
-                                                </td>
-                                            </tr>
-                                        ),
-                                    )}
+                                                <p className="mt-1 text-xs text-muted-foreground">
+                                                    {revision.uploaded_at}
+                                                </p>
+                                            </td>
+                                        </tr>
+                                    ))}
                                 </tbody>
                             </table>
                         </div>

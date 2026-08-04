@@ -1,18 +1,18 @@
 <?php
 
-use App\Http\Controllers\SiteIssueController;
-use App\Http\Controllers\TrashController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DrawingController;
 use App\Http\Controllers\DrawingRevisionController;
 use App\Http\Controllers\ProjectController;
+use App\Http\Controllers\SiteIssueController;
+use App\Http\Controllers\TrashController;
 use Illuminate\Support\Facades\Route;
 
 Route::inertia('/', 'welcome')->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('dashboard',[DashboardController::class, 'index'],
-        )->name('dashboard');
+    Route::get('dashboard', [DashboardController::class, 'index'],
+    )->name('dashboard');
 
     Route::get('projects', [ProjectController::class, 'index'])
         ->name('projects.index');

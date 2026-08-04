@@ -3,9 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Drawing;
-use App\Models\SiteIssue;
 use App\Models\DrawingRevision;
 use App\Models\Project;
+use App\Models\SiteIssue;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;

@@ -167,9 +167,7 @@ export default function DrawingShow({ project, drawing }: DrawingShowProps) {
                 'Move this drawing to the Trash? Its revision files will be retained.',
             )
         ) {
-            router.delete(
-                `/projects/${project.id}/drawings/${drawing.id}`,
-            );
+            router.delete(`/projects/${project.id}/drawings/${drawing.id}`);
         }
     };
 
@@ -505,18 +503,13 @@ export default function DrawingShow({ project, drawing }: DrawingShowProps) {
                         </h2>
 
                         <p className="mt-1 text-sm text-muted-foreground">
-                            Record a problem found at the site and link it
-                            to this drawing.
+                            Record a problem found at the site and link it to
+                            this drawing.
                         </p>
 
-                        <form
-                            onSubmit={submitIssue}
-                            className="mt-6 space-y-5"
-                        >
+                        <form onSubmit={submitIssue} className="mt-6 space-y-5">
                             <div className="space-y-2">
-                                <Label htmlFor="issue_title">
-                                    Issue Title
-                                </Label>
+                                <Label htmlFor="issue_title">Issue Title</Label>
 
                                 <Input
                                     id="issue_title"
@@ -562,9 +555,7 @@ export default function DrawingShow({ project, drawing }: DrawingShowProps) {
                             </div>
 
                             <div className="space-y-2">
-                                <Label htmlFor="issue_priority">
-                                    Priority
-                                </Label>
+                                <Label htmlFor="issue_priority">Priority</Label>
 
                                 <select
                                     id="issue_priority"
@@ -578,13 +569,9 @@ export default function DrawingShow({ project, drawing }: DrawingShowProps) {
                                     className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                                 >
                                     <option value="low">Low</option>
-                                    <option value="medium">
-                                        Medium
-                                    </option>
+                                    <option value="medium">Medium</option>
                                     <option value="high">High</option>
-                                    <option value="critical">
-                                        Critical
-                                    </option>
+                                    <option value="critical">Critical</option>
                                 </select>
 
                                 {issueForm.errors.priority && (
@@ -621,9 +608,7 @@ export default function DrawingShow({ project, drawing }: DrawingShowProps) {
                             </div>
 
                             <div className="space-y-2">
-                                <Label htmlFor="issue_photo">
-                                    Site Photo
-                                </Label>
+                                <Label htmlFor="issue_photo">Site Photo</Label>
 
                                 <Input
                                     ref={issuePhotoInput}
@@ -633,15 +618,14 @@ export default function DrawingShow({ project, drawing }: DrawingShowProps) {
                                     onChange={(event) =>
                                         issueForm.setData(
                                             'photo',
-                                            event.target.files?.[0] ??
-                                                null,
+                                            event.target.files?.[0] ?? null,
                                         )
                                     }
                                 />
 
                                 <p className="text-xs text-muted-foreground">
-                                    Optional JPG, PNG or WebP image. Maximum
-                                    5 MB.
+                                    Optional JPG, PNG or WebP image. Maximum 5
+                                    MB.
                                 </p>
 
                                 {issueForm.errors.photo && (
@@ -709,10 +693,7 @@ export default function DrawingShow({ project, drawing }: DrawingShowProps) {
                         ) : (
                             <div className="divide-y">
                                 {drawing.issues.map((issue) => (
-                                    <article
-                                        key={issue.id}
-                                        className="p-6"
-                                    >
+                                    <article key={issue.id} className="p-6">
                                         <div className="flex flex-col justify-between gap-4 md:flex-row">
                                             <div className="min-w-0">
                                                 <div className="flex flex-wrap items-center gap-2">
@@ -737,7 +718,7 @@ export default function DrawingShow({ project, drawing }: DrawingShowProps) {
                                                     {issue.title}
                                                 </h3>
 
-                                                <p className="mt-2 whitespace-pre-line text-sm text-muted-foreground">
+                                                <p className="mt-2 text-sm whitespace-pre-line text-muted-foreground">
                                                     {issue.description}
                                                 </p>
 
@@ -756,7 +737,7 @@ export default function DrawingShow({ project, drawing }: DrawingShowProps) {
                                                             Resolution
                                                         </p>
 
-                                                        <p className="mt-1 whitespace-pre-line text-sm text-muted-foreground">
+                                                        <p className="mt-1 text-sm whitespace-pre-line text-muted-foreground">
                                                             {issue.resolution}
                                                         </p>
                                                     </div>

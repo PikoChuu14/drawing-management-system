@@ -110,15 +110,12 @@ class SiteIssueController extends Controller
                     $issue = $drawing->siteIssues()->create([
                         'reported_by' => $user->id,
                         'title' => $validated['title'],
-                        'description' =>
-                            $validated['description'],
-                        'location' =>
-                            $validated['location'] ?? null,
+                        'description' => $validated['description'],
+                        'location' => $validated['location'] ?? null,
                         'priority' => $validated['priority'],
                         'status' => 'open',
                         'photo_path' => $photoPath,
-                        'photo_original_name' =>
-                            $photoOriginalName,
+                        'photo_original_name' => $photoOriginalName,
                     ]);
 
                     $issue->update([
@@ -168,25 +165,20 @@ class SiteIssueController extends Controller
 
             'drawing' => [
                 'id' => $drawing->id,
-                'drawing_number' =>
-                    $drawing->drawing_number,
+                'drawing_number' => $drawing->drawing_number,
                 'title' => $drawing->title,
             ],
 
             'issue' => [
                 'id' => $siteIssue->id,
-                'issue_number' =>
-                    $siteIssue->issue_number,
+                'issue_number' => $siteIssue->issue_number,
                 'title' => $siteIssue->title,
-                'description' =>
-                    $siteIssue->description,
+                'description' => $siteIssue->description,
                 'location' => $siteIssue->location,
                 'priority' => $siteIssue->priority,
                 'status' => $siteIssue->status,
-                'resolution' =>
-                    $siteIssue->resolution,
-                'has_photo' =>
-                    $siteIssue->photo_path !== null,
+                'resolution' => $siteIssue->resolution,
+                'has_photo' => $siteIssue->photo_path !== null,
             ],
         ]);
     }
@@ -262,12 +254,10 @@ class SiteIssueController extends Controller
         $siteIssue->update([
             'title' => $validated['title'],
             'description' => $validated['description'],
-            'location' =>
-                $validated['location'] ?? null,
+            'location' => $validated['location'] ?? null,
             'priority' => $validated['priority'],
             'status' => $validated['status'],
-            'resolution' =>
-                $validated['resolution'] ?? null,
+            'resolution' => $validated['resolution'] ?? null,
 
             'resolved_at' => $isResolved
                 ? ($siteIssue->resolved_at ?? now())
