@@ -9,6 +9,7 @@ use App\Models\SiteIssue;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -126,8 +127,8 @@ class DrawingController extends Controller
                 'description' => $drawing->description,
                 'creator_name' => $drawing->creator->name,
 
-                'revisions' => $revisions
-                    ->map(function (DrawingRevision $revision): array {
+                'revisions' => array_map(
+                    function (DrawingRevision $revision): array {
                         return [
                             'id' => $revision->id,
                             'revision_code' => $revision->revision_code,
@@ -135,10 +136,12 @@ class DrawingController extends Controller
                             'file_extension' => $revision->file_extension,
                             'file_size' => $revision->file_size,
                             'revision_notes' => $revision->revision_notes,
-                            'issued_at' => $revision->issued_at
-                                ?->format('Y-m-d'),
+                            'issued_at' => $revision->issued_at === null
+                                ? null
+                                : Carbon::parse((string) $revision->issued_at)
+                                    ->format('Y-m-d'),
                             'uploaded_by' => $revision->uploader?->name,
-                            'uploaded_at' => $revision->created_at
+                            'uploaded_at' => Carbon::parse((string) $revision->created_at)
                                 ->format('Y-m-d H:i'),
                             'translation_status' =>
                                 $revision->translation_status,
@@ -147,21 +150,27 @@ class DrawingController extends Controller
                             'translation_error' =>
                                 $revision->translation_error,
                             'translation_requested_at' =>
-                                $revision->translation_requested_at
-                                    ?->format('Y-m-d H:i'),
+                                $revision->translation_requested_at === null
+                                    ? null
+                                    : Carbon::parse((string) $revision->translation_requested_at)
+                                        ->format('Y-m-d H:i'),
                             'translation_completed_at' =>
-                                $revision->translation_completed_at
-                                    ?->format('Y-m-d H:i'),
+                                $revision->translation_completed_at === null
+                                    ? null
+                                    : Carbon::parse((string) $revision->translation_completed_at)
+                                        ->format('Y-m-d H:i'),
 
                             'can_preview' => strtolower(
                                 (string) $revision->file_extension,
                             ) === 'pdf',
 
                         ];
-                    }),
+                    },
+                    $revisions->all(),
+                ),
 
-                'issues' => $issues
-                    ->map(function (SiteIssue $issue): array {
+                'issues' => array_map(
+                    function (SiteIssue $issue): array {
                         return [
                             'id' => $issue->id,
                             'issue_number' => $issue->issue_number,
@@ -173,12 +182,16 @@ class DrawingController extends Controller
                             'resolution' => $issue->resolution,
                             'has_photo' => $issue->photo_path !== null,
                             'reported_by' => $issue->reporter->name,
-                            'reported_at' => $issue->created_at
+                            'reported_at' => Carbon::parse((string) $issue->created_at)
                                 ->format('Y-m-d H:i'),
-                            'resolved_at' => $issue->resolved_at
-                                ?->format('Y-m-d H:i'),
+                            'resolved_at' => $issue->resolved_at === null
+                                ? null
+                                : Carbon::parse((string) $issue->resolved_at)
+                                    ->format('Y-m-d H:i'),
                         ];
-                    }),
+                    },
+                    $issues->all(),
+                ),
             ],
         ]);
     }
