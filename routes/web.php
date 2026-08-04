@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ApsViewerController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DrawingController;
 use App\Http\Controllers\DrawingRevisionController;
@@ -39,6 +40,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         'projects/{project}/drawings/{drawing}/revisions',
         [DrawingRevisionController::class, 'store'],
     )->name('revisions.store');
+
+    Route::get(
+        'projects/{project}/drawings/{drawing}/revisions/{revision}/preview',
+        [DrawingRevisionController::class, 'preview'],
+    )->name('revisions.preview');
 
     Route::get(
         'projects/{project}/drawings/{drawing}/revisions/{revision}/download',
@@ -114,6 +120,27 @@ Route::middleware(['auth', 'verified'])->group(function () {
         'projects/{project}/drawings/{drawing}/issues/{siteIssue}/photo',
         [SiteIssueController::class, 'photo'],
     )->name('issues.photo');
+
+    Route::post(
+        'projects/{project}/drawings/{drawing}/revisions/{revision}/aps/process',
+        [
+            DrawingRevisionController::class,
+            'processForPreview',
+        ],
+    )->name('revisions.aps.process');
+
+    Route::patch(
+        'projects/{project}/drawings/{drawing}/revisions/{revision}/aps/status',
+        [
+            DrawingRevisionController::class,
+            'refreshTranslationStatus',
+        ],
+    )->name('revisions.aps.status');
+
+    Route::get(
+        'aps/viewer-token',
+        [ApsViewerController::class, 'token'],
+    )->name('aps.viewer-token');
 
 });
 

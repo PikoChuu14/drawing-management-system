@@ -35,4 +35,17 @@ return [
         ],
     ],
 
+    'aps' => [
+        'client_id' => env('APS_CLIENT_ID'),
+        'client_secret' => env('APS_CLIENT_SECRET'),
+
+        'base_url' => env(
+            'APS_BASE_URL',
+            'https://developer.api.autodesk.com',
+        ),
+
+        'bucket' => env('APS_BUCKET'),
+        'region' => env('APS_REGION', 'US'),
+    ],
+
 ];
