@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { loadApsViewer } from '@/lib/load-aps-viewer';
+import { cn } from '@/lib/utils';
 
 type ViewerTokenResponse = {
     access_token: string;
@@ -10,9 +11,10 @@ type ApsViewerProps = {
     urn: string;
     tokenUrl: string;
     api: string;
+    className?: string;
 };
 
-export default function ApsViewer({ urn, tokenUrl, api }: ApsViewerProps) {
+export default function ApsViewer({ urn, tokenUrl, api, className }: ApsViewerProps) {
     const containerRef = useRef<HTMLDivElement>(null);
 
     const viewerRef = useRef<Autodesk.Viewing.GuiViewer3D | null>(null);
@@ -24,6 +26,11 @@ export default function ApsViewer({ urn, tokenUrl, api }: ApsViewerProps) {
     useEffect(() => {
         let cancelled = false;
         const container = containerRef.current;
+        let resizeObserver: ResizeObserver | null = null;
+
+        if (!container) {
+            return;
+        }
 
         const startViewer = async () => {
             setLoading(true);
@@ -90,6 +97,16 @@ export default function ApsViewer({ urn, tokenUrl, api }: ApsViewerProps) {
                         );
 
                         viewerRef.current = viewer;
+
+                        const viewerWithResize = viewer as Autodesk.Viewing.GuiViewer3D & {
+                            resize?: () => void;
+                        };
+
+                        resizeObserver = new ResizeObserver(() => {
+                            viewerWithResize.resize?.();
+                        });
+
+                        resizeObserver.observe(container);
 
                         const startResult = viewer.start();
 
@@ -179,6 +196,8 @@ export default function ApsViewer({ urn, tokenUrl, api }: ApsViewerProps) {
         return () => {
             cancelled = true;
 
+            resizeObserver?.disconnect();
+
             const viewer = viewerRef.current;
 
             if (viewer) {
@@ -193,7 +212,14 @@ export default function ApsViewer({ urn, tokenUrl, api }: ApsViewerProps) {
     }, [api, tokenUrl, urn]);
 
     return (
-        <div className="relative h-[70vh] min-h-[520px] w-full overflow-hidden rounded-lg bg-neutral-900 md:h-[76vh]">
+        
+            <div
+                className={cn(
+                    'relative min-h-[420px] w-full overflow-hidden rounded-lg bg-neutral-900',
+                    className,
+                )}
+            >
+
             <div ref={containerRef} className="absolute inset-0" />
 
             {loading && !error && (

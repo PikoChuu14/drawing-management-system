@@ -1,7 +1,8 @@
 import { Head, Link, router, useForm } from '@inertiajs/react';
-import { useRef, useState } from 'react';
-import type { FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import ApsViewer from '@/components/aps-viewer';
+import { cn } from '@/lib/utils';
+import { Maximize2, Minimize2 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -263,6 +264,174 @@ export default function DrawingShow({
     const [dwgPreviewRevision, setDwgPreviewRevision] =
         useState<Revision | null>(null);
 
+    type WorkspaceTab =
+    | 'details'
+    | 'revisions'
+    | 'issues';
+
+    const workspaceRef =
+        useRef<HTMLElement>(null);
+
+    const [
+        activeWorkspaceTab,
+        setActiveWorkspaceTab,
+    ] = useState<WorkspaceTab>('details');
+
+    const [
+        isWorkspaceFullscreen,
+        setIsWorkspaceFullscreen,
+    ] = useState(false);
+
+    const [isFocusMode, setIsFocusMode] =
+        useState(false);
+
+    const previewableRevisions =
+    drawing.revisions.filter(
+        (revision) =>
+            revision.can_preview ||
+            (
+                revision.can_view_dwg &&
+                revision.aps_urn !== null
+            ),
+    );
+
+    const selectedWorkspaceRevision =
+        dwgPreviewRevision ?? previewRevision;
+
+    const selectedWorkspaceRevisionId =
+        selectedWorkspaceRevision?.id ?? '';
+
+    const unresolvedIssueCount =
+        drawing.issues.filter(
+            (issue) =>
+                issue.status === 'open' ||
+                issue.status === 'in_progress',
+        ).length;
+
+    const workspaceExpanded =
+        isWorkspaceFullscreen || isFocusMode;
+
+    const selectWorkspaceRevision = (
+        revisionId: number,
+    ) => {
+        const revision =
+            drawing.revisions.find(
+                (item) => item.id === revisionId,
+            );
+
+        if (!revision) {
+            return;
+        }
+
+        if (
+            revision.can_view_dwg &&
+            revision.aps_urn
+        ) {
+            setDwgPreviewRevision(revision);
+            setPreviewRevision(null);
+
+            return;
+        }
+
+        if (revision.can_preview) {
+            setPreviewRevision(revision);
+            setDwgPreviewRevision(null);
+        }
+    };
+
+    useEffect(() => {
+        if (
+            selectedWorkspaceRevision ||
+            previewableRevisions.length === 0
+        ) {
+            return;
+        }
+
+        selectWorkspaceRevision(
+            previewableRevisions[0].id,
+        );
+    }, []);
+
+    useEffect(() => {
+    const handleFullscreenChange = () => {
+        setIsWorkspaceFullscreen(
+            document.fullscreenElement ===
+                workspaceRef.current,
+        );
+    };
+
+    document.addEventListener(
+        'fullscreenchange',
+        handleFullscreenChange,
+    );
+
+    return () => {
+        document.removeEventListener(
+            'fullscreenchange',
+            handleFullscreenChange,
+        );
+    };
+}, []);
+
+    useEffect(() => {
+    if (!isFocusMode) {
+        return;
+    }
+
+    const previousOverflow =
+        document.body.style.overflow;
+
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+        document.body.style.overflow =
+            previousOverflow;
+    };
+}, [isFocusMode]);
+
+    const enterWorkspaceFullscreen =
+    async () => {
+        const workspace =
+            workspaceRef.current;
+
+        if (!workspace) {
+            return;
+        }
+
+        try {
+            if (
+                document.fullscreenEnabled &&
+                workspace.requestFullscreen
+            ) {
+                await workspace.requestFullscreen();
+
+                return;
+            }
+        } catch (error) {
+            console.warn(
+                'Browser fullscreen was unavailable.',
+                error,
+            );
+        }
+
+        /*
+         * Fallback for browsers or embedded situations
+         * where the Fullscreen API is unavailable.
+         */
+        setIsFocusMode(true);
+    };
+
+    const exitWorkspaceFullscreen =
+    async () => {
+        if (document.fullscreenElement) {
+            await document.exitFullscreen();
+
+            return;
+        }
+
+        setIsFocusMode(false);
+    };
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={`${drawing.drawing_number} Revisions`} />
@@ -324,6 +493,391 @@ export default function DrawingShow({
                         </div>
                     </div>
                 </header>
+
+                <section
+                    ref={workspaceRef}
+                    className={cn(
+                        'overflow-hidden rounded-xl border bg-card shadow-sm',
+                        workspaceExpanded &&
+                            'fixed inset-0 z-[100] flex h-[100dvh] w-screen flex-col rounded-none border-0 bg-background',
+                    )}
+                >
+                    <div className="flex flex-col gap-4 border-b p-4 lg:flex-row lg:items-center lg:justify-between">
+                        <div className="min-w-0">
+                            <div className="flex flex-wrap items-center gap-2">
+                                <span className="font-mono text-sm font-semibold">
+                                    {drawing.drawing_number}
+                                </span>
+
+                                <span className="rounded-full border px-2.5 py-1 text-xs capitalize">
+                                    {formatStatus(drawing.status)}
+                                </span>
+
+                                {drawing.discipline && (
+                                    <span className="rounded-full border px-2.5 py-1 text-xs">
+                                        {drawing.discipline}
+                                    </span>
+                                )}
+                            </div>
+
+                            <h2 className="mt-2 truncate text-lg font-semibold">
+                                {drawing.title}
+                            </h2>
+                        </div>
+
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                            <div className="min-w-0 sm:w-72">
+                                <label
+                                    htmlFor="workspace_revision"
+                                    className="sr-only"
+                                >
+                                    Select drawing revision
+                                </label>
+
+                                <select
+                                    id="workspace_revision"
+                                    value={selectedWorkspaceRevisionId}
+                                    onChange={(event) =>
+                                        selectWorkspaceRevision(
+                                            Number(event.target.value),
+                                        )
+                                    }
+                                    disabled={previewableRevisions.length === 0}
+                                    className="h-11 w-full rounded-md border border-input bg-background px-3 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                                >
+                                    {previewableRevisions.length === 0 && (
+                                        <option value="">
+                                            No preview available
+                                        </option>
+                                    )}
+
+                                    {previewableRevisions.map((revision, index) => (
+                                        <option
+                                            key={revision.id}
+                                            value={revision.id}
+                                        >
+                                            Rev {revision.revision_code} —{' '}
+                                            {revision.file_extension?.toUpperCase()}
+                                            {index === 0
+                                                ? ' (Latest viewable)'
+                                                : ''}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <Button
+                                type="button"
+                                variant="outline"
+                                className="h-11 gap-2"
+                                onClick={
+                                    workspaceExpanded
+                                        ? exitWorkspaceFullscreen
+                                        : enterWorkspaceFullscreen
+                                }
+                            >
+                                {workspaceExpanded ? (
+                                    <>
+                                        <Minimize2 className="size-4" />
+                                        Exit Full Screen
+                                    </>
+                                ) : (
+                                    <>
+                                        <Maximize2 className="size-4" />
+                                        Full Screen
+                                    </>
+                                )}
+                            </Button>
+                        </div>
+                    </div>
+
+                    <div
+                        className={cn(
+                            'grid min-h-0 gap-4 p-2 sm:p-4 xl:grid-cols-[minmax(0,1fr)_360px]',
+                            workspaceExpanded && 'flex flex-1 p-0',
+                        )}
+                    >
+                        <div
+                            className={cn(
+                                'min-w-0 overflow-hidden rounded-lg border bg-neutral-950',
+                                workspaceExpanded &&
+                                    'h-full flex-1 rounded-none border-0',
+                            )}
+                        >
+                            {dwgPreviewRevision?.aps_urn ? (
+                                <ApsViewer
+                                    key={dwgPreviewRevision.id}
+                                    urn={dwgPreviewRevision.aps_urn}
+                                    tokenUrl={apsViewer.token_url}
+                                    api={apsViewer.api}
+                                    className={cn(
+                                        'h-[62dvh] min-h-[460px] md:h-[68dvh]',
+                                        workspaceExpanded &&
+                                            'h-full min-h-0 rounded-none',
+                                    )}
+                                />
+                            ) : previewRevision ? (
+                                <iframe
+                                    key={previewRevision.id}
+                                    src={getPreviewUrl(previewRevision.id)}
+                                    title={`PDF preview for revision ${previewRevision.revision_code}`}
+                                    className={cn(
+                                        'h-[62dvh] min-h-[460px] w-full bg-white md:h-[68dvh]',
+                                        workspaceExpanded &&
+                                            'h-full min-h-0',
+                                    )}
+                                />
+                            ) : (
+                                <div className="flex h-[62dvh] min-h-[460px] items-center justify-center p-6 text-center text-white">
+                                    <div>
+                                        <p className="font-medium">
+                                            No drawing preview available
+                                        </p>
+
+                                        <p className="mt-2 max-w-md text-sm text-neutral-400">
+                                            Upload a PDF or process a DWG
+                                            revision to display it here.
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        {!workspaceExpanded && (
+                            <aside className="overflow-hidden rounded-lg border bg-background">
+                                <div
+                                    className="grid grid-cols-3 border-b"
+                                    role="tablist"
+                                    aria-label="Drawing information"
+                                >
+                                    {(
+                                        [
+                                            ['details', 'Details'],
+                                            ['revisions', 'Revisions'],
+                                            ['issues', `Issues (${unresolvedIssueCount})`],
+                                        ] as const
+                                    ).map(([value, label]) => (
+                                        <button
+                                            key={value}
+                                            type="button"
+                                            role="tab"
+                                            aria-selected={
+                                                activeWorkspaceTab === value
+                                            }
+                                            onClick={() =>
+                                                setActiveWorkspaceTab(value)
+                                            }
+                                            className={cn(
+                                                'min-h-12 border-b-2 px-2 text-sm font-medium',
+                                                activeWorkspaceTab === value
+                                                    ? 'border-primary text-foreground'
+                                                    : 'border-transparent text-muted-foreground hover:text-foreground',
+                                            )}
+                                        >
+                                            {label}
+                                        </button>
+                                    ))}
+                                </div>
+
+                                <div className="max-h-[68dvh] overflow-y-auto p-5">
+                                    {activeWorkspaceTab === 'details' && (
+                                        <div className="space-y-5">
+                                            <div>
+                                                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                                                    Drawing
+                                                </p>
+
+                                                <p className="mt-1 font-mono font-semibold">
+                                                    {drawing.drawing_number}
+                                                </p>
+
+                                                <p className="mt-1 text-sm">
+                                                    {drawing.title}
+                                                </p>
+                                            </div>
+
+                                            <dl className="grid grid-cols-2 gap-4 text-sm">
+                                                <div>
+                                                    <dt className="text-muted-foreground">
+                                                        Discipline
+                                                    </dt>
+                                                    <dd className="mt-1 font-medium">
+                                                        {drawing.discipline ??
+                                                            'Not set'}
+                                                    </dd>
+                                                </div>
+
+                                                <div>
+                                                    <dt className="text-muted-foreground">
+                                                        Status
+                                                    </dt>
+                                                    <dd className="mt-1 font-medium capitalize">
+                                                        {formatStatus(
+                                                            drawing.status,
+                                                        )}
+                                                    </dd>
+                                                </div>
+
+                                                <div>
+                                                    <dt className="text-muted-foreground">
+                                                        Revisions
+                                                    </dt>
+                                                    <dd className="mt-1 font-medium">
+                                                        {drawing.revisions.length}
+                                                    </dd>
+                                                </div>
+
+                                                <div>
+                                                    <dt className="text-muted-foreground">
+                                                        Open issues
+                                                    </dt>
+                                                    <dd className="mt-1 font-medium">
+                                                        {unresolvedIssueCount}
+                                                    </dd>
+                                                </div>
+                                            </dl>
+
+                                            {drawing.description && (
+                                                <div>
+                                                    <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                                                        Description
+                                                    </p>
+
+                                                    <p className="mt-2 whitespace-pre-line text-sm text-muted-foreground">
+                                                        {drawing.description}
+                                                    </p>
+                                                </div>
+                                            )}
+
+                                            <p className="text-xs text-muted-foreground">
+                                                Registered by {drawing.creator_name}
+                                            </p>
+                                        </div>
+                                    )}
+
+                                    {activeWorkspaceTab === 'revisions' && (
+                                        <div className="space-y-3">
+                                            {drawing.revisions.map((revision) => (
+                                                <div
+                                                    key={revision.id}
+                                                    className={cn(
+                                                        'rounded-lg border p-4',
+                                                        selectedWorkspaceRevision?.id ===
+                                                            revision.id &&
+                                                            'border-primary bg-primary/5',
+                                                    )}
+                                                >
+                                                    <div className="flex items-start justify-between gap-3">
+                                                        <div className="min-w-0">
+                                                            <p className="font-mono font-semibold">
+                                                                Rev {revision.revision_code}
+                                                            </p>
+
+                                                            <p className="mt-1 truncate text-sm">
+                                                                {
+                                                                    revision.original_filename
+                                                                }
+                                                            </p>
+
+                                                            <p className="mt-1 text-xs uppercase text-muted-foreground">
+                                                                {revision.file_extension ??
+                                                                    'File'}{' '}
+                                                                ·{' '}
+                                                                {formatFileSize(
+                                                                    revision.file_size,
+                                                                )}
+                                                            </p>
+                                                        </div>
+
+                                                        {(revision.can_preview ||
+                                                            revision.can_view_dwg) && (
+                                                            <Button
+                                                                type="button"
+                                                                size="sm"
+                                                                variant="outline"
+                                                                onClick={() =>
+                                                                    selectWorkspaceRevision(
+                                                                        revision.id,
+                                                                    )
+                                                                }
+                                                            >
+                                                                View
+                                                            </Button>
+                                                        )}
+                                                    </div>
+
+                                                    {revision.revision_notes && (
+                                                        <p className="mt-3 text-sm text-muted-foreground">
+                                                            {revision.revision_notes}
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+
+                                    {activeWorkspaceTab === 'issues' && (
+                                        <div className="space-y-3">
+                                            {drawing.issues.length === 0 ? (
+                                                <p className="rounded-lg border border-dashed p-5 text-center text-sm text-muted-foreground">
+                                                    No site issues are linked to this drawing.
+                                                </p>
+                                            ) : (
+                                                drawing.issues.map((issue) => (
+                                                    <div
+                                                        key={issue.id}
+                                                        className="rounded-lg border p-4"
+                                                    >
+                                                        <div className="flex flex-wrap gap-2">
+                                                            <span className="font-mono text-xs font-semibold">
+                                                                {issue.issue_number}
+                                                            </span>
+
+                                                            <span className="rounded-full border px-2 py-0.5 text-xs capitalize">
+                                                                {formatStatus(
+                                                                    issue.priority,
+                                                                )}
+                                                            </span>
+
+                                                            <span className="rounded-full border px-2 py-0.5 text-xs capitalize">
+                                                                {formatStatus(
+                                                                    issue.status,
+                                                                )}
+                                                            </span>
+                                                        </div>
+
+                                                        <p className="mt-3 text-sm font-medium">
+                                                            {issue.title}
+                                                        </p>
+
+                                                        {issue.location && (
+                                                            <p className="mt-2 text-xs text-muted-foreground">
+                                                                {issue.location}
+                                                            </p>
+                                                        )}
+
+                                                        <Button
+                                                            asChild
+                                                            size="sm"
+                                                            variant="outline"
+                                                            className="mt-3"
+                                                        >
+                                                            <Link
+                                                                href={`/projects/${project.id}/drawings/${drawing.id}/issues/${issue.id}/edit`}
+                                                            >
+                                                                Open Issue
+                                                            </Link>
+                                                        </Button>
+                                                    </div>
+                                                ))
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                            </aside>
+                        )}
+                    </div>
+                </section>
 
                 <div className="grid gap-6 xl:grid-cols-[380px_1fr]">
                     <section className="rounded-xl border bg-card p-6 shadow-sm">
@@ -773,109 +1327,6 @@ export default function DrawingShow({
                     </section>
                 </div>
 
-                {dwgPreviewRevision && dwgPreviewRevision.aps_urn && (
-                    <section
-                        id="dwg-preview"
-                        className="scroll-mt-6 overflow-hidden rounded-xl border bg-card shadow-sm"
-                    >
-                        <div className="flex flex-col justify-between gap-4 border-b p-4 sm:flex-row sm:items-center md:p-6">
-                            <div className="min-w-0">
-                                <p className="text-sm text-muted-foreground">
-                                    Interactive DWG Preview
-                                </p>
-
-                                <h2 className="mt-1 truncate text-lg font-semibold">
-                                    Revision {dwgPreviewRevision.revision_code}{' '}
-                                    — {dwgPreviewRevision.original_filename}
-                                </h2>
-
-                                <p className="mt-1 text-xs text-muted-foreground">
-                                    Use the Viewer controls to zoom, pan, select
-                                    sheets, and inspect the translated drawing.
-                                </p>
-                            </div>
-
-                            <div className="flex shrink-0 flex-wrap gap-2">
-                                <Button asChild size="sm" variant="outline">
-                                    <a
-                                        href={`/projects/${project.id}/drawings/${drawing.id}/revisions/${dwgPreviewRevision.id}/download`}
-                                    >
-                                        Download Original
-                                    </a>
-                                </Button>
-
-                                <Button
-                                    type="button"
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() => setDwgPreviewRevision(null)}
-                                >
-                                    Close Viewer
-                                </Button>
-                            </div>
-                        </div>
-
-                        <div className="bg-muted/30 p-2 sm:p-4">
-                            <ApsViewer
-                                key={dwgPreviewRevision.id}
-                                urn={dwgPreviewRevision.aps_urn}
-                                tokenUrl={apsViewer.token_url}
-                                api={apsViewer.api}
-                            />
-                        </div>
-                    </section>
-                )}
-
-                {previewRevision && (
-                    <section
-                        id="pdf-preview"
-                        className="scroll-mt-6 overflow-hidden rounded-xl border bg-card shadow-sm"
-                    >
-                        <div className="flex flex-col justify-between gap-4 border-b p-4 sm:flex-row sm:items-center md:p-6">
-                            <div className="min-w-0">
-                                <p className="text-sm text-muted-foreground">
-                                    PDF Preview
-                                </p>
-
-                                <h2 className="mt-1 truncate text-lg font-semibold">
-                                    Revision {previewRevision.revision_code} —{' '}
-                                    {previewRevision.original_filename}
-                                </h2>
-                            </div>
-
-                            <div className="flex shrink-0 flex-wrap gap-2">
-                                <Button asChild size="sm" variant="outline">
-                                    <a
-                                        href={getPreviewUrl(previewRevision.id)}
-                                        target="_blank"
-                                        rel="noreferrer"
-                                    >
-                                        Open in New Tab
-                                    </a>
-                                </Button>
-
-                                <Button
-                                    type="button"
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() => setPreviewRevision(null)}
-                                >
-                                    Close Preview
-                                </Button>
-                            </div>
-                        </div>
-
-                        <div className="bg-muted/30 p-2 sm:p-4">
-                            <iframe
-                                key={previewRevision.id}
-                                src={getPreviewUrl(previewRevision.id)}
-                                title={`PDF preview for revision ${previewRevision.revision_code}`}
-                                className="h-[65vh] min-h-[420px] w-full rounded-lg border bg-white md:h-[75vh]"
-                            />
-                        </div>
-                    </section>
-                )}
-
                 <section className="grid gap-6 xl:grid-cols-[380px_1fr]">
                     <div className="rounded-xl border bg-card p-6 shadow-sm">
                         <h2 className="text-lg font-semibold">
@@ -994,7 +1445,8 @@ export default function DrawingShow({
                                     ref={issuePhotoInput}
                                     id="issue_photo"
                                     type="file"
-                                    accept=".jpg,.jpeg,.png,.webp"
+                                    accept="image/*"
+                                    capture="environment"
                                     onChange={(event) =>
                                         issueForm.setData(
                                             'photo',
