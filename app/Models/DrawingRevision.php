@@ -27,6 +27,14 @@ class DrawingRevision extends Model
         'file_size',
         'revision_notes',
         'issued_at',
+        'aps_object_key',
+        'aps_object_id',
+        'aps_urn',
+        'translation_status',
+        'translation_progress',
+        'translation_error',
+        'translation_requested_at',
+        'translation_completed_at',
     ];
 
     protected function casts(): array
@@ -34,6 +42,9 @@ class DrawingRevision extends Model
         return [
             'issued_at' => 'date',
             'file_size' => 'integer',
+
+            'translation_requested_at' => 'datetime',
+            'translation_completed_at' => 'datetime',
         ];
     }
 

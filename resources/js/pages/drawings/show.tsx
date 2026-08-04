@@ -25,6 +25,17 @@ type Revision = {
     uploaded_by: string;
     uploaded_at: string;
     can_preview: boolean;
+    translation_status:
+        | 'not_started'
+        | 'uploading'
+        | 'processing'
+        | 'ready'
+        | 'failed';
+
+    translation_progress: string | null;
+    translation_error: string | null;
+    translation_requested_at: string | null;
+    translation_completed_at: string | null;
 };
 
 type Drawing = {
@@ -177,6 +188,74 @@ export default function DrawingShow({ project, drawing }: DrawingShowProps) {
         ) {
             router.delete(`/projects/${project.id}/drawings/${drawing.id}`);
         }
+    };
+
+    const [
+        processingRevisionId,
+        setProcessingRevisionId,
+    ] = useState<number | null>(null);
+
+    const [apsError, setApsError] =
+        useState<string | null>(null);
+
+    const processDwg = (revision: Revision) => {
+        setApsError(null);
+
+        router.post(
+            `/projects/${project.id}/drawings/${drawing.id}/revisions/${revision.id}/aps/process`,
+            {},
+            {
+                preserveScroll: true,
+
+                onStart: () => {
+                    setProcessingRevisionId(
+                        revision.id,
+                    );
+                },
+
+                onError: (errors) => {
+                    setApsError(
+                        errors.aps ??
+                            'The DWG could not be processed.',
+                    );
+                },
+
+                onFinish: () => {
+                    setProcessingRevisionId(null);
+                },
+            },
+        );
+    };
+
+    const refreshDwgStatus = (
+        revision: Revision,
+    ) => {
+        setApsError(null);
+
+        router.patch(
+            `/projects/${project.id}/drawings/${drawing.id}/revisions/${revision.id}/aps/status`,
+            {},
+            {
+                preserveScroll: true,
+
+                onStart: () => {
+                    setProcessingRevisionId(
+                        revision.id,
+                    );
+                },
+
+                onError: (errors) => {
+                    setApsError(
+                        errors.aps ??
+                            'The translation status could not be refreshed.',
+                    );
+                },
+
+                onFinish: () => {
+                    setProcessingRevisionId(null);
+                },
+            },
+        );
     };
 
     return (
@@ -387,6 +466,12 @@ export default function DrawingShow({ project, drawing }: DrawingShowProps) {
                                 Revision History
                             </h2>
 
+                            {apsError && (
+                                <div className="mt-4 rounded-lg border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive">
+                                    {apsError}
+                                </div>
+                            )}
+
                             <p className="mt-1 text-sm text-muted-foreground">
                                 {drawing.revisions.length}{' '}
                                 {drawing.revisions.length === 1
@@ -465,6 +550,34 @@ export default function DrawingShow({ project, drawing }: DrawingShowProps) {
                                                             revision.file_size,
                                                         )}
                                                     </p>
+
+                                                    {revision.file_extension?.toLowerCase() ===
+                                                        'dwg' && (
+                                                        <div className="mt-2 text-xs">
+                                                            <p className="capitalize">
+                                                                APS:{' '}
+                                                                {formatStatus(
+                                                                    revision.translation_status,
+                                                                )}
+                                                            </p>
+
+                                                            {revision.translation_progress && (
+                                                                <p className="mt-1 text-muted-foreground">
+                                                                    {
+                                                                        revision.translation_progress
+                                                                    }
+                                                                </p>
+                                                            )}
+
+                                                            {revision.translation_error && (
+                                                                <p className="mt-1 max-w-72 text-red-600">
+                                                                    {
+                                                                        revision.translation_error
+                                                                    }
+                                                                </p>
+                                                            )}
+                                                        </div>
+                                                    )}
                                                 </td>
 
                                                 <td className="px-6 py-4 text-muted-foreground">
@@ -514,6 +627,66 @@ export default function DrawingShow({ project, drawing }: DrawingShowProps) {
                                                                     : 'Preview'}
                                                             </Button>
                                                         )}
+
+                                                        {revision.file_extension?.toLowerCase() ===
+                                                            'dwg' &&
+                                                            (revision.translation_status ===
+                                                                'not_started' ||
+                                                                revision.translation_status ===
+                                                                    'failed') && (
+                                                                <Button
+                                                                    type="button"
+                                                                    size="sm"
+                                                                    variant="outline"
+                                                                    disabled={
+                                                                        processingRevisionId ===
+                                                                        revision.id
+                                                                    }
+                                                                    onClick={() =>
+                                                                        processDwg(revision)
+                                                                    }
+                                                                >
+                                                                    {processingRevisionId === revision.id
+                                                                        ? 'Processing...'
+                                                                        : revision.translation_status ===
+                                                                            'failed'
+                                                                          ? 'Retry Processing'
+                                                                          : 'Process for Preview'}
+                                                                </Button>
+                                                            )}
+
+                                                        {revision.file_extension?.toLowerCase() ===
+                                                            'dwg' &&
+                                                            (revision.translation_status ===
+                                                                'processing' ||
+                                                                revision.translation_status ===
+                                                                    'uploading') && (
+                                                                <Button
+                                                                    type="button"
+                                                                    size="sm"
+                                                                    variant="outline"
+                                                                    disabled={
+                                                                        processingRevisionId ===
+                                                                        revision.id
+                                                                    }
+                                                                    onClick={() =>
+                                                                        refreshDwgStatus(revision)
+                                                                    }
+                                                                >
+                                                                    {processingRevisionId === revision.id
+                                                                        ? 'Checking...'
+                                                                        : 'Refresh Status'}
+                                                                </Button>
+                                                            )}
+
+                                                        {revision.file_extension?.toLowerCase() ===
+                                                            'dwg' &&
+                                                            revision.translation_status ===
+                                                                'ready' && (
+                                                                <span className="inline-flex h-8 items-center rounded-md border px-3 text-xs font-medium">
+                                                                    Ready for Viewer
+                                                                </span>
+                                                            )}
 
                                                         <Button
                                                             asChild

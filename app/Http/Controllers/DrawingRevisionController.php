@@ -12,6 +12,8 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use App\Services\ApsService;
+use Illuminate\Support\Str;
 use Throwable;
 
 class DrawingRevisionController extends Controller
@@ -202,5 +204,224 @@ class DrawingRevisionController extends Controller
         );
 
         return $response;
+    }
+
+    /**
+     * Upload a DWG revision to APS and request translation.
+     */
+    public function processForPreview(
+        Project $project,
+        Drawing $drawing,
+        DrawingRevision $revision,
+        ApsService $apsService,
+    ): RedirectResponse {
+        $this->ensureRevisionBelongsToDrawing(
+            $project,
+            $drawing,
+            $revision,
+        );
+
+        abort_unless(
+            strtolower(
+                (string) $revision->file_extension,
+            ) === 'dwg',
+            422,
+            'Only DWG files can use APS processing.',
+        );
+
+        $disk = Storage::disk('local');
+
+        abort_unless(
+            $disk->exists($revision->file_path),
+            404,
+            'The original DWG file could not be found.',
+        );
+
+        if ($revision->translation_status === 'ready') {
+            return to_route(
+                'drawings.show',
+                [$project, $drawing],
+            );
+        }
+
+        try {
+            $objectId = $revision->aps_object_id;
+
+            /*
+            * Reuse an object that was already uploaded when a
+            * previous translation request failed.
+            */
+            if (
+                ! is_string($objectId)
+                || $objectId === ''
+            ) {
+                $revision->update([
+                    'translation_status' => 'uploading',
+                    'translation_progress' => null,
+                    'translation_error' => null,
+                ]);
+
+                $extension = strtolower(
+                    (string) $revision->file_extension,
+                );
+
+                $objectKey = sprintf(
+                    'drawing-%d-revision-%d-%s.%s',
+                    $drawing->id,
+                    $revision->id,
+                    Str::uuid()->toString(),
+                    $extension,
+                );
+
+                $upload = $apsService->uploadObject(
+                    $disk->path($revision->file_path),
+                    $objectKey,
+                    'application/octet-stream',
+                );
+
+                $objectId = $upload['object_id'];
+
+                $revision->update([
+                    'aps_object_key' =>
+                        $upload['object_key'],
+
+                    'aps_object_id' => $objectId,
+
+                    'translation_status' => 'processing',
+                ]);
+            }
+
+            $translation = $apsService->startTranslation(
+                $objectId,
+            );
+
+            $revision->update([
+                'aps_urn' => $translation['urn'],
+
+                'translation_status' => 'processing',
+
+                'translation_progress' =>
+                    'Translation requested',
+
+                'translation_error' => null,
+
+                'translation_requested_at' => now(),
+
+                'translation_completed_at' => null,
+            ]);
+        } catch (Throwable $exception) {
+            $revision->update([
+                'translation_status' => 'failed',
+
+                'translation_error' => Str::limit(
+                    $exception->getMessage(),
+                    2000,
+                ),
+            ]);
+
+            return to_route(
+                'drawings.show',
+                [$project, $drawing],
+            )->withErrors([
+                'aps' => $exception->getMessage(),
+            ]);
+        }
+
+        return to_route(
+            'drawings.show',
+            [$project, $drawing],
+        );
+    }
+
+    /**
+     * Refresh the APS translation status.
+     */
+    public function refreshTranslationStatus(
+        Project $project,
+        Drawing $drawing,
+        DrawingRevision $revision,
+        ApsService $apsService,
+    ): RedirectResponse {
+        $this->ensureRevisionBelongsToDrawing(
+            $project,
+            $drawing,
+            $revision,
+        );
+
+        abort_unless(
+            strtolower(
+                (string) $revision->file_extension,
+            ) === 'dwg',
+            422,
+        );
+
+        abort_unless(
+            is_string($revision->aps_urn)
+                && $revision->aps_urn !== '',
+            422,
+            'This revision has not been submitted to APS.',
+        );
+
+        try {
+            $manifest = $apsService->translationStatus(
+                $revision->aps_urn,
+            );
+
+            $applicationStatus = match (
+                $manifest['status']
+            ) {
+                'success' => 'ready',
+                'failed' => 'failed',
+
+                'pending',
+                'inprogress' => 'processing',
+
+                default => 'processing',
+            };
+
+            $revision->update([
+                'translation_status' =>
+                    $applicationStatus,
+
+                'translation_progress' =>
+                    $manifest['progress'],
+
+                'translation_error' =>
+                    $manifest['error'],
+
+                'translation_completed_at' =>
+                    $applicationStatus === 'ready'
+                        ? now()
+                        : null,
+            ]);
+        } catch (Throwable $exception) {
+            return to_route(
+                'drawings.show',
+                [$project, $drawing],
+            )->withErrors([
+                'aps' => $exception->getMessage(),
+            ]);
+        }
+
+        return to_route(
+            'drawings.show',
+            [$project, $drawing],
+        );
+    }
+
+    private function ensureRevisionBelongsToDrawing(
+        Project $project,
+        Drawing $drawing,
+        DrawingRevision $revision,
+    ): void {
+        abort_unless(
+            $drawing->project_id === $project->id,
+            404,
+        );
+
+        abort_unless(
+            $revision->drawing_id === $drawing->id,
+            404,
+        );
     }
 }

@@ -120,6 +120,22 @@ Route::middleware(['auth', 'verified'])->group(function () {
         [SiteIssueController::class, 'photo'],
     )->name('issues.photo');
 
+    Route::post(
+        'projects/{project}/drawings/{drawing}/revisions/{revision}/aps/process',
+        [
+            DrawingRevisionController::class,
+            'processForPreview',
+        ],
+    )->name('revisions.aps.process');
+
+    Route::patch(
+        'projects/{project}/drawings/{drawing}/revisions/{revision}/aps/status',
+        [
+            DrawingRevisionController::class,
+            'refreshTranslationStatus',
+        ],
+    )->name('revisions.aps.status');
+
 });
 
 require __DIR__.'/settings.php';
