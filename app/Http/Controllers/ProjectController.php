@@ -8,6 +8,7 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -276,6 +277,102 @@ class ProjectController extends Controller
         }
 
         $user->projects()->create($validated);
+
+        return to_route('projects.index');
+    }
+
+    /**
+     * Display the project edit form.
+     */
+    public function edit(Project $project): Response
+    {
+        return Inertia::render('projects/edit', [
+            'project' => [
+                'id' => $project->id,
+                'project_code' => $project->project_code,
+                'name' => $project->name,
+                'description' => $project->description,
+                'status' => $project->status,
+                'start_date' => $project->start_date?->format('Y-m-d'),
+                'end_date' => $project->end_date?->format('Y-m-d'),
+            ],
+        ]);
+    }
+
+    /**
+     * Update a project.
+     */
+    public function update(
+        Request $request,
+        Project $project,
+    ): RedirectResponse {
+        $validated = $request->validate([
+            'project_code' => [
+                'required',
+                'string',
+                'max:50',
+                Rule::unique('projects', 'project_code')
+                    ->ignore($project),
+            ],
+
+            'name' => [
+                'required',
+                'string',
+                'max:255',
+            ],
+
+            'description' => [
+                'nullable',
+                'string',
+                'max:2000',
+            ],
+
+            'status' => [
+                'required',
+                Rule::in([
+                    'planned',
+                    'active',
+                    'on_hold',
+                    'completed',
+                    'archived',
+                ]),
+            ],
+
+            'start_date' => [
+                'nullable',
+                'date',
+            ],
+
+            'end_date' => [
+                'nullable',
+                'date',
+                'after_or_equal:start_date',
+            ],
+        ]);
+
+        $project->update($validated);
+
+        return to_route('projects.show', $project);
+    }
+
+    /**
+     * Archive a project without deleting it.
+     */
+    public function archive(Project $project): RedirectResponse
+    {
+        $project->update([
+            'status' => 'archived',
+        ]);
+
+        return to_route('projects.show', $project);
+    }
+
+    /**
+     * Move a project to the Trash.
+     */
+    public function destroy(Project $project): RedirectResponse
+    {
+        $project->delete();
 
         return to_route('projects.index');
     }

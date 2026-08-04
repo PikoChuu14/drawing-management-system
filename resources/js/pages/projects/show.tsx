@@ -115,6 +115,26 @@ export default function ProjectShow({ project, filters }: ProjectShowProps) {
         return status.replaceAll('_', ' ');
     };
 
+    const archiveProject = () => {
+        if (
+            window.confirm(
+                'Archive this project? Its drawings will remain available.',
+            )
+        ) {
+            router.patch(`/projects/${project.id}/archive`);
+        }
+    };
+
+    const deleteProject = () => {
+        if (
+            window.confirm(
+                'Move this project to the Trash? You can restore it later.',
+            )
+        ) {
+            router.delete(`/projects/${project.id}`);
+        }
+    };
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={`${project.project_code} Drawings`} />
@@ -137,6 +157,33 @@ export default function ProjectShow({ project, filters }: ProjectShowProps) {
                             <h1 className="mt-1 text-2xl font-semibold">
                                 {project.name}
                             </h1>
+
+                            <div className="mt-3 flex flex-wrap gap-2">
+                                <Button asChild variant="outline">
+                                    <Link href={`/projects/${project.id}/edit`}>
+                                        Edit Project
+                                    </Link>
+                                </Button>
+
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    disabled={project.status === 'archived'}
+                                    onClick={archiveProject}
+                                >
+                                    {project.status === 'archived'
+                                        ? 'Archived'
+                                        : 'Archive'}
+                                </Button>
+
+                                <Button
+                                    type="button"
+                                    variant="destructive"
+                                    onClick={deleteProject}
+                                >
+                                    Delete
+                                </Button>
+                            </div>
 
                             {project.description && (
                                 <p className="mt-2 max-w-3xl text-sm text-muted-foreground">
