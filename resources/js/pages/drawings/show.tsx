@@ -1,5 +1,6 @@
 import { Head, Link, router, useForm } from '@inertiajs/react';
-import { useRef, useState, type FormEvent, } from 'react';
+import { useRef, useState } from 'react';
+import type { FormEvent } from 'react';
 import ApsViewer from '@/components/aps-viewer';
 
 import { Button } from '@/components/ui/button';

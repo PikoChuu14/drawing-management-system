@@ -1,5 +1,5 @@
-import { loadApsViewer } from '@/lib/load-aps-viewer';
 import { useEffect, useRef, useState } from 'react';
+import { loadApsViewer } from '@/lib/load-aps-viewer';
 
 type ViewerTokenResponse = {
     access_token: string;
@@ -33,6 +33,7 @@ export default function ApsViewer({
 
     useEffect(() => {
         let cancelled = false;
+        const container = containerRef.current;
 
         const startViewer = async () => {
             setLoading(true);
@@ -41,10 +42,7 @@ export default function ApsViewer({
             try {
                 await loadApsViewer();
 
-                if (
-                    cancelled ||
-                    !containerRef.current
-                ) {
+                if (cancelled || !container) {
                     return;
                 }
 
@@ -97,16 +95,13 @@ export default function ApsViewer({
                         getAccessToken,
                     },
                     () => {
-                        if (
-                            cancelled ||
-                            !containerRef.current
-                        ) {
+                        if (cancelled || !container) {
                             return;
                         }
 
                         const viewer =
                             new Autodesk.Viewing.GuiViewer3D(
-                                containerRef.current,
+                                container,
                                 {
                                     extensions: [
                                         'Autodesk.DocumentBrowser',
@@ -227,14 +222,15 @@ export default function ApsViewer({
         return () => {
             cancelled = true;
 
-            if (viewerRef.current) {
-                viewerRef.current.finish();
+            const viewer = viewerRef.current;
+
+            if (viewer) {
+                viewer.finish();
                 viewerRef.current = null;
             }
 
-            if (containerRef.current) {
-                containerRef.current.innerHTML =
-                    '';
+            if (container) {
+                container.innerHTML = '';
             }
         };
     }, [api, tokenUrl, urn]);
