@@ -48,6 +48,193 @@ final class ApsService
     }
 
     /**
+ * Ensure that the application's APS bucket exists.
+ *
+ * @return array{
+ *     bucket_key: string,
+ *     policy_key: string,
+ *     created: bool
+ * }
+ */
+public function ensureBucket(): array
+{
+    $bucketKey = $this->bucketKey();
+    $baseUrl = $this->baseUrl();
+
+    $token = $this->internalToken()['access_token'];
+
+    /*
+     * First check whether this application already owns
+     * a bucket with the configured key.
+     */
+    $detailsResponse = Http::withToken($token)
+        ->acceptJson()
+        ->connectTimeout(10)
+        ->timeout(30)
+        ->get(
+            "{$baseUrl}/oss/v2/buckets/"
+            .rawurlencode($bucketKey)
+            .'/details',
+        );
+
+    if ($detailsResponse->successful()) {
+        return [
+            'bucket_key' => $bucketKey,
+            'policy_key' => (string) (
+                $detailsResponse->json('policyKey')
+                ?? 'unknown'
+            ),
+            'created' => false,
+        ];
+    }
+
+    /*
+     * Continue to bucket creation only when APS confirms
+     * that the bucket does not exist for this application.
+     */
+    if ($detailsResponse->status() !== 404) {
+        throw new RuntimeException(
+            'APS bucket lookup failed '
+            ."({$detailsResponse->status()}): "
+            .$this->responseError($detailsResponse),
+        );
+    }
+
+    $region = strtoupper(
+        (string) config(
+            'services.aps.region',
+            'US',
+        ),
+    );
+
+    $createResponse = Http::withToken($token)
+        ->acceptJson()
+        ->withHeaders([
+            'x-ads-region' => $region,
+        ])
+        ->connectTimeout(10)
+        ->timeout(30)
+        ->post(
+            "{$baseUrl}/oss/v2/buckets",
+            [
+                'bucketKey' => $bucketKey,
+
+                /*
+                 * Persistent objects remain available
+                 * until explicitly deleted.
+                 */
+                'policyKey' => 'persistent',
+            ],
+        );
+
+    if ($createResponse->status() === 409) {
+        throw new RuntimeException(
+            "The APS bucket key '{$bucketKey}' is already "
+            .'being used. Choose another globally unique '
+            .'APS_BUCKET value in .env.',
+        );
+    }
+
+    if ($createResponse->failed()) {
+        throw new RuntimeException(
+            'APS bucket creation failed '
+            ."({$createResponse->status()}): "
+            .$this->responseError($createResponse),
+        );
+    }
+
+    return [
+        'bucket_key' => (string) (
+            $createResponse->json('bucketKey')
+            ?? $bucketKey
+        ),
+
+        'policy_key' => (string) (
+            $createResponse->json('policyKey')
+            ?? 'persistent'
+        ),
+
+        'created' => true,
+    ];
+}
+
+/**
+ * Get and validate the configured APS bucket key.
+ */
+private function bucketKey(): string
+{
+    $bucketKey = trim(
+        (string) config(
+            'services.aps.bucket',
+            '',
+        ),
+    );
+
+    if ($bucketKey === '') {
+        throw new RuntimeException(
+            'APS_BUCKET is missing from the .env file.',
+        );
+    }
+
+    if (
+        preg_match(
+            '/^[a-z0-9_-]{3,128}$/',
+            $bucketKey,
+        ) !== 1
+    ) {
+        throw new RuntimeException(
+            'APS_BUCKET must contain 3 to 128 lowercase '
+            .'letters, numbers, hyphens, or underscores.',
+        );
+    }
+
+    return $bucketKey;
+}
+
+    /**
+     * Get the configured APS API base URL.
+     */
+    private function baseUrl(): string
+    {
+        return rtrim(
+            (string) config(
+                'services.aps.base_url',
+                'https://developer.api.autodesk.com',
+            ),
+            '/',
+        );
+    }
+
+    /**
+     * Extract a useful error message from an APS response.
+     */
+    private function responseError(
+        \Illuminate\Http\Client\Response $response,
+    ): string {
+        $possibleMessages = [
+            $response->json('reason'),
+            $response->json('diagnostic'),
+            $response->json('error_description'),
+            $response->json('error'),
+        ];
+
+        foreach ($possibleMessages as $message) {
+            if (
+                is_string($message)
+                && trim($message) !== ''
+            ) {
+                return $message;
+            }
+        }
+
+        $body = trim($response->body());
+
+        return $body !== ''
+            ? $body
+            : 'Unknown APS error.';
+    }
+
+    /**
      * Request and cache an APS server-to-server token.
      *
      * @param  list<string>  $scopes
@@ -68,13 +255,7 @@ final class ApsService
             '',
         );
 
-        $baseUrl = rtrim(
-            (string) config(
-                'services.aps.base_url',
-                'https://developer.api.autodesk.com',
-            ),
-            '/',
-        );
+        $baseUrl = $this->baseUrl();
 
         if ($clientId === '' || $clientSecret === '') {
             throw new RuntimeException(
