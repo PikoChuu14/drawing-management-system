@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use RuntimeException;
@@ -48,148 +49,148 @@ final class ApsService
     }
 
     /**
- * Ensure that the application's APS bucket exists.
- *
- * @return array{
- *     bucket_key: string,
- *     policy_key: string,
- *     created: bool
- * }
- */
-public function ensureBucket(): array
-{
-    $bucketKey = $this->bucketKey();
-    $baseUrl = $this->baseUrl();
-
-    $token = $this->internalToken()['access_token'];
-
-    /*
-     * First check whether this application already owns
-     * a bucket with the configured key.
+     * Ensure that the application's APS bucket exists.
+     *
+     * @return array{
+     *     bucket_key: string,
+     *     policy_key: string,
+     *     created: bool
+     * }
      */
-    $detailsResponse = Http::withToken($token)
-        ->acceptJson()
-        ->connectTimeout(10)
-        ->timeout(30)
-        ->get(
-            "{$baseUrl}/oss/v2/buckets/"
-            .rawurlencode($bucketKey)
-            .'/details',
+    public function ensureBucket(): array
+    {
+        $bucketKey = $this->bucketKey();
+        $baseUrl = $this->baseUrl();
+
+        $token = $this->internalToken()['access_token'];
+
+        /*
+         * First check whether this application already owns
+         * a bucket with the configured key.
+         */
+        $detailsResponse = Http::withToken($token)
+            ->acceptJson()
+            ->connectTimeout(10)
+            ->timeout(30)
+            ->get(
+                "{$baseUrl}/oss/v2/buckets/"
+                .rawurlencode($bucketKey)
+                .'/details',
+            );
+
+        if ($detailsResponse->successful()) {
+            return [
+                'bucket_key' => $bucketKey,
+                'policy_key' => (string) (
+                    $detailsResponse->json('policyKey')
+                    ?? 'unknown'
+                ),
+                'created' => false,
+            ];
+        }
+
+        /*
+         * Continue to bucket creation only when APS confirms
+         * that the bucket does not exist for this application.
+         */
+        if ($detailsResponse->status() !== 404) {
+            throw new RuntimeException(
+                'APS bucket lookup failed '
+                ."({$detailsResponse->status()}): "
+                .$this->responseError($detailsResponse),
+            );
+        }
+
+        $region = strtoupper(
+            (string) config(
+                'services.aps.region',
+                'US',
+            ),
         );
 
-    if ($detailsResponse->successful()) {
+        $createResponse = Http::withToken($token)
+            ->acceptJson()
+            ->withHeaders([
+                'x-ads-region' => $region,
+            ])
+            ->connectTimeout(10)
+            ->timeout(30)
+            ->post(
+                "{$baseUrl}/oss/v2/buckets",
+                [
+                    'bucketKey' => $bucketKey,
+
+                    /*
+                     * Persistent objects remain available
+                     * until explicitly deleted.
+                     */
+                    'policyKey' => 'persistent',
+                ],
+            );
+
+        if ($createResponse->status() === 409) {
+            throw new RuntimeException(
+                "The APS bucket key '{$bucketKey}' is already "
+                .'being used. Choose another globally unique '
+                .'APS_BUCKET value in .env.',
+            );
+        }
+
+        if ($createResponse->failed()) {
+            throw new RuntimeException(
+                'APS bucket creation failed '
+                ."({$createResponse->status()}): "
+                .$this->responseError($createResponse),
+            );
+        }
+
         return [
-            'bucket_key' => $bucketKey,
-            'policy_key' => (string) (
-                $detailsResponse->json('policyKey')
-                ?? 'unknown'
+            'bucket_key' => (string) (
+                $createResponse->json('bucketKey')
+                ?? $bucketKey
             ),
-            'created' => false,
+
+            'policy_key' => (string) (
+                $createResponse->json('policyKey')
+                ?? 'persistent'
+            ),
+
+            'created' => true,
         ];
     }
 
-    /*
-     * Continue to bucket creation only when APS confirms
-     * that the bucket does not exist for this application.
+    /**
+     * Get and validate the configured APS bucket key.
      */
-    if ($detailsResponse->status() !== 404) {
-        throw new RuntimeException(
-            'APS bucket lookup failed '
-            ."({$detailsResponse->status()}): "
-            .$this->responseError($detailsResponse),
+    private function bucketKey(): string
+    {
+        $bucketKey = trim(
+            (string) config(
+                'services.aps.bucket',
+                '',
+            ),
         );
+
+        if ($bucketKey === '') {
+            throw new RuntimeException(
+                'APS_BUCKET is missing from the .env file.',
+            );
+        }
+
+        if (
+            preg_match(
+                '/^[a-z0-9_-]{3,128}$/',
+                $bucketKey,
+            ) !== 1
+        ) {
+            throw new RuntimeException(
+                'APS_BUCKET must contain 3 to 128 lowercase '
+                .'letters, numbers, hyphens, or underscores.',
+            );
+        }
+
+        return $bucketKey;
     }
-
-    $region = strtoupper(
-        (string) config(
-            'services.aps.region',
-            'US',
-        ),
-    );
-
-    $createResponse = Http::withToken($token)
-        ->acceptJson()
-        ->withHeaders([
-            'x-ads-region' => $region,
-        ])
-        ->connectTimeout(10)
-        ->timeout(30)
-        ->post(
-            "{$baseUrl}/oss/v2/buckets",
-            [
-                'bucketKey' => $bucketKey,
-
-                /*
-                 * Persistent objects remain available
-                 * until explicitly deleted.
-                 */
-                'policyKey' => 'persistent',
-            ],
-        );
-
-    if ($createResponse->status() === 409) {
-        throw new RuntimeException(
-            "The APS bucket key '{$bucketKey}' is already "
-            .'being used. Choose another globally unique '
-            .'APS_BUCKET value in .env.',
-        );
-    }
-
-    if ($createResponse->failed()) {
-        throw new RuntimeException(
-            'APS bucket creation failed '
-            ."({$createResponse->status()}): "
-            .$this->responseError($createResponse),
-        );
-    }
-
-    return [
-        'bucket_key' => (string) (
-            $createResponse->json('bucketKey')
-            ?? $bucketKey
-        ),
-
-        'policy_key' => (string) (
-            $createResponse->json('policyKey')
-            ?? 'persistent'
-        ),
-
-        'created' => true,
-    ];
-}
-
-/**
- * Get and validate the configured APS bucket key.
- */
-private function bucketKey(): string
-{
-    $bucketKey = trim(
-        (string) config(
-            'services.aps.bucket',
-            '',
-        ),
-    );
-
-    if ($bucketKey === '') {
-        throw new RuntimeException(
-            'APS_BUCKET is missing from the .env file.',
-        );
-    }
-
-    if (
-        preg_match(
-            '/^[a-z0-9_-]{3,128}$/',
-            $bucketKey,
-        ) !== 1
-    ) {
-        throw new RuntimeException(
-            'APS_BUCKET must contain 3 to 128 lowercase '
-            .'letters, numbers, hyphens, or underscores.',
-        );
-    }
-
-    return $bucketKey;
-}
 
     /**
      * Get the configured APS API base URL.
@@ -209,7 +210,7 @@ private function bucketKey(): string
      * Extract a useful error message from an APS response.
      */
     private function responseError(
-        \Illuminate\Http\Client\Response $response,
+        Response $response,
     ): string {
         $possibleMessages = [
             $response->json('reason'),
@@ -447,8 +448,7 @@ private function bucketKey(): string
 
             if ($remainingSeconds > 0) {
                 return [
-                    'access_token' =>
-                        $cached['access_token'],
+                    'access_token' => $cached['access_token'],
 
                     'expires_in' => $remainingSeconds,
                 ];
@@ -466,8 +466,7 @@ private function bucketKey(): string
             ->post(
                 "{$baseUrl}/authentication/v2/token",
                 [
-                    'grant_type' =>
-                        'client_credentials',
+                    'grant_type' => 'client_credentials',
 
                     'scope' => $scopeString,
                 ],
@@ -488,7 +487,7 @@ private function bucketKey(): string
             }
 
             throw new RuntimeException(
-                "APS authentication failed "
+                'APS authentication failed '
                 ."({$response->status()}): {$error}",
             );
         }

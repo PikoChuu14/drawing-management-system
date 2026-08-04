@@ -143,19 +143,14 @@ class DrawingController extends Controller
                             'uploaded_by' => $revision->uploader?->name,
                             'uploaded_at' => Carbon::parse((string) $revision->created_at)
                                 ->format('Y-m-d H:i'),
-                            'translation_status' =>
-                                $revision->translation_status,
-                            'translation_progress' =>
-                                $revision->translation_progress,
-                            'translation_error' =>
-                                $revision->translation_error,
-                            'translation_requested_at' =>
-                                $revision->translation_requested_at === null
+                            'translation_status' => $revision->translation_status,
+                            'translation_progress' => $revision->translation_progress,
+                            'translation_error' => $revision->translation_error,
+                            'translation_requested_at' => $revision->translation_requested_at === null
                                     ? null
                                     : Carbon::parse((string) $revision->translation_requested_at)
                                         ->format('Y-m-d H:i'),
-                            'translation_completed_at' =>
-                                $revision->translation_completed_at === null
+                            'translation_completed_at' => $revision->translation_completed_at === null
                                     ? null
                                     : Carbon::parse((string) $revision->translation_completed_at)
                                         ->format('Y-m-d H:i'),

@@ -1,12 +1,12 @@
 <?php
 
+use App\Http\Controllers\ApsViewerController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DrawingController;
 use App\Http\Controllers\DrawingRevisionController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\SiteIssueController;
 use App\Http\Controllers\TrashController;
-use App\Http\Controllers\ApsViewerController;
 use Illuminate\Support\Facades\Route;
 
 Route::inertia('/', 'welcome')->name('home');

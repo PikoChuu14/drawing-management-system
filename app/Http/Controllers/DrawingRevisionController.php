@@ -6,14 +6,14 @@ use App\Models\Drawing;
 use App\Models\DrawingRevision;
 use App\Models\Project;
 use App\Models\User;
+use App\Services\ApsService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Validation\Rule;
-use Symfony\Component\HttpFoundation\StreamedResponse;
-use Symfony\Component\HttpFoundation\BinaryFileResponse;
-use App\Services\ApsService;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 use Throwable;
 
 class DrawingRevisionController extends Controller
@@ -193,8 +193,7 @@ class DrawingRevisionController extends Controller
             [
                 'Content-Type' => 'application/pdf',
                 'X-Content-Type-Options' => 'nosniff',
-                'Cache-Control' =>
-                    'private, no-store, max-age=0',
+                'Cache-Control' => 'private, no-store, max-age=0',
             ],
         );
 
@@ -282,8 +281,7 @@ class DrawingRevisionController extends Controller
                 $objectId = $upload['object_id'];
 
                 $revision->update([
-                    'aps_object_key' =>
-                        $upload['object_key'],
+                    'aps_object_key' => $upload['object_key'],
 
                     'aps_object_id' => $objectId,
 
@@ -300,8 +298,7 @@ class DrawingRevisionController extends Controller
 
                 'translation_status' => 'processing',
 
-                'translation_progress' =>
-                    'Translation requested',
+                'translation_progress' => 'Translation requested',
 
                 'translation_error' => null,
 
@@ -380,17 +377,13 @@ class DrawingRevisionController extends Controller
             };
 
             $revision->update([
-                'translation_status' =>
-                    $applicationStatus,
+                'translation_status' => $applicationStatus,
 
-                'translation_progress' =>
-                    $manifest['progress'],
+                'translation_progress' => $manifest['progress'],
 
-                'translation_error' =>
-                    $manifest['error'],
+                'translation_error' => $manifest['error'],
 
-                'translation_completed_at' =>
-                    $applicationStatus === 'ready'
+                'translation_completed_at' => $applicationStatus === 'ready'
                         ? now()
                         : null,
             ]);
