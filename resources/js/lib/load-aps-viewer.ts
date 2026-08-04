@@ -13,10 +13,7 @@ let viewerLoaderPromise: Promise<void> | null = null;
  * Load the Autodesk Viewer JavaScript and stylesheet once.
  */
 export function loadApsViewer(): Promise<void> {
-    if (
-        typeof Autodesk !== 'undefined' &&
-        Autodesk.Viewing
-    ) {
+    if (typeof Autodesk !== 'undefined' && Autodesk.Viewing) {
         return Promise.resolve();
     }
 
@@ -24,94 +21,79 @@ export function loadApsViewer(): Promise<void> {
         return viewerLoaderPromise;
     }
 
-    viewerLoaderPromise = new Promise<void>(
-        (resolve, reject) => {
-            addViewerStylesheet();
+    viewerLoaderPromise = new Promise<void>((resolve, reject) => {
+        addViewerStylesheet();
 
-            const existingScript =
-                document.getElementById(
-                    VIEWER_SCRIPT_ID,
-                ) as HTMLScriptElement | null;
+        const existingScript = document.getElementById(
+            VIEWER_SCRIPT_ID,
+        ) as HTMLScriptElement | null;
 
-            if (existingScript) {
-                existingScript.addEventListener(
-                    'load',
-                    () => resolve(),
-                    { once: true },
-                );
+        if (existingScript) {
+            existingScript.addEventListener('load', () => resolve(), {
+                once: true,
+            });
 
-                existingScript.addEventListener(
-                    'error',
-                    () =>
-                        reject(
-                            new Error(
-                                'The Autodesk Viewer SDK could not be loaded.',
-                            ),
-                        ),
-                    { once: true },
-                );
-
-                return;
-            }
-
-            const script =
-                document.createElement('script');
-
-            script.id = VIEWER_SCRIPT_ID;
-            script.src = VIEWER_SCRIPT_URL;
-            script.async = true;
-
-            script.addEventListener(
-                'load',
-                () => {
-                    if (
-                        typeof Autodesk ===
-                            'undefined' ||
-                        !Autodesk.Viewing
-                    ) {
-                        reject(
-                            new Error(
-                                'The Autodesk Viewer SDK loaded without its expected API.',
-                            ),
-                        );
-
-                        return;
-                    }
-
-                    resolve();
-                },
-                { once: true },
-            );
-
-            script.addEventListener(
+            existingScript.addEventListener(
                 'error',
                 () =>
                     reject(
                         new Error(
-                            'The Autodesk Viewer SDK could not be downloaded.',
+                            'The Autodesk Viewer SDK could not be loaded.',
                         ),
                     ),
                 { once: true },
             );
 
-            document.head.appendChild(script);
-        },
-    );
+            return;
+        }
+
+        const script = document.createElement('script');
+
+        script.id = VIEWER_SCRIPT_ID;
+        script.src = VIEWER_SCRIPT_URL;
+        script.async = true;
+
+        script.addEventListener(
+            'load',
+            () => {
+                if (typeof Autodesk === 'undefined' || !Autodesk.Viewing) {
+                    reject(
+                        new Error(
+                            'The Autodesk Viewer SDK loaded without its expected API.',
+                        ),
+                    );
+
+                    return;
+                }
+
+                resolve();
+            },
+            { once: true },
+        );
+
+        script.addEventListener(
+            'error',
+            () =>
+                reject(
+                    new Error(
+                        'The Autodesk Viewer SDK could not be downloaded.',
+                    ),
+                ),
+            { once: true },
+        );
+
+        document.head.appendChild(script);
+    });
 
     return viewerLoaderPromise;
 }
 
 function addViewerStylesheet(): void {
-    if (
-        document.getElementById(
-            VIEWER_STYLE_ID,
-        )
-    ) {
+    if (document.getElementById(VIEWER_STYLE_ID)) {
         return;
     }
 
-    const link =
-        document.createElement('link');
+    const link = document.createElement('link');
 
     link.id = VIEWER_STYLE_ID;
     link.rel = 'stylesheet';

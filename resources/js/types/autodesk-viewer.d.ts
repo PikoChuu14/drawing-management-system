@@ -10,10 +10,7 @@ declare namespace Autodesk {
             env?: string;
             api?: string;
             getAccessToken?: (
-                callback?: (
-                    accessToken: string,
-                    expires: number,
-                ) => void,
+                callback?: (accessToken: string, expires: number) => void,
             ) => void;
         }
 

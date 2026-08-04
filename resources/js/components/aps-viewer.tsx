@@ -12,24 +12,14 @@ type ApsViewerProps = {
     api: string;
 };
 
-export default function ApsViewer({
-    urn,
-    tokenUrl,
-    api,
-}: ApsViewerProps) {
-    const containerRef =
-        useRef<HTMLDivElement>(null);
+export default function ApsViewer({ urn, tokenUrl, api }: ApsViewerProps) {
+    const containerRef = useRef<HTMLDivElement>(null);
 
-    const viewerRef =
-        useRef<Autodesk.Viewing.GuiViewer3D | null>(
-            null,
-        );
+    const viewerRef = useRef<Autodesk.Viewing.GuiViewer3D | null>(null);
 
-    const [loading, setLoading] =
-        useState(true);
+    const [loading, setLoading] = useState(true);
 
-    const [error, setError] =
-        useState<string | null>(null);
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         let cancelled = false;
@@ -47,10 +37,7 @@ export default function ApsViewer({
                 }
 
                 const getAccessToken = (
-                    callback?: (
-                        accessToken: string,
-                        expiresIn: number,
-                    ) => void,
+                    callback?: (accessToken: string, expiresIn: number) => void,
                 ) => {
                     fetch(tokenUrl, {
                         method: 'GET',
@@ -70,16 +57,12 @@ export default function ApsViewer({
                         })
                         .then((token) => {
                             if (callback) {
-                                callback(
-                                    token.access_token,
-                                    token.expires_in,
-                                );
+                                callback(token.access_token, token.expires_in);
                             }
                         })
                         .catch((tokenError: unknown) => {
                             const message =
-                                tokenError instanceof
-                                Error
+                                tokenError instanceof Error
                                     ? tokenError.message
                                     : 'The Viewer token could not be retrieved.';
 
@@ -99,20 +82,16 @@ export default function ApsViewer({
                             return;
                         }
 
-                        const viewer =
-                            new Autodesk.Viewing.GuiViewer3D(
-                                container,
-                                {
-                                    extensions: [
-                                        'Autodesk.DocumentBrowser',
-                                    ],
-                                },
-                            );
+                        const viewer = new Autodesk.Viewing.GuiViewer3D(
+                            container,
+                            {
+                                extensions: ['Autodesk.DocumentBrowser'],
+                            },
+                        );
 
                         viewerRef.current = viewer;
 
-                        const startResult =
-                            viewer.start();
+                        const startResult = viewer.start();
 
                         if (startResult !== 0) {
                             setError(
@@ -124,19 +103,14 @@ export default function ApsViewer({
                             return;
                         }
 
-                        viewer.setTheme(
-                            'light-theme',
-                        );
+                        viewer.setTheme('light-theme');
 
                         Autodesk.Viewing.Document.load(
                             `urn:${urn}`,
-                            (
-                                document: Autodesk.Viewing.Document,
-                            ) => {
-                                const viewable =
-                                    document
-                                        .getRoot()
-                                        .getDefaultGeometry();
+                            (document: Autodesk.Viewing.Document) => {
+                                const viewable = document
+                                    .getRoot()
+                                    .getDefaultGeometry();
 
                                 if (!viewable) {
                                     setError(
@@ -149,53 +123,36 @@ export default function ApsViewer({
                                 }
 
                                 viewer
-                                    .loadDocumentNode(
-                                        document,
-                                        viewable,
-                                    )
+                                    .loadDocumentNode(document, viewable)
                                     .then(() => {
-                                        if (
-                                            cancelled
-                                        ) {
+                                        if (cancelled) {
                                             return;
                                         }
 
                                         viewer.fitToView();
                                         setLoading(false);
                                     })
-                                    .catch(
-                                        (
-                                            loadError: unknown,
-                                        ) => {
-                                            const message =
-                                                loadError instanceof
-                                                Error
-                                                    ? loadError.message
-                                                    : 'The translated drawing could not be loaded.';
+                                    .catch((loadError: unknown) => {
+                                        const message =
+                                            loadError instanceof Error
+                                                ? loadError.message
+                                                : 'The translated drawing could not be loaded.';
 
-                                            setError(
-                                                message,
-                                            );
+                                        setError(message);
 
-                                            setLoading(
-                                                false,
-                                            );
-                                        },
-                                    );
+                                        setLoading(false);
+                                    });
                             },
                             (
                                 code: number,
                                 message: string,
                                 errors: unknown[],
                             ) => {
-                                console.error(
-                                    'APS document load failure',
-                                    {
-                                        code,
-                                        message,
-                                        errors,
-                                    },
-                                );
+                                console.error('APS document load failure', {
+                                    code,
+                                    message,
+                                    errors,
+                                });
 
                                 setError(
                                     `The DWG document could not be loaded: ${message ?? `error ${code}`}`,
@@ -237,21 +194,15 @@ export default function ApsViewer({
 
     return (
         <div className="relative h-[70vh] min-h-[520px] w-full overflow-hidden rounded-lg bg-neutral-900 md:h-[76vh]">
-            <div
-                ref={containerRef}
-                className="absolute inset-0"
-            />
+            <div ref={containerRef} className="absolute inset-0" />
 
             {loading && !error && (
                 <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/90">
                     <div className="text-center">
-                        <p className="font-medium">
-                            Loading DWG viewer…
-                        </p>
+                        <p className="font-medium">Loading DWG viewer…</p>
 
                         <p className="mt-1 text-sm text-muted-foreground">
-                            Retrieving the translated drawing
-                            from Autodesk APS.
+                            Retrieving the translated drawing from Autodesk APS.
                         </p>
                     </div>
                 </div>

@@ -27,11 +27,7 @@ type Revision = {
     uploaded_at: string;
     can_preview: boolean;
     translation_status:
-        | 'not_started'
-        | 'uploading'
-        | 'processing'
-        | 'ready'
-        | 'failed';
+        'not_started' | 'uploading' | 'processing' | 'ready' | 'failed';
 
     translation_progress: string | null;
     translation_error: string | null;
@@ -39,7 +35,7 @@ type Revision = {
     translation_completed_at: string | null;
 
     can_view_dwg: boolean;
-    aps_urn:string | null;
+    aps_urn: string | null;
 };
 
 type Drawing = {
@@ -111,7 +107,11 @@ function formatFileSize(bytes: number): string {
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-export default function DrawingShow({ project, drawing, apsViewer }: DrawingShowProps) {
+export default function DrawingShow({
+    project,
+    drawing,
+    apsViewer,
+}: DrawingShowProps) {
     const fileInput = useRef<HTMLInputElement>(null);
 
     const breadcrumbs: BreadcrumbItem[] = [
@@ -136,8 +136,9 @@ export default function DrawingShow({ project, drawing, apsViewer }: DrawingShow
         file: null,
     });
 
-    const [previewRevision, setPreviewRevision] =
-        useState<Revision | null>(null);
+    const [previewRevision, setPreviewRevision] = useState<Revision | null>(
+        null,
+    );
 
     const getPreviewUrl = (revisionId: number) => {
         return `/projects/${project.id}/drawings/${drawing.id}/revisions/${revisionId}/preview`;
@@ -200,13 +201,11 @@ export default function DrawingShow({ project, drawing, apsViewer }: DrawingShow
         }
     };
 
-    const [
-        processingRevisionId,
-        setProcessingRevisionId,
-    ] = useState<number | null>(null);
+    const [processingRevisionId, setProcessingRevisionId] = useState<
+        number | null
+    >(null);
 
-    const [apsError, setApsError] =
-        useState<string | null>(null);
+    const [apsError, setApsError] = useState<string | null>(null);
 
     const processDwg = (revision: Revision) => {
         setApsError(null);
@@ -218,15 +217,12 @@ export default function DrawingShow({ project, drawing, apsViewer }: DrawingShow
                 preserveScroll: true,
 
                 onStart: () => {
-                    setProcessingRevisionId(
-                        revision.id,
-                    );
+                    setProcessingRevisionId(revision.id);
                 },
 
                 onError: (errors) => {
                     setApsError(
-                        errors.aps ??
-                            'The DWG could not be processed.',
+                        errors.aps ?? 'The DWG could not be processed.',
                     );
                 },
 
@@ -237,9 +233,7 @@ export default function DrawingShow({ project, drawing, apsViewer }: DrawingShow
         );
     };
 
-    const refreshDwgStatus = (
-        revision: Revision,
-    ) => {
+    const refreshDwgStatus = (revision: Revision) => {
         setApsError(null);
 
         router.patch(
@@ -249,9 +243,7 @@ export default function DrawingShow({ project, drawing, apsViewer }: DrawingShow
                 preserveScroll: true,
 
                 onStart: () => {
-                    setProcessingRevisionId(
-                        revision.id,
-                    );
+                    setProcessingRevisionId(revision.id);
                 },
 
                 onError: (errors) => {
@@ -268,10 +260,8 @@ export default function DrawingShow({ project, drawing, apsViewer }: DrawingShow
         );
     };
 
-    const [
-        dwgPreviewRevision,
-        setDwgPreviewRevision,
-    ] = useState<Revision | null>(null);
+    const [dwgPreviewRevision, setDwgPreviewRevision] =
+        useState<Revision | null>(null);
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -623,22 +613,33 @@ export default function DrawingShow({ project, drawing, apsViewer }: DrawingShow
                                                                         : 'outline'
                                                                 }
                                                                 onClick={() => {
-                                                                    setPreviewRevision(revision);
-                                                                    setDwgPreviewRevision(null);
+                                                                    setPreviewRevision(
+                                                                        revision,
+                                                                    );
+                                                                    setDwgPreviewRevision(
+                                                                        null,
+                                                                    );
 
-                                                                    window.setTimeout(() => {
-                                                                        document
-                                                                            .getElementById(
-                                                                                'pdf-preview',
-                                                                            )
-                                                                            ?.scrollIntoView({
-                                                                                behavior: 'smooth',
-                                                                                block: 'start',
-                                                                            });
-                                                                    }, 0);
+                                                                    window.setTimeout(
+                                                                        () => {
+                                                                            document
+                                                                                .getElementById(
+                                                                                    'pdf-preview',
+                                                                                )
+                                                                                ?.scrollIntoView(
+                                                                                    {
+                                                                                        behavior:
+                                                                                            'smooth',
+                                                                                        block: 'start',
+                                                                                    },
+                                                                                );
+                                                                        },
+                                                                        0,
+                                                                    );
                                                                 }}
                                                             >
-                                                                {previewRevision?.id === revision.id
+                                                                {previewRevision?.id ===
+                                                                revision.id
                                                                     ? 'Viewing'
                                                                     : 'Preview'}
                                                             </Button>
@@ -659,10 +660,13 @@ export default function DrawingShow({ project, drawing, apsViewer }: DrawingShow
                                                                         revision.id
                                                                     }
                                                                     onClick={() =>
-                                                                        processDwg(revision)
+                                                                        processDwg(
+                                                                            revision,
+                                                                        )
                                                                     }
                                                                 >
-                                                                    {processingRevisionId === revision.id
+                                                                    {processingRevisionId ===
+                                                                    revision.id
                                                                         ? 'Processing...'
                                                                         : revision.translation_status ===
                                                                             'failed'
@@ -686,10 +690,13 @@ export default function DrawingShow({ project, drawing, apsViewer }: DrawingShow
                                                                         revision.id
                                                                     }
                                                                     onClick={() =>
-                                                                        refreshDwgStatus(revision)
+                                                                        refreshDwgStatus(
+                                                                            revision,
+                                                                        )
                                                                     }
                                                                 >
-                                                                    {processingRevisionId === revision.id
+                                                                    {processingRevisionId ===
+                                                                    revision.id
                                                                         ? 'Checking...'
                                                                         : 'Refresh Status'}
                                                                 </Button>
@@ -698,43 +705,50 @@ export default function DrawingShow({ project, drawing, apsViewer }: DrawingShow
                                                         {revision.file_extension?.toLowerCase() ===
                                                             'dwg' &&
                                                             revision.translation_status ===
-                                                                'ready' && (
-                                                                revision.can_view_dwg &&
-                                                                    revision.aps_urn && (
-                                                                        <Button
-                                                                            type="button"
-                                                                            size="sm"
-                                                                            variant={
-                                                                                dwgPreviewRevision?.id ===
-                                                                                revision.id
-                                                                                    ? 'default'
-                                                                                    : 'outline'
-                                                                            }
-                                                                            onClick={() => {
-                                                                                setDwgPreviewRevision(
-                                                                                    revision,
-                                                                                );
-                                                                                                
-                                                                                setPreviewRevision(null);
+                                                                'ready' &&
+                                                            revision.can_view_dwg &&
+                                                            revision.aps_urn && (
+                                                                <Button
+                                                                    type="button"
+                                                                    size="sm"
+                                                                    variant={
+                                                                        dwgPreviewRevision?.id ===
+                                                                        revision.id
+                                                                            ? 'default'
+                                                                            : 'outline'
+                                                                    }
+                                                                    onClick={() => {
+                                                                        setDwgPreviewRevision(
+                                                                            revision,
+                                                                        );
 
-                                                                                window.setTimeout(() => {
-                                                                                    document
-                                                                                        .getElementById(
-                                                                                            'dwg-preview',
-                                                                                        )
-                                                                                        ?.scrollIntoView({
-                                                                                            behavior: 'smooth',
+                                                                        setPreviewRevision(
+                                                                            null,
+                                                                        );
+
+                                                                        window.setTimeout(
+                                                                            () => {
+                                                                                document
+                                                                                    .getElementById(
+                                                                                        'dwg-preview',
+                                                                                    )
+                                                                                    ?.scrollIntoView(
+                                                                                        {
+                                                                                            behavior:
+                                                                                                'smooth',
                                                                                             block: 'start',
-                                                                                        });
-                                                                                }, 0);
-                                                                            }}
-                                                                        >
-                                                                            {dwgPreviewRevision?.id ===
-                                                                            revision.id
-                                                                                ? 'Viewing DWG'
-                                                                                : 'Preview DWG'}
-                                                                        </Button>
-                                                                    )
+                                                                                        },
+                                                                                    );
+                                                                            },
+                                                                            0,
+                                                                        );
+                                                                    }}
+                                                                >
+                                                                    {dwgPreviewRevision?.id ===
+                                                                    revision.id
+                                                                        ? 'Viewing DWG'
+                                                                        : 'Preview DWG'}
+                                                                </Button>
                                                             )}
 
                                                         <Button
@@ -759,66 +773,58 @@ export default function DrawingShow({ project, drawing, apsViewer }: DrawingShow
                     </section>
                 </div>
 
-                {dwgPreviewRevision &&
-                    dwgPreviewRevision.aps_urn && (
-                        <section
-                            id="dwg-preview"
-                            className="scroll-mt-6 overflow-hidden rounded-xl border bg-card shadow-sm"
-                        >
-                            <div className="flex flex-col justify-between gap-4 border-b p-4 sm:flex-row sm:items-center md:p-6">
-                                <div className="min-w-0">
-                                    <p className="text-sm text-muted-foreground">
-                                        Interactive DWG Preview
-                                    </p>
+                {dwgPreviewRevision && dwgPreviewRevision.aps_urn && (
+                    <section
+                        id="dwg-preview"
+                        className="scroll-mt-6 overflow-hidden rounded-xl border bg-card shadow-sm"
+                    >
+                        <div className="flex flex-col justify-between gap-4 border-b p-4 sm:flex-row sm:items-center md:p-6">
+                            <div className="min-w-0">
+                                <p className="text-sm text-muted-foreground">
+                                    Interactive DWG Preview
+                                </p>
 
-                                    <h2 className="mt-1 truncate text-lg font-semibold">
-                                        Revision{' '}
-                                        {dwgPreviewRevision.revision_code}{' '}
-                                        —{' '}
-                                        {dwgPreviewRevision.original_filename}
-                                    </h2>
+                                <h2 className="mt-1 truncate text-lg font-semibold">
+                                    Revision {dwgPreviewRevision.revision_code}{' '}
+                                    — {dwgPreviewRevision.original_filename}
+                                </h2>
 
-                                    <p className="mt-1 text-xs text-muted-foreground">
-                                        Use the Viewer controls to zoom, pan, select sheets, and inspect the translated drawing.
-                                    </p>
-                                </div>
-
-                                <div className="flex shrink-0 flex-wrap gap-2">
-                                    <Button
-                                        asChild
-                                        size="sm"
-                                        variant="outline"
-                                    >
-                                        <a
-                                            href={`/projects/${project.id}/drawings/${drawing.id}/revisions/${dwgPreviewRevision.id}/download`}
-                                        >
-                                            Download Original
-                                        </a>
-                                    </Button>
-
-                                    <Button
-                                        type="button"
-                                        size="sm"
-                                        variant="outline"
-                                        onClick={() =>
-                                            setDwgPreviewRevision(null)
-                                        }
-                                    >
-                                        Close Viewer
-                                    </Button>
-                                </div>
+                                <p className="mt-1 text-xs text-muted-foreground">
+                                    Use the Viewer controls to zoom, pan, select
+                                    sheets, and inspect the translated drawing.
+                                </p>
                             </div>
 
-                            <div className="bg-muted/30 p-2 sm:p-4">
-                                <ApsViewer
-                                    key={dwgPreviewRevision.id}
-                                    urn={dwgPreviewRevision.aps_urn}
-                                    tokenUrl={apsViewer.token_url}
-                                    api={apsViewer.api}
-                                />
+                            <div className="flex shrink-0 flex-wrap gap-2">
+                                <Button asChild size="sm" variant="outline">
+                                    <a
+                                        href={`/projects/${project.id}/drawings/${drawing.id}/revisions/${dwgPreviewRevision.id}/download`}
+                                    >
+                                        Download Original
+                                    </a>
+                                </Button>
+
+                                <Button
+                                    type="button"
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => setDwgPreviewRevision(null)}
+                                >
+                                    Close Viewer
+                                </Button>
                             </div>
-                        </section>
-                    )}
+                        </div>
+
+                        <div className="bg-muted/30 p-2 sm:p-4">
+                            <ApsViewer
+                                key={dwgPreviewRevision.id}
+                                urn={dwgPreviewRevision.aps_urn}
+                                tokenUrl={apsViewer.token_url}
+                                api={apsViewer.api}
+                            />
+                        </div>
+                    </section>
+                )}
 
                 {previewRevision && (
                     <section
@@ -832,8 +838,7 @@ export default function DrawingShow({ project, drawing, apsViewer }: DrawingShow
                                 </p>
 
                                 <h2 className="mt-1 truncate text-lg font-semibold">
-                                    Revision{' '}
-                                    {previewRevision.revision_code} —{' '}
+                                    Revision {previewRevision.revision_code} —{' '}
                                     {previewRevision.original_filename}
                                 </h2>
                             </div>
