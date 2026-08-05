@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Services\ApsService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -96,21 +97,57 @@ class DrawingRevisionController extends Controller
         }
 
         try {
-            $drawing->revisions()->create([
-                'uploaded_by' => $user->id,
-                'revision_code' => $validated['revision_code'],
-                'file_path' => $path,
-                'original_filename' => $file->getClientOriginalName(),
-                'mime_type' => $file->getMimeType() ?: null,
-                'file_extension' => strtolower(
-                    $file->getClientOriginalExtension(),
-                ),
-                'file_size' => (int) $file->getSize(),
-                'revision_notes' => $validated['revision_notes'] ?? null,
-                'issued_at' => $validated['issued_at'] ?? null,
-            ]);
+            DB::transaction(
+                function () use (
+                    $drawing,
+                    $user,
+                    $validated,
+                    $file,
+                    $path,
+                ): void {
+                    $revision =
+                        $drawing->revisions()->create([
+                            'uploaded_by' => $user->id,
+
+                            'revision_code' => $validated[
+                                    'revision_code'
+                                ],
+
+                            'file_path' => $path,
+
+                            'original_filename' => $file
+                                ->getClientOriginalName(),
+
+                            'mime_type' => $file->getMimeType()
+                                    ?: null,
+
+                            'file_extension' => strtolower(
+                                $file
+                                    ->getClientOriginalExtension(),
+                            ),
+
+                            'file_size' => (int) $file->getSize(),
+
+                            'revision_notes' => $validated[
+                                    'revision_notes'
+                                ] ?? null,
+
+                            'issued_at' => $validated[
+                                    'issued_at'
+                                ] ?? null,
+                        ]);
+
+                    /*
+                     * The newly uploaded revision becomes current.
+                     * The previous current revision is now derived
+                     * as superseded.
+                     */
+                    $drawing->update([
+                        'current_revision_id' => $revision->id,
+                    ]);
+                },
+            );
         } catch (Throwable $exception) {
-            // Avoid leaving an unused file if the database insert fails.
             Storage::disk('local')->delete($path);
 
             throw $exception;
@@ -415,6 +452,204 @@ class DrawingRevisionController extends Controller
         abort_unless(
             $revision->drawing_id === $drawing->id,
             404,
+        );
+    }
+
+    /**
+     * Edit revision metadata.
+     *
+     * The original revision file is deliberately not replaced.
+     */
+    public function update(
+        Request $request,
+        Project $project,
+        Drawing $drawing,
+        DrawingRevision $revision,
+    ): RedirectResponse {
+        $this->ensureRevisionBelongsToDrawing(
+            $project,
+            $drawing,
+            $revision,
+        );
+
+        $validated = $request->validate([
+            'revision_code' => [
+                'required',
+                'string',
+                'max:50',
+
+                Rule::unique(
+                    'drawing_revisions',
+                    'revision_code',
+                )
+                    ->where(
+                        fn ($query) =>
+                            $query->where(
+                                'drawing_id',
+                                $drawing->id,
+                            ),
+                    )
+                    ->ignore($revision),
+            ],
+
+            'issued_at' => [
+                'nullable',
+                'date',
+            ],
+
+            'revision_notes' => [
+                'nullable',
+                'string',
+                'max:2000',
+            ],
+        ]);
+
+        $revision->update($validated);
+
+        return to_route(
+            'drawings.show',
+            [$project, $drawing],
+        );
+    }
+
+    /**
+     * Set an existing revision as current.
+     */
+    public function makeCurrent(
+        Project $project,
+        Drawing $drawing,
+        DrawingRevision $revision,
+    ): RedirectResponse {
+        $this->ensureRevisionBelongsToDrawing(
+            $project,
+            $drawing,
+            $revision,
+        );
+
+        if ($revision->archived_at !== null) {
+            return to_route(
+                'drawings.show',
+                [$project, $drawing],
+            )->withErrors([
+                'revision' =>
+                    'Restore the archived revision before making it current.',
+            ]);
+        }
+
+        $drawing->update([
+            'current_revision_id' =>
+                $revision->id,
+        ]);
+
+        return to_route(
+            'drawings.show',
+            [$project, $drawing],
+        );
+    }
+
+    /**
+     * Archive a superseded revision.
+     */
+    public function archive(
+        Project $project,
+        Drawing $drawing,
+        DrawingRevision $revision,
+    ): RedirectResponse {
+        $this->ensureRevisionBelongsToDrawing(
+            $project,
+            $drawing,
+            $revision,
+        );
+
+        if (
+            $drawing->current_revision_id ===
+            $revision->id
+        ) {
+            return to_route(
+                'drawings.show',
+                [$project, $drawing],
+            )->withErrors([
+                'revision' =>
+                    'The current revision cannot be archived. Make another revision current first.',
+            ]);
+        }
+
+        $revision->update([
+            'archived_at' => now(),
+        ]);
+
+        return to_route(
+            'drawings.show',
+            [$project, $drawing],
+        );
+    }
+
+    /**
+     * Restore an archived revision.
+     */
+    public function restore(
+        Project $project,
+        Drawing $drawing,
+        DrawingRevision $revision,
+    ): RedirectResponse {
+        $this->ensureRevisionBelongsToDrawing(
+            $project,
+            $drawing,
+            $revision,
+        );
+
+        $revision->update([
+            'archived_at' => null,
+        ]);
+
+        return to_route(
+            'drawings.show',
+            [$project, $drawing],
+        );
+    }
+
+    /**
+     * Permanently delete a non-current revision.
+     */
+    public function destroy(
+        Project $project,
+        Drawing $drawing,
+        DrawingRevision $revision,
+    ): RedirectResponse {
+        $this->ensureRevisionBelongsToDrawing(
+            $project,
+            $drawing,
+            $revision,
+        );
+
+        if (
+            $drawing->current_revision_id ===
+            $revision->id
+        ) {
+            return to_route(
+                'drawings.show',
+                [$project, $drawing],
+            )->withErrors([
+                'revision' =>
+                    'The current revision cannot be deleted. Upload or select another current revision first.',
+            ]);
+        }
+
+        $filePath = $revision->file_path;
+
+        /*
+        * Delete the database record first so the revision
+        * immediately disappears from the system.
+        */
+        $revision->delete();
+
+        Storage::disk('local')->delete(
+            $filePath,
+        );
+
+        return to_route(
+            'drawings.show',
+            [$project, $drawing],
         );
     }
 }

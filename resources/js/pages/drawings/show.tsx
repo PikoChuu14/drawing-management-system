@@ -2,9 +2,8 @@ import { Head, Link, router, useForm } from '@inertiajs/react';
 import { History, ListChecks, Plus, Maximize2, Minimize2, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
-import FormModal from '@/components/form-modal';
-
 import ApsViewer from '@/components/aps-viewer';
+import FormModal from '@/components/form-modal';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -40,6 +39,21 @@ type Revision = {
 
     can_view_dwg: boolean;
     aps_urn: string | null;
+
+        lifecycle_status:
+        | 'current'
+        | 'superseded'
+        | 'archived';
+
+    is_current: boolean;
+    is_archived: boolean;
+
+    archived_at: string | null;
+
+    can_make_current: boolean;
+    can_archive: boolean;
+    can_restore: boolean;
+    can_delete: boolean;
 };
 
 type Drawing = {
@@ -93,6 +107,12 @@ type IssueForm = {
 type ApsViewerConfig = {
     token_url: string;
     api: string;
+};
+
+type RevisionEditForm = {
+    revision_code: string;
+    issued_at: string;
+    revision_notes: string;
 };
 
 function formatStatus(status: string): string {
@@ -328,7 +348,20 @@ export default function DrawingShow({
 
     const [isFocusMode, setIsFocusMode] = useState(false);
 
-    const previewableRevisions = drawing.revisions.filter(
+    const revisionsNewestFirst = [
+        ...drawing.revisions,
+    ].sort(
+        (first, second) =>
+            second.id - first.id,
+    );
+
+    const activeRevisions =
+        revisionsNewestFirst.filter(
+            (revision) =>
+                !revision.is_archived,
+        );
+
+    const previewableRevisions = activeRevisions.filter(
         (revision) =>
             revision.can_preview ||
             (revision.can_view_dwg && revision.aps_urn !== null),
@@ -538,6 +571,220 @@ export default function DrawingShow({
                 block: 'start',
             });
         }, 0);
+    };
+
+    const viewRevisionInWorkspace = (
+        revision: Revision,
+    ) => {
+        selectWorkspaceRevision(revision.id);
+
+        window.setTimeout(() => {
+            workspaceRef.current?.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start',
+            });
+        }, 0);
+    };
+
+    useEffect(() => {
+        if (selectedWorkspaceRevision) {
+            return;
+        }
+
+        const currentViewable =
+            activeRevisions.find(
+                (revision) =>
+                    revision.is_current &&
+                    (
+                        revision.can_preview ||
+                        (
+                            revision.can_view_dwg &&
+                            revision.aps_urn
+                        )
+                    ),
+            );
+
+        const latestViewable =
+            activeRevisions.find(
+                (revision) =>
+                    revision.can_preview ||
+                    (
+                        revision.can_view_dwg &&
+                        revision.aps_urn
+                    ),
+            );
+
+        const target =
+            currentViewable ?? latestViewable;
+
+        if (target) {
+            queueMicrotask(() => {
+                selectWorkspaceRevision(target.id);
+            });
+        }
+    }, [drawing.id]);
+
+    const issuesNewestFirst = [
+        ...drawing.issues,
+    ].sort(
+        (first, second) =>
+            second.id - first.id,
+    );
+
+    const latestTabletRevisions =
+        activeRevisions.slice(0, 3);
+
+    const latestTabletIssues =
+        issuesNewestFirst.slice(0, 3);
+
+    const [
+        revisionActionError,
+        setRevisionActionError,
+    ] = useState<string | null>(null);
+
+    const makeRevisionCurrent = (
+        revision: Revision,
+    ) => {
+        setRevisionActionError(null);
+
+        router.patch(
+            `/projects/${project.id}/drawings/${drawing.id}/revisions/${revision.id}/make-current`,
+            {},
+            {
+                preserveScroll: true,
+                onError: (errors) =>
+                    setRevisionActionError(
+                        errors.revision ??
+                            'The revision could not be made current.',
+                    ),
+            },
+        );
+    };
+
+    const archiveRevision = (
+        revision: Revision,
+    ) => {
+        if (
+            !window.confirm(
+                `Archive revision ${revision.revision_code}? It will be hidden from normal viewing but remain in Full History.`,
+            )
+        ) {
+            return;
+        }
+
+        setRevisionActionError(null);
+
+        router.patch(
+            `/projects/${project.id}/drawings/${drawing.id}/revisions/${revision.id}/archive`,
+            {},
+            {
+                preserveScroll: true,
+                onError: (errors) =>
+                    setRevisionActionError(
+                        errors.revision ??
+                            'The revision could not be archived.',
+                    ),
+            },
+        );
+    };
+
+    const restoreRevision = (
+        revision: Revision,
+    ) => {
+        router.patch(
+            `/projects/${project.id}/drawings/${drawing.id}/revisions/${revision.id}/restore`,
+            {},
+            {
+                preserveScroll: true,
+            },
+        );
+    };
+
+    const deleteRevision = (
+        revision: Revision,
+    ) => {
+        if (
+            !window.confirm(
+                `Permanently delete revision ${revision.revision_code} and its uploaded file?\n\nThis action cannot be undone.`,
+            )
+        ) {
+            return;
+        }
+
+        setRevisionActionError(null);
+
+        router.delete(
+            `/projects/${project.id}/drawings/${drawing.id}/revisions/${revision.id}`,
+            {
+                preserveScroll: true,
+                onError: (errors) =>
+                    setRevisionActionError(
+                        errors.revision ??
+                            'The revision could not be deleted.',
+                    ),
+            },
+        );
+    };
+
+    const [
+        editingRevision,
+        setEditingRevision,
+    ] = useState<Revision | null>(null);
+
+    const revisionEditForm =
+        useForm<RevisionEditForm>({
+            revision_code: '',
+            issued_at: '',
+            revision_notes: '',
+        });
+
+    const openEditRevision = (
+        revision: Revision,
+    ) => {
+        revisionEditForm.setData({
+            revision_code:
+                revision.revision_code,
+
+            issued_at:
+                revision.issued_at ?? '',
+
+            revision_notes:
+                revision.revision_notes ?? '',
+        });
+
+        revisionEditForm.clearErrors();
+        setEditingRevision(revision);
+    };
+
+    const closeEditRevision = () => {
+        if (revisionEditForm.processing) {
+            return;
+        }
+
+        revisionEditForm.reset();
+        revisionEditForm.clearErrors();
+        setEditingRevision(null);
+    };
+
+    const submitRevisionEdit = (
+        event: FormEvent<HTMLFormElement>,
+    ) => {
+        event.preventDefault();
+
+        if (!editingRevision) {
+            return;
+        }
+
+        revisionEditForm.put(
+            `/projects/${project.id}/drawings/${drawing.id}/revisions/${editingRevision.id}`,
+            {
+                preserveScroll: true,
+
+                onSuccess: () => {
+                    closeEditRevision();
+                },
+            },
+        );
     };
 
     return (
@@ -917,8 +1164,8 @@ export default function DrawingShow({
                                                 </Button>
                                             </div>
 
-                                            {drawing.revisions.map(
-                                                (revision, index) => (
+                                            {latestTabletRevisions.map(
+                                                (revision) => (
                                                     <div
                                                         key={revision.id}
                                                         className={cn(
@@ -926,17 +1173,32 @@ export default function DrawingShow({
                                                             selectedWorkspaceRevision?.id ===
                                                                 revision.id &&
                                                                 'border-primary bg-primary/5',
-                                                            index >= 3 && 'max-xl:hidden',
                                                         )}
                                                     >
                                                         <div className="flex items-start justify-between gap-3">
                                                             <div className="min-w-0">
-                                                                <p className="font-mono font-semibold">
-                                                                    Rev{' '}
-                                                                    {
-                                                                        revision.revision_code
-                                                                    }
-                                                                </p>
+                                                                <div className="flex flex-wrap items-center gap-2">
+                                                                    <p className="font-mono font-semibold">
+                                                                        Rev{' '}
+                                                                        {
+                                                                            revision.revision_code
+                                                                        }
+                                                                    </p>
+
+                                                                    <span
+                                                                        className={cn(
+                                                                            'rounded-full border px-2 py-0.5 text-xs capitalize',
+                                                                            revision.is_current &&
+                                                                                'border-green-600/40 bg-green-600/10 text-green-700 dark:text-green-400',
+                                                                            revision.is_archived &&
+                                                                                'border-muted-foreground/40 bg-muted text-muted-foreground',
+                                                                        )}
+                                                                    >
+                                                                        {formatStatus(
+                                                                            revision.lifecycle_status,
+                                                                        )}
+                                                                    </span>
+                                                                </div>
 
                                                                 <p className="mt-1 truncate text-sm">
                                                                     {
@@ -982,10 +1244,10 @@ export default function DrawingShow({
                                                 ),
                                             )}
 
-                                            {drawing.revisions.length > 3 && (
+                                            {activeRevisions.length > 3 && (
                                                 <p className="mt-3 text-center text-xs text-muted-foreground xl:hidden">
                                                     Showing the latest 3 of{' '}
-                                                    {drawing.revisions.length} revisions.
+                                                    {activeRevisions.length} active revisions.
                                                 </p>
                                             )}
                                         </div>
@@ -1024,12 +1286,11 @@ export default function DrawingShow({
                                                     this drawing.
                                                 </p>
                                             ) : (
-                                                drawing.issues.map((issue, index) => (
+                                                latestTabletIssues.map((issue) => (
                                                     <div
                                                         key={issue.id}
                                                         className={cn(
                                                             'rounded-lg border p-4',
-                                                            index >= 3 && 'max-xl:hidden',
                                                         )}
                                                     >
                                                         <div className="flex flex-wrap gap-2">
@@ -1082,10 +1343,10 @@ export default function DrawingShow({
                                                 ))
                                             )}
 
-                                            {drawing.issues.length > 3 && (
+                                            {issuesNewestFirst.length > 3 && (
                                                 <p className="mt-3 text-center text-xs text-muted-foreground xl:hidden">
                                                     Showing the latest 3 of{' '}
-                                                    {drawing.issues.length} site issues.
+                                                    {issuesNewestFirst.length} site issues.
                                                 </p>
                                             )}
                                         </div>
@@ -1300,9 +1561,25 @@ export default function DrawingShow({
                                                 className="border-b last:border-b-0"
                                             >
                                                 <td className="px-6 py-4">
-                                                    <p className="font-mono font-semibold">
-                                                        {revision.revision_code}
-                                                    </p>
+                                                    <div className="flex flex-wrap items-center gap-2">
+                                                        <p className="font-mono font-semibold">
+                                                            {revision.revision_code}
+                                                        </p>
+
+                                                        <span
+                                                            className={cn(
+                                                                'rounded-full border px-2 py-0.5 text-xs capitalize',
+                                                                revision.is_current &&
+                                                                    'border-green-600/40 bg-green-600/10 text-green-700 dark:text-green-400',
+                                                                revision.is_archived &&
+                                                                    'border-muted-foreground/40 bg-muted text-muted-foreground',
+                                                            )}
+                                                        >
+                                                            {formatStatus(
+                                                                revision.lifecycle_status,
+                                                            )}
+                                                        </span>
+                                                    </div>
 
                                                     <p className="text-xs text-muted-foreground">
                                                         Issued:{' '}
@@ -1373,48 +1650,145 @@ export default function DrawingShow({
 
                                                 <td className="px-6 py-4">
                                                     <div className="flex flex-wrap gap-2">
-                                                        {revision.can_preview && (
+                                                        {!revision.is_archived &&
+                                                            (revision.can_preview ||
+                                                                revision.can_view_dwg) && (
                                                             <Button
                                                                 type="button"
                                                                 size="sm"
-                                                                variant={
-                                                                    previewRevision?.id ===
-                                                                    revision.id
-                                                                        ? 'default'
-                                                                        : 'outline'
-                                                                }
-                                                                onClick={() => {
-                                                                    setPreviewRevision(
+                                                                onClick={() =>
+                                                                    viewRevisionInWorkspace(
                                                                         revision,
-                                                                    );
-                                                                    setDwgPreviewRevision(
-                                                                        null,
-                                                                    );
-
-                                                                    window.setTimeout(
-                                                                        () => {
-                                                                            document
-                                                                                .getElementById(
-                                                                                    'pdf-preview',
-                                                                                )
-                                                                                ?.scrollIntoView(
-                                                                                    {
-                                                                                        behavior:
-                                                                                            'smooth',
-                                                                                        block: 'start',
-                                                                                    },
-                                                                                );
-                                                                        },
-                                                                        0,
-                                                                    );
-                                                                }}
+                                                                    )
+                                                                }
                                                             >
-                                                                {previewRevision?.id ===
-                                                                revision.id
-                                                                    ? 'Viewing'
-                                                                    : 'Preview'}
+                                                                View
                                                             </Button>
                                                         )}
+
+                                                        {revision.can_make_current && (
+                                                            <Button
+                                                                type="button"
+                                                                size="sm"
+                                                                variant="outline"
+                                                                onClick={() =>
+                                                                    makeRevisionCurrent(
+                                                                        revision,
+                                                                    )
+                                                                }
+                                                            >
+                                                                Make Current
+                                                            </Button>
+                                                        )}
+
+                                                        {!revision.is_archived && (
+                                                            <Button
+                                                                type="button"
+                                                                size="sm"
+                                                                variant="outline"
+                                                                onClick={() =>
+                                                                    openEditRevision(
+                                                                        revision,
+                                                                    )
+                                                                }
+                                                            >
+                                                                Edit
+                                                            </Button>
+                                                        )}
+
+                                                        {revision.can_archive && (
+                                                            <Button
+                                                                type="button"
+                                                                size="sm"
+                                                                variant="outline"
+                                                                onClick={() =>
+                                                                    archiveRevision(
+                                                                        revision,
+                                                                    )
+                                                                }
+                                                            >
+                                                                Archive
+                                                            </Button>
+                                                        )}
+
+                                                        {revision.can_restore && (
+                                                            <Button
+                                                                type="button"
+                                                                size="sm"
+                                                                variant="outline"
+                                                                onClick={() =>
+                                                                    restoreRevision(
+                                                                        revision,
+                                                                    )
+                                                                }
+                                                            >
+                                                                Restore
+                                                            </Button>
+                                                        )}
+
+                                                        {revision.can_delete && (
+                                                            <Button
+                                                                type="button"
+                                                                size="sm"
+                                                                variant="destructive"
+                                                                onClick={() =>
+                                                                    deleteRevision(
+                                                                        revision,
+                                                                    )
+                                                                }
+                                                            >
+                                                                Delete
+                                                            </Button>
+                                                        )}
+
+                                                        {revision.file_extension?.toLowerCase() ===
+                                                            'dwg' &&
+                                                            revision.translation_status ===
+                                                                'ready' &&
+                                                            revision.can_view_dwg &&
+                                                            revision.aps_urn && (
+                                                                <Button
+                                                                    type="button"
+                                                                    size="sm"
+                                                                    variant={
+                                                                        dwgPreviewRevision?.id ===
+                                                                        revision.id
+                                                                            ? 'default'
+                                                                            : 'outline'
+                                                                    }
+                                                                    onClick={() => {
+                                                                        setDwgPreviewRevision(
+                                                                            revision,
+                                                                        );
+
+                                                                        setPreviewRevision(
+                                                                            null,
+                                                                        );
+
+                                                                        window.setTimeout(
+                                                                            () => {
+                                                                                document
+                                                                                    .getElementById(
+                                                                                        'dwg-preview',
+                                                                                    )
+                                                                                    ?.scrollIntoView(
+                                                                                        {
+                                                                                            behavior:
+                                                                                                'smooth',
+                                                                                            block: 'start',
+                                                                                        },
+                                                                                    );
+                                                                            },
+                                                                            0,
+                                                                        );
+                                                                    }}
+                                                                >
+                                                                    {dwgPreviewRevision?.id ===
+                                                                    revision.id
+                                                                        ? 'Viewing DWG'
+                                                                        : 'Preview DWG'}
+                                                                </Button>
+                                                            )}
 
                                                         {revision.file_extension?.toLowerCase() ===
                                                             'dwg' &&
@@ -1470,55 +1844,6 @@ export default function DrawingShow({
                                                                     revision.id
                                                                         ? 'Checking...'
                                                                         : 'Refresh Status'}
-                                                                </Button>
-                                                            )}
-
-                                                        {revision.file_extension?.toLowerCase() ===
-                                                            'dwg' &&
-                                                            revision.translation_status ===
-                                                                'ready' &&
-                                                            revision.can_view_dwg &&
-                                                            revision.aps_urn && (
-                                                                <Button
-                                                                    type="button"
-                                                                    size="sm"
-                                                                    variant={
-                                                                        dwgPreviewRevision?.id ===
-                                                                        revision.id
-                                                                            ? 'default'
-                                                                            : 'outline'
-                                                                    }
-                                                                    onClick={() => {
-                                                                        setDwgPreviewRevision(
-                                                                            revision,
-                                                                        );
-
-                                                                        setPreviewRevision(
-                                                                            null,
-                                                                        );
-
-                                                                        window.setTimeout(
-                                                                            () => {
-                                                                                document
-                                                                                    .getElementById(
-                                                                                        'dwg-preview',
-                                                                                    )
-                                                                                    ?.scrollIntoView(
-                                                                                        {
-                                                                                            behavior:
-                                                                                                'smooth',
-                                                                                            block: 'start',
-                                                                                        },
-                                                                                    );
-                                                                            },
-                                                                            0,
-                                                                        );
-                                                                    }}
-                                                                >
-                                                                    {dwgPreviewRevision?.id ===
-                                                                    revision.id
-                                                                        ? 'Viewing DWG'
-                                                                        : 'Preview DWG'}
                                                                 </Button>
                                                             )}
 
@@ -2150,6 +2475,122 @@ export default function DrawingShow({
             </FormModal>
 
             <FormModal
+                open={editingRevision !== null}
+                title={
+                    editingRevision
+                        ? `Edit Revision ${editingRevision.revision_code}`
+                        : 'Edit Revision'
+                }
+                description="Update revision metadata. The original drawing file will not be replaced."
+                onClose={closeEditRevision}
+            >
+                <form
+                    onSubmit={submitRevisionEdit}
+                    className="space-y-5"
+                >
+                    <div className="space-y-2">
+                        <Label htmlFor="edit_revision_code">
+                            Revision Code
+                        </Label>
+
+                        <Input
+                            id="edit_revision_code"
+                            value={
+                                revisionEditForm.data
+                                    .revision_code
+                            }
+                            onChange={(event) =>
+                                revisionEditForm.setData(
+                                    'revision_code',
+                                    event.target.value,
+                                )
+                            }
+                        />
+
+                        {revisionEditForm.errors
+                            .revision_code && (
+                            <p className="text-sm text-red-600">
+                                {
+                                    revisionEditForm.errors
+                                        .revision_code
+                                }
+                            </p>
+                        )}
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label htmlFor="edit_issued_at">
+                            Issue Date
+                        </Label>
+
+                        <Input
+                            id="edit_issued_at"
+                            type="date"
+                            value={
+                                revisionEditForm.data
+                                    .issued_at
+                            }
+                            onChange={(event) =>
+                                revisionEditForm.setData(
+                                    'issued_at',
+                                    event.target.value,
+                                )
+                            }
+                        />
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label htmlFor="edit_revision_notes">
+                            Revision Notes
+                        </Label>
+
+                        <textarea
+                            id="edit_revision_notes"
+                            rows={5}
+                            value={
+                                revisionEditForm.data
+                                    .revision_notes
+                            }
+                            onChange={(event) =>
+                                revisionEditForm.setData(
+                                    'revision_notes',
+                                    event.target.value,
+                                )
+                            }
+                            className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm outline-none"
+                        />
+                    </div>
+
+                    <div className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
+                        The uploaded file cannot be replaced through
+                        editing. Upload a new revision when the actual
+                        drawing file changes.
+                    </div>
+
+                    <div className="flex justify-end gap-3 border-t pt-5">
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={closeEditRevision}
+                        >
+                            Cancel
+                        </Button>
+
+                        <Button
+                            type="submit"
+                            disabled={
+                                revisionEditForm.processing
+                            }
+                        >
+                            {revisionEditForm.processing
+                                ? 'Saving...'
+                                : 'Save Changes'}
+                        </Button>
+                    </div>
+                </form>
+            </FormModal>
+
+            <FormModal
                 open={recordsModalOpen}
                 title="Drawing Records"
                 description={`${drawing.drawing_number} — revisions and linked site issues.`}
@@ -2193,6 +2634,12 @@ export default function DrawingShow({
 
                 {recordsTab === 'revisions' ? (
                     <div className="mt-5 space-y-4">
+                        {revisionActionError && (
+                            <div className="mt-4 rounded-lg border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive">
+                                {revisionActionError}
+                            </div>
+                        )}
+
                         {drawing.revisions.length === 0 ? (
                             <p className="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">
                                 No revisions uploaded.
@@ -2205,12 +2652,28 @@ export default function DrawingShow({
                                 >
                                     <div className="flex flex-col justify-between gap-4 sm:flex-row">
                                         <div className="min-w-0">
-                                            <p className="font-mono font-semibold">
-                                                Revision{' '}
-                                                {
-                                                    revision.revision_code
-                                                }
-                                            </p>
+                                            <div className="flex flex-wrap items-center gap-2">
+                                                <p className="font-mono font-semibold">
+                                                    Revision{' '}
+                                                    {
+                                                        revision.revision_code
+                                                    }
+                                                </p>
+
+                                                <span
+                                                    className={cn(
+                                                        'rounded-full border px-2 py-0.5 text-xs capitalize',
+                                                        revision.is_current &&
+                                                            'border-green-600/40 bg-green-600/10 text-green-700 dark:text-green-400',
+                                                        revision.is_archived &&
+                                                            'border-muted-foreground/40 bg-muted text-muted-foreground',
+                                                    )}
+                                                >
+                                                    {formatStatus(
+                                                        revision.lifecycle_status,
+                                                    )}
+                                                </span>
+                                            </div>
 
                                             <p className="mt-1 break-all text-sm">
                                                 {
@@ -2243,8 +2706,9 @@ export default function DrawingShow({
                                         </div>
 
                                         <div className="flex shrink-0 flex-wrap gap-2">
-                                            {(revision.can_preview ||
-                                                revision.can_view_dwg) && (
+                                            {!revision.is_archived &&
+                                                (revision.can_preview ||
+                                                    revision.can_view_dwg) && (
                                                 <Button
                                                     type="button"
                                                     size="sm"
@@ -2255,6 +2719,81 @@ export default function DrawingShow({
                                                     }
                                                 >
                                                     View
+                                                </Button>
+                                            )}
+
+                                            {revision.can_make_current && (
+                                                <Button
+                                                    type="button"
+                                                    size="sm"
+                                                    variant="outline"
+                                                    onClick={() =>
+                                                        makeRevisionCurrent(
+                                                            revision,
+                                                        )
+                                                    }
+                                                >
+                                                    Make Current
+                                                </Button>
+                                            )}
+
+                                            {!revision.is_archived && (
+                                                <Button
+                                                    type="button"
+                                                    size="sm"
+                                                    variant="outline"
+                                                    onClick={() =>
+                                                        openEditRevision(
+                                                            revision,
+                                                        )
+                                                    }
+                                                >
+                                                    Edit
+                                                </Button>
+                                            )}
+
+                                            {revision.can_archive && (
+                                                <Button
+                                                    type="button"
+                                                    size="sm"
+                                                    variant="outline"
+                                                    onClick={() =>
+                                                        archiveRevision(
+                                                            revision,
+                                                        )
+                                                    }
+                                                >
+                                                    Archive
+                                                </Button>
+                                            )}
+
+                                            {revision.can_restore && (
+                                                <Button
+                                                    type="button"
+                                                    size="sm"
+                                                    variant="outline"
+                                                    onClick={() =>
+                                                        restoreRevision(
+                                                            revision,
+                                                        )
+                                                    }
+                                                >
+                                                    Restore
+                                                </Button>
+                                            )}
+
+                                            {revision.can_delete && (
+                                                <Button
+                                                    type="button"
+                                                    size="sm"
+                                                    variant="destructive"
+                                                    onClick={() =>
+                                                        deleteRevision(
+                                                            revision,
+                                                        )
+                                                    }
+                                                >
+                                                    Delete
                                                 </Button>
                                             )}
 

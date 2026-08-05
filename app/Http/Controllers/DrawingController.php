@@ -98,17 +98,18 @@ class DrawingController extends Controller
             'revisions' => function ($query): void {
                 $query
                     ->with('uploader:id,name')
-                    ->latest();
+                    ->orderByDesc('created_at')
+                    ->orderByDesc('id');
             },
 
             'siteIssues' => function ($query): void {
                 $query
                     ->with('reporter:id,name')
-                    ->latest();
+                    ->orderByDesc('created_at')
+                    ->orderByDesc('id');
             },
         ]);
 
-        $revisions = $drawing->revisions()->get();
         $issues = $drawing->siteIssues()->get();
 
         return Inertia::render('drawings/show', [
@@ -127,58 +128,101 @@ class DrawingController extends Controller
                 'description' => $drawing->description,
                 'creator_name' => $drawing->creator->name,
 
-                'revisions' => array_map(
-                    function (DrawingRevision $revision): array {
-                        return [
-                            'id' => $revision->id,
-                            'revision_code' => $revision->revision_code,
-                            'original_filename' => $revision->original_filename,
-                            'file_extension' => $revision->file_extension,
-                            'file_size' => $revision->file_size,
-                            'revision_notes' => $revision->revision_notes,
-                            'issued_at' => $revision->issued_at === null
-                                ? null
-                                : Carbon::parse((string) $revision->issued_at)
-                                    ->format('Y-m-d'),
-                            'uploaded_by' => $revision->uploader?->name,
-                            'uploaded_at' => Carbon::parse((string) $revision->created_at)
-                                ->format('Y-m-d H:i'),
-                            'translation_status' => $revision->translation_status,
-                            'translation_progress' => $revision->translation_progress,
-                            'translation_error' => $revision->translation_error,
-                            'translation_requested_at' => $revision->translation_requested_at === null
-                                    ? null
-                                    : Carbon::parse((string) $revision->translation_requested_at)
-                                        ->format('Y-m-d H:i'),
-                            'translation_completed_at' => $revision->translation_completed_at === null
-                                    ? null
-                                    : Carbon::parse((string) $revision->translation_completed_at)
-                                        ->format('Y-m-d H:i'),
+                'revisions' => $drawing->revisions
+                    ->map(
+                        function (
+                            DrawingRevision $revision,
+                        ) use ($drawing): array {
+                            $isCurrent =
+                                $drawing->current_revision_id ===
+                                $revision->id;
 
-                            'can_preview' => strtolower(
-                                (string) $revision->file_extension,
-                            ) === 'pdf',
+                            $isArchived =
+                                $revision->archived_at !== null;
 
-                            'can_view_dwg' => (
-                                strtolower(
-                                    (string) $revision->file_extension,
-                                ) === 'dwg'
-                                && $revision->translation_status === 'ready'
-                                && is_string($revision->aps_urn)
-                                && $revision->aps_urn !== ''
-                            ),
+                            $lifecycleStatus = match (true) {
+                                $isArchived => 'archived',
+                                $isCurrent => 'current',
+                                default => 'superseded',
+                            };
 
-                            'aps_urn' => (
-                                $revision->translation_status === 'ready'
-                                && is_string($revision->aps_urn)
-                            )
-                                ? $revision->aps_urn
-                                : null,
+                            return [
+                                'id' => $revision->id,
+                                'revision_code' => $revision->revision_code,
+                                'original_filename' => $revision->original_filename,
+                                'file_extension' => $revision->file_extension,
+                                'file_size' => $revision->file_size,
+                                'revision_notes' => $revision->revision_notes,
+                                'issued_at' => $revision->issued_at
+                                    ?->format('Y-m-d'),
+                                'uploaded_by' => $revision->uploader->name,
+                                'uploaded_at' => $revision->created_at
+                                    ->format('Y-m-d H:i'),
 
-                        ];
-                    },
-                    $revisions->all(),
-                ),
+                                'can_preview' => strtolower(
+                                    (string) $revision
+                                        ->file_extension,
+                                ) === 'pdf',
+
+                                'translation_status' => $revision->translation_status,
+
+                                'translation_progress' => $revision->translation_progress,
+
+                                'translation_error' => $revision->translation_error,
+
+                                'translation_requested_at' => $revision
+                                    ->translation_requested_at
+                                    ?->format('Y-m-d H:i'),
+
+                                'translation_completed_at' => $revision
+                                    ->translation_completed_at
+                                    ?->format('Y-m-d H:i'),
+
+                                'can_view_dwg' => (
+                                    strtolower(
+                                        (string) $revision
+                                            ->file_extension,
+                                    ) === 'dwg'
+                                    && $revision
+                                        ->translation_status ===
+                                        'ready'
+                                    && is_string(
+                                        $revision->aps_urn,
+                                    )
+                                    && $revision->aps_urn !== ''
+                                ),
+
+                                'aps_urn' => (
+                                    $revision
+                                        ->translation_status ===
+                                        'ready'
+                                    && is_string(
+                                        $revision->aps_urn,
+                                    )
+                                )
+                                    ? $revision->aps_urn
+                                    : null,
+
+                                'lifecycle_status' => $lifecycleStatus,
+
+                                'is_current' => $isCurrent,
+                                'is_archived' => $isArchived,
+
+                                'archived_at' => $revision->archived_at
+                                    ?->format('Y-m-d H:i'),
+
+                                'can_make_current' => ! $isCurrent
+                                    && ! $isArchived,
+
+                                'can_archive' => ! $isCurrent
+                                    && ! $isArchived,
+
+                                'can_restore' => $isArchived,
+
+                                'can_delete' => ! $isCurrent,
+                            ];
+                        },
+                    ),
 
                 'issues' => array_map(
                     function (SiteIssue $issue): array {

@@ -23,11 +23,14 @@ class Drawing extends Model
     protected $fillable = [
         'project_id',
         'created_by',
+        'current_revision_id',
         'drawing_number',
         'title',
         'discipline',
         'status',
         'description',
+        'translation_completed_at',
+        'archived_at',
     ];
 
     /**
@@ -62,5 +65,24 @@ class Drawing extends Model
     public function siteIssues(): HasMany
     {
         return $this->hasMany(SiteIssue::class);
+    }
+
+    public function currentRevision(): BelongsTo
+    {
+        return $this->belongsTo(
+            DrawingRevision::class,
+            'current_revision_id',
+        );
+    }
+
+    protected function casts(): array
+    {
+        return [
+            'issued_at' => 'date',
+            'file_size' => 'integer',
+            'translation_requested_at' => 'datetime',
+            'translation_completed_at' => 'datetime',
+            'archived_at' => 'datetime',
+        ];
     }
 }
