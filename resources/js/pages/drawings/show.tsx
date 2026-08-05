@@ -918,18 +918,23 @@ export default function DrawingShow({
                                                             </p>
                                                         )}
 
-                                                        <Button
-                                                            asChild
-                                                            size="sm"
-                                                            variant="outline"
-                                                            className="mt-3"
-                                                        >
-                                                            <Link
-                                                                href={`/projects/${project.id}/drawings/${drawing.id}/issues/${issue.id}/edit`}
+                                                        {issue.has_photo ? (
+                                                            <Button
+                                                                type="button"
+                                                                size="sm"
+                                                                variant="outline"
+                                                                className="mt-3"
+                                                                onClick={() =>
+                                                                    setPhotoPreviewIssue(issue)
+                                                                }
                                                             >
-                                                                Open Issue
-                                                            </Link>
-                                                        </Button>
+                                                                View Photo
+                                                            </Button>
+                                                        ) : (
+                                                            <p className="mt-3 text-xs text-muted-foreground">
+                                                                No photo attached
+                                                            </p>
+                                                        )}
                                                     </div>
                                                 ))
                                             )}
