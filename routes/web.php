@@ -142,6 +142,45 @@ Route::middleware(['auth', 'verified'])->group(function () {
         [ApsViewerController::class, 'token'],
     )->name('aps.viewer-token');
 
+    Route::put(
+        'projects/{project}/drawings/{drawing}/revisions/{revision}',
+        [
+            DrawingRevisionController::class,
+            'update', ],
+    )->name('revisions.update');
+
+    Route::patch(
+        'projects/{project}/drawings/{drawing}/revisions/{revision}/make-current',
+        [
+            DrawingRevisionController::class,
+            'makeCurrent',
+        ],
+    )->name('revisions.make-current');
+
+    Route::patch(
+        'projects/{project}/drawings/{drawing}/revisions/{revision}/archive',
+        [
+            DrawingRevisionController::class,
+            'archive',
+        ],
+    )->name('revisions.archive');
+
+    Route::patch(
+        'projects/{project}/drawings/{drawing}/revisions/{revision}/restore',
+        [
+            DrawingRevisionController::class,
+            'restore',
+        ],
+    )->name('revisions.restore');
+
+    Route::delete(
+        'projects/{project}/drawings/{drawing}/revisions/{revision}',
+        [
+            DrawingRevisionController::class,
+            'destroy',
+        ],
+    )->name('revisions.destroy');
+
 });
 
 require __DIR__.'/settings.php';

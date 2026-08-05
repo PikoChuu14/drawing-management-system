@@ -1,9 +1,16 @@
 import { Head, Link, router, useForm } from '@inertiajs/react';
-import { Maximize2, Minimize2, X } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import {
+    History,
+    ListChecks,
+    Plus,
+    Maximize2,
+    Minimize2,
+    X,
+} from 'lucide-react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
-
 import ApsViewer from '@/components/aps-viewer';
+import FormModal from '@/components/form-modal';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -39,6 +46,18 @@ type Revision = {
 
     can_view_dwg: boolean;
     aps_urn: string | null;
+
+    lifecycle_status: 'current' | 'superseded' | 'archived';
+
+    is_current: boolean;
+    is_archived: boolean;
+
+    archived_at: string | null;
+
+    can_make_current: boolean;
+    can_archive: boolean;
+    can_restore: boolean;
+    can_delete: boolean;
 };
 
 type Drawing = {
@@ -92,6 +111,12 @@ type IssueForm = {
 type ApsViewerConfig = {
     token_url: string;
     api: string;
+};
+
+type RevisionEditForm = {
+    revision_code: string;
+    issued_at: string;
+    revision_notes: string;
 };
 
 function formatStatus(status: string): string {
@@ -171,6 +196,12 @@ export default function DrawingShow({
                 if (fileInput.current) {
                     fileInput.current.value = '';
                 }
+
+                if (tabletRevisionFileInput.current) {
+                    tabletRevisionFileInput.current.value = '';
+                }
+
+                setRevisionUploadOpen(false);
             },
         });
     };
@@ -200,6 +231,12 @@ export default function DrawingShow({
                     if (issuePhotoInput.current) {
                         issuePhotoInput.current.value = '';
                     }
+
+                    if (tabletIssuePhotoInput.current) {
+                        tabletIssuePhotoInput.current.value = '';
+                    }
+
+                    setIssueReportOpen(false);
                 },
             },
         );
@@ -301,7 +338,15 @@ export default function DrawingShow({
 
     const [isFocusMode, setIsFocusMode] = useState(false);
 
-    const previewableRevisions = drawing.revisions.filter(
+    const revisionsNewestFirst = [...drawing.revisions].sort(
+        (first, second) => second.id - first.id,
+    );
+
+    const activeRevisions = revisionsNewestFirst.filter(
+        (revision) => !revision.is_archived,
+    );
+
+    const previewableRevisions = activeRevisions.filter(
         (revision) =>
             revision.can_preview ||
             (revision.can_view_dwg && revision.aps_urn !== null),
@@ -317,27 +362,30 @@ export default function DrawingShow({
 
     const workspaceExpanded = isWorkspaceFullscreen || isFocusMode;
 
-    const selectWorkspaceRevision = (revisionId: number) => {
-        const revision = drawing.revisions.find(
-            (item) => item.id === revisionId,
-        );
+    const selectWorkspaceRevision = useCallback(
+        (revisionId: number) => {
+            const revision = drawing.revisions.find(
+                (item) => item.id === revisionId,
+            );
 
-        if (!revision) {
-            return;
-        }
+            if (!revision) {
+                return;
+            }
 
-        if (revision.can_view_dwg && revision.aps_urn) {
-            setDwgPreviewRevision(revision);
-            setPreviewRevision(null);
+            if (revision.can_view_dwg && revision.aps_urn) {
+                setDwgPreviewRevision(revision);
+                setPreviewRevision(null);
 
-            return;
-        }
+                return;
+            }
 
-        if (revision.can_preview) {
-            setPreviewRevision(revision);
-            setDwgPreviewRevision(null);
-        }
-    };
+            if (revision.can_preview) {
+                setPreviewRevision(revision);
+                setDwgPreviewRevision(null);
+            }
+        },
+        [drawing.revisions],
+    );
 
     useEffect(() => {
         if (!photoPreviewIssue) {
@@ -431,6 +479,244 @@ export default function DrawingShow({
         }
 
         setIsFocusMode(false);
+    };
+
+    type RecordsTab = 'revisions' | 'issues';
+
+    const [revisionUploadOpen, setRevisionUploadOpen] = useState(false);
+
+    const [issueReportOpen, setIssueReportOpen] = useState(false);
+
+    const [recordsModalOpen, setRecordsModalOpen] = useState(false);
+
+    const [recordsTab, setRecordsTab] = useState<RecordsTab>('revisions');
+
+    const tabletRevisionFileInput = useRef<HTMLInputElement>(null);
+
+    const tabletIssuePhotoInput = useRef<HTMLInputElement>(null);
+
+    const openRecordsModal = (tab: RecordsTab) => {
+        setRecordsTab(tab);
+        setRecordsModalOpen(true);
+    };
+
+    const closeRevisionUpload = () => {
+        if (form.processing) {
+            return;
+        }
+
+        form.reset();
+        form.clearErrors();
+
+        if (tabletRevisionFileInput.current) {
+            tabletRevisionFileInput.current.value = '';
+        }
+
+        setRevisionUploadOpen(false);
+    };
+
+    const closeIssueReport = () => {
+        if (issueForm.processing) {
+            return;
+        }
+
+        issueForm.reset();
+        issueForm.clearErrors();
+
+        if (tabletIssuePhotoInput.current) {
+            tabletIssuePhotoInput.current.value = '';
+        }
+
+        setIssueReportOpen(false);
+    };
+
+    const viewRevisionFromHistory = (revision: Revision) => {
+        selectWorkspaceRevision(revision.id);
+        setRecordsModalOpen(false);
+
+        window.setTimeout(() => {
+            workspaceRef.current?.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start',
+            });
+        }, 0);
+    };
+
+    const viewRevisionInWorkspace = (revision: Revision) => {
+        selectWorkspaceRevision(revision.id);
+
+        window.setTimeout(() => {
+            workspaceRef.current?.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start',
+            });
+        }, 0);
+    };
+
+    useEffect(() => {
+        if (selectedWorkspaceRevision) {
+            return;
+        }
+
+        const currentViewable = activeRevisions.find(
+            (revision) =>
+                revision.is_current &&
+                (revision.can_preview ||
+                    (revision.can_view_dwg && revision.aps_urn)),
+        );
+
+        const latestViewable = activeRevisions.find(
+            (revision) =>
+                revision.can_preview ||
+                (revision.can_view_dwg && revision.aps_urn),
+        );
+
+        const target = currentViewable ?? latestViewable;
+
+        if (target) {
+            queueMicrotask(() => {
+                selectWorkspaceRevision(target.id);
+            });
+        }
+    }, [activeRevisions, selectedWorkspaceRevision, selectWorkspaceRevision]);
+
+    const issuesNewestFirst = [...drawing.issues].sort(
+        (first, second) => second.id - first.id,
+    );
+
+    const latestTabletRevisions = activeRevisions.slice(0, 3);
+
+    const latestTabletIssues = issuesNewestFirst.slice(0, 3);
+
+    const [revisionActionError, setRevisionActionError] = useState<
+        string | null
+    >(null);
+
+    const makeRevisionCurrent = (revision: Revision) => {
+        setRevisionActionError(null);
+
+        router.patch(
+            `/projects/${project.id}/drawings/${drawing.id}/revisions/${revision.id}/make-current`,
+            {},
+            {
+                preserveScroll: true,
+                onError: (errors) =>
+                    setRevisionActionError(
+                        errors.revision ??
+                            'The revision could not be made current.',
+                    ),
+            },
+        );
+    };
+
+    const archiveRevision = (revision: Revision) => {
+        if (
+            !window.confirm(
+                `Archive revision ${revision.revision_code}? It will be hidden from normal viewing but remain in Full History.`,
+            )
+        ) {
+            return;
+        }
+
+        setRevisionActionError(null);
+
+        router.patch(
+            `/projects/${project.id}/drawings/${drawing.id}/revisions/${revision.id}/archive`,
+            {},
+            {
+                preserveScroll: true,
+                onError: (errors) =>
+                    setRevisionActionError(
+                        errors.revision ??
+                            'The revision could not be archived.',
+                    ),
+            },
+        );
+    };
+
+    const restoreRevision = (revision: Revision) => {
+        router.patch(
+            `/projects/${project.id}/drawings/${drawing.id}/revisions/${revision.id}/restore`,
+            {},
+            {
+                preserveScroll: true,
+            },
+        );
+    };
+
+    const deleteRevision = (revision: Revision) => {
+        if (
+            !window.confirm(
+                `Permanently delete revision ${revision.revision_code} and its uploaded file?\n\nThis action cannot be undone.`,
+            )
+        ) {
+            return;
+        }
+
+        setRevisionActionError(null);
+
+        router.delete(
+            `/projects/${project.id}/drawings/${drawing.id}/revisions/${revision.id}`,
+            {
+                preserveScroll: true,
+                onError: (errors) =>
+                    setRevisionActionError(
+                        errors.revision ?? 'The revision could not be deleted.',
+                    ),
+            },
+        );
+    };
+
+    const [editingRevision, setEditingRevision] = useState<Revision | null>(
+        null,
+    );
+
+    const revisionEditForm = useForm<RevisionEditForm>({
+        revision_code: '',
+        issued_at: '',
+        revision_notes: '',
+    });
+
+    const openEditRevision = (revision: Revision) => {
+        revisionEditForm.setData({
+            revision_code: revision.revision_code,
+
+            issued_at: revision.issued_at ?? '',
+
+            revision_notes: revision.revision_notes ?? '',
+        });
+
+        revisionEditForm.clearErrors();
+        setEditingRevision(revision);
+    };
+
+    const closeEditRevision = () => {
+        if (revisionEditForm.processing) {
+            return;
+        }
+
+        revisionEditForm.reset();
+        revisionEditForm.clearErrors();
+        setEditingRevision(null);
+    };
+
+    const submitRevisionEdit = (event: FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+
+        if (!editingRevision) {
+            return;
+        }
+
+        revisionEditForm.put(
+            `/projects/${project.id}/drawings/${drawing.id}/revisions/${editingRevision.id}`,
+            {
+                preserveScroll: true,
+
+                onSuccess: () => {
+                    closeEditRevision();
+                },
+            },
+        );
     };
 
     return (
@@ -785,7 +1071,36 @@ export default function DrawingShow({
 
                                     {activeWorkspaceTab === 'revisions' && (
                                         <div className="space-y-3">
-                                            {drawing.revisions.map(
+                                            <div className="mb-5 grid grid-cols-2 gap-3 xl:hidden">
+                                                <Button
+                                                    type="button"
+                                                    className="h-11 gap-2"
+                                                    onClick={() =>
+                                                        setRevisionUploadOpen(
+                                                            true,
+                                                        )
+                                                    }
+                                                >
+                                                    <Plus className="size-4" />
+                                                    Upload Revision
+                                                </Button>
+
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    className="h-11 gap-2"
+                                                    onClick={() =>
+                                                        openRecordsModal(
+                                                            'revisions',
+                                                        )
+                                                    }
+                                                >
+                                                    <History className="size-4" />
+                                                    Full History
+                                                </Button>
+                                            </div>
+
+                                            {latestTabletRevisions.map(
                                                 (revision) => (
                                                     <div
                                                         key={revision.id}
@@ -798,12 +1113,28 @@ export default function DrawingShow({
                                                     >
                                                         <div className="flex items-start justify-between gap-3">
                                                             <div className="min-w-0">
-                                                                <p className="font-mono font-semibold">
-                                                                    Rev{' '}
-                                                                    {
-                                                                        revision.revision_code
-                                                                    }
-                                                                </p>
+                                                                <div className="flex flex-wrap items-center gap-2">
+                                                                    <p className="font-mono font-semibold">
+                                                                        Rev{' '}
+                                                                        {
+                                                                            revision.revision_code
+                                                                        }
+                                                                    </p>
+
+                                                                    <span
+                                                                        className={cn(
+                                                                            'rounded-full border px-2 py-0.5 text-xs capitalize',
+                                                                            revision.is_current &&
+                                                                                'border-green-600/40 bg-green-600/10 text-green-700 dark:text-green-400',
+                                                                            revision.is_archived &&
+                                                                                'border-muted-foreground/40 bg-muted text-muted-foreground',
+                                                                        )}
+                                                                    >
+                                                                        {formatStatus(
+                                                                            revision.lifecycle_status,
+                                                                        )}
+                                                                    </span>
+                                                                </div>
 
                                                                 <p className="mt-1 truncate text-sm">
                                                                     {
@@ -848,74 +1179,120 @@ export default function DrawingShow({
                                                     </div>
                                                 ),
                                             )}
+
+                                            {activeRevisions.length > 3 && (
+                                                <p className="mt-3 text-center text-xs text-muted-foreground xl:hidden">
+                                                    Showing the latest 3 of{' '}
+                                                    {activeRevisions.length}{' '}
+                                                    active revisions.
+                                                </p>
+                                            )}
                                         </div>
                                     )}
 
                                     {activeWorkspaceTab === 'issues' && (
                                         <div className="space-y-3">
+                                            <div className="mb-5 grid grid-cols-2 gap-3 xl:hidden">
+                                                <Button
+                                                    type="button"
+                                                    className="h-11 gap-2"
+                                                    onClick={() =>
+                                                        setIssueReportOpen(true)
+                                                    }
+                                                >
+                                                    <Plus className="size-4" />
+                                                    Report Issue
+                                                </Button>
+
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    className="h-11 gap-2"
+                                                    onClick={() =>
+                                                        openRecordsModal(
+                                                            'issues',
+                                                        )
+                                                    }
+                                                >
+                                                    <ListChecks className="size-4" />
+                                                    All Issues
+                                                </Button>
+                                            </div>
+
                                             {drawing.issues.length === 0 ? (
                                                 <p className="rounded-lg border border-dashed p-5 text-center text-sm text-muted-foreground">
                                                     No site issues are linked to
                                                     this drawing.
                                                 </p>
                                             ) : (
-                                                drawing.issues.map((issue) => (
-                                                    <div
-                                                        key={issue.id}
-                                                        className="rounded-lg border p-4"
-                                                    >
-                                                        <div className="flex flex-wrap gap-2">
-                                                            <span className="font-mono text-xs font-semibold">
-                                                                {
-                                                                    issue.issue_number
-                                                                }
-                                                            </span>
+                                                latestTabletIssues.map(
+                                                    (issue) => (
+                                                        <div
+                                                            key={issue.id}
+                                                            className={cn(
+                                                                'rounded-lg border p-4',
+                                                            )}
+                                                        >
+                                                            <div className="flex flex-wrap gap-2">
+                                                                <span className="font-mono text-xs font-semibold">
+                                                                    {
+                                                                        issue.issue_number
+                                                                    }
+                                                                </span>
 
-                                                            <span className="rounded-full border px-2 py-0.5 text-xs capitalize">
-                                                                {formatStatus(
-                                                                    issue.priority,
-                                                                )}
-                                                            </span>
+                                                                <span className="rounded-full border px-2 py-0.5 text-xs capitalize">
+                                                                    {formatStatus(
+                                                                        issue.priority,
+                                                                    )}
+                                                                </span>
 
-                                                            <span className="rounded-full border px-2 py-0.5 text-xs capitalize">
-                                                                {formatStatus(
-                                                                    issue.status,
+                                                                <span className="rounded-full border px-2 py-0.5 text-xs capitalize">
+                                                                    {formatStatus(
+                                                                        issue.status,
+                                                                    )}
+                                                                </span>
+                                                            </div>
+
+                                                            <p className="mt-3 text-sm font-medium">
+                                                                {issue.title}
+                                                            </p>
+
+                                                            {issue.location && (
+                                                                <p className="mt-2 text-xs text-muted-foreground">
+                                                                    {
+                                                                        issue.location
+                                                                    }
+                                                                </p>
+                                                            )}
+
+                                                            <div className="mt-3 flex flex-wrap gap-2">
+                                                                {issue.has_photo && (
+                                                                    <Button
+                                                                        type="button"
+                                                                        size="sm"
+                                                                        variant="outline"
+                                                                        onClick={() =>
+                                                                            setPhotoPreviewIssue(
+                                                                                issue,
+                                                                            )
+                                                                        }
+                                                                    >
+                                                                        View
+                                                                        Photo
+                                                                    </Button>
                                                                 )}
-                                                            </span>
+                                                            </div>
                                                         </div>
+                                                    ),
+                                                )
+                                            )}
 
-                                                        <p className="mt-3 text-sm font-medium">
-                                                            {issue.title}
-                                                        </p>
-
-                                                        {issue.location && (
-                                                            <p className="mt-2 text-xs text-muted-foreground">
-                                                                {issue.location}
-                                                            </p>
-                                                        )}
-
-                                                        {issue.has_photo ? (
-                                                            <Button
-                                                                type="button"
-                                                                size="sm"
-                                                                variant="outline"
-                                                                className="mt-3"
-                                                                onClick={() =>
-                                                                    setPhotoPreviewIssue(
-                                                                        issue,
-                                                                    )
-                                                                }
-                                                            >
-                                                                View Photo
-                                                            </Button>
-                                                        ) : (
-                                                            <p className="mt-3 text-xs text-muted-foreground">
-                                                                No photo
-                                                                attached
-                                                            </p>
-                                                        )}
-                                                    </div>
-                                                ))
+                                            {issuesNewestFirst.length > 3 && (
+                                                <p className="mt-3 text-center text-xs text-muted-foreground xl:hidden">
+                                                    Showing the latest 3 of{' '}
+                                                    {issuesNewestFirst.length}{' '}
+                                                    site issues.
+                                                </p>
                                             )}
                                         </div>
                                     )}
@@ -925,7 +1302,7 @@ export default function DrawingShow({
                     </div>
                 </section>
 
-                <div className="grid gap-6 xl:grid-cols-[380px_1fr]">
+                <div className="hidden gap-6 xl:grid xl:grid-cols-[380px_1fr]">
                     <section className="rounded-xl border bg-card p-6 shadow-sm">
                         <h2 className="text-lg font-semibold">
                             Upload Revision
@@ -1129,9 +1506,27 @@ export default function DrawingShow({
                                                 className="border-b last:border-b-0"
                                             >
                                                 <td className="px-6 py-4">
-                                                    <p className="font-mono font-semibold">
-                                                        {revision.revision_code}
-                                                    </p>
+                                                    <div className="flex flex-wrap items-center gap-2">
+                                                        <p className="font-mono font-semibold">
+                                                            {
+                                                                revision.revision_code
+                                                            }
+                                                        </p>
+
+                                                        <span
+                                                            className={cn(
+                                                                'rounded-full border px-2 py-0.5 text-xs capitalize',
+                                                                revision.is_current &&
+                                                                    'border-green-600/40 bg-green-600/10 text-green-700 dark:text-green-400',
+                                                                revision.is_archived &&
+                                                                    'border-muted-foreground/40 bg-muted text-muted-foreground',
+                                                            )}
+                                                        >
+                                                            {formatStatus(
+                                                                revision.lifecycle_status,
+                                                            )}
+                                                        </span>
+                                                    </div>
 
                                                     <p className="text-xs text-muted-foreground">
                                                         Issued:{' '}
@@ -1202,48 +1597,145 @@ export default function DrawingShow({
 
                                                 <td className="px-6 py-4">
                                                     <div className="flex flex-wrap gap-2">
-                                                        {revision.can_preview && (
+                                                        {!revision.is_archived &&
+                                                            (revision.can_preview ||
+                                                                revision.can_view_dwg) && (
+                                                                <Button
+                                                                    type="button"
+                                                                    size="sm"
+                                                                    onClick={() =>
+                                                                        viewRevisionInWorkspace(
+                                                                            revision,
+                                                                        )
+                                                                    }
+                                                                >
+                                                                    View
+                                                                </Button>
+                                                            )}
+
+                                                        {revision.can_make_current && (
                                                             <Button
                                                                 type="button"
                                                                 size="sm"
-                                                                variant={
-                                                                    previewRevision?.id ===
-                                                                    revision.id
-                                                                        ? 'default'
-                                                                        : 'outline'
-                                                                }
-                                                                onClick={() => {
-                                                                    setPreviewRevision(
+                                                                variant="outline"
+                                                                onClick={() =>
+                                                                    makeRevisionCurrent(
                                                                         revision,
-                                                                    );
-                                                                    setDwgPreviewRevision(
-                                                                        null,
-                                                                    );
-
-                                                                    window.setTimeout(
-                                                                        () => {
-                                                                            document
-                                                                                .getElementById(
-                                                                                    'pdf-preview',
-                                                                                )
-                                                                                ?.scrollIntoView(
-                                                                                    {
-                                                                                        behavior:
-                                                                                            'smooth',
-                                                                                        block: 'start',
-                                                                                    },
-                                                                                );
-                                                                        },
-                                                                        0,
-                                                                    );
-                                                                }}
+                                                                    )
+                                                                }
                                                             >
-                                                                {previewRevision?.id ===
-                                                                revision.id
-                                                                    ? 'Viewing'
-                                                                    : 'Preview'}
+                                                                Make Current
                                                             </Button>
                                                         )}
+
+                                                        {!revision.is_archived && (
+                                                            <Button
+                                                                type="button"
+                                                                size="sm"
+                                                                variant="outline"
+                                                                onClick={() =>
+                                                                    openEditRevision(
+                                                                        revision,
+                                                                    )
+                                                                }
+                                                            >
+                                                                Edit
+                                                            </Button>
+                                                        )}
+
+                                                        {revision.can_archive && (
+                                                            <Button
+                                                                type="button"
+                                                                size="sm"
+                                                                variant="outline"
+                                                                onClick={() =>
+                                                                    archiveRevision(
+                                                                        revision,
+                                                                    )
+                                                                }
+                                                            >
+                                                                Archive
+                                                            </Button>
+                                                        )}
+
+                                                        {revision.can_restore && (
+                                                            <Button
+                                                                type="button"
+                                                                size="sm"
+                                                                variant="outline"
+                                                                onClick={() =>
+                                                                    restoreRevision(
+                                                                        revision,
+                                                                    )
+                                                                }
+                                                            >
+                                                                Restore
+                                                            </Button>
+                                                        )}
+
+                                                        {revision.can_delete && (
+                                                            <Button
+                                                                type="button"
+                                                                size="sm"
+                                                                variant="destructive"
+                                                                onClick={() =>
+                                                                    deleteRevision(
+                                                                        revision,
+                                                                    )
+                                                                }
+                                                            >
+                                                                Delete
+                                                            </Button>
+                                                        )}
+
+                                                        {revision.file_extension?.toLowerCase() ===
+                                                            'dwg' &&
+                                                            revision.translation_status ===
+                                                                'ready' &&
+                                                            revision.can_view_dwg &&
+                                                            revision.aps_urn && (
+                                                                <Button
+                                                                    type="button"
+                                                                    size="sm"
+                                                                    variant={
+                                                                        dwgPreviewRevision?.id ===
+                                                                        revision.id
+                                                                            ? 'default'
+                                                                            : 'outline'
+                                                                    }
+                                                                    onClick={() => {
+                                                                        setDwgPreviewRevision(
+                                                                            revision,
+                                                                        );
+
+                                                                        setPreviewRevision(
+                                                                            null,
+                                                                        );
+
+                                                                        window.setTimeout(
+                                                                            () => {
+                                                                                document
+                                                                                    .getElementById(
+                                                                                        'dwg-preview',
+                                                                                    )
+                                                                                    ?.scrollIntoView(
+                                                                                        {
+                                                                                            behavior:
+                                                                                                'smooth',
+                                                                                            block: 'start',
+                                                                                        },
+                                                                                    );
+                                                                            },
+                                                                            0,
+                                                                        );
+                                                                    }}
+                                                                >
+                                                                    {dwgPreviewRevision?.id ===
+                                                                    revision.id
+                                                                        ? 'Viewing DWG'
+                                                                        : 'Preview DWG'}
+                                                                </Button>
+                                                            )}
 
                                                         {revision.file_extension?.toLowerCase() ===
                                                             'dwg' &&
@@ -1302,55 +1794,6 @@ export default function DrawingShow({
                                                                 </Button>
                                                             )}
 
-                                                        {revision.file_extension?.toLowerCase() ===
-                                                            'dwg' &&
-                                                            revision.translation_status ===
-                                                                'ready' &&
-                                                            revision.can_view_dwg &&
-                                                            revision.aps_urn && (
-                                                                <Button
-                                                                    type="button"
-                                                                    size="sm"
-                                                                    variant={
-                                                                        dwgPreviewRevision?.id ===
-                                                                        revision.id
-                                                                            ? 'default'
-                                                                            : 'outline'
-                                                                    }
-                                                                    onClick={() => {
-                                                                        setDwgPreviewRevision(
-                                                                            revision,
-                                                                        );
-
-                                                                        setPreviewRevision(
-                                                                            null,
-                                                                        );
-
-                                                                        window.setTimeout(
-                                                                            () => {
-                                                                                document
-                                                                                    .getElementById(
-                                                                                        'dwg-preview',
-                                                                                    )
-                                                                                    ?.scrollIntoView(
-                                                                                        {
-                                                                                            behavior:
-                                                                                                'smooth',
-                                                                                            block: 'start',
-                                                                                        },
-                                                                                    );
-                                                                            },
-                                                                            0,
-                                                                        );
-                                                                    }}
-                                                                >
-                                                                    {dwgPreviewRevision?.id ===
-                                                                    revision.id
-                                                                        ? 'Viewing DWG'
-                                                                        : 'Preview DWG'}
-                                                                </Button>
-                                                            )}
-
                                                         <Button
                                                             asChild
                                                             variant="outline"
@@ -1373,7 +1816,7 @@ export default function DrawingShow({
                     </section>
                 </div>
 
-                <section className="grid gap-6 xl:grid-cols-[380px_1fr]">
+                <section className="hidden gap-6 xl:grid xl:grid-cols-[380px_1fr]">
                     <div className="rounded-xl border bg-card p-6 shadow-sm">
                         <h2 className="text-lg font-semibold">
                             Report Site Issue
@@ -1501,8 +1944,8 @@ export default function DrawingShow({
                                 />
 
                                 <p className="text-xs text-muted-foreground">
-                                    On a phone or tablet, choose Take Photo,
-                                    Photo Library, or Choose File. Maximum 5 MB.
+                                    Take Photo, Photo Library, or Choose File.
+                                    Maximum 5 MB.
                                 </p>
 
                                 {issueForm.errors.photo && (
@@ -1663,6 +2106,689 @@ export default function DrawingShow({
                     </div>
                 </section>
             </div>
+
+            <FormModal
+                open={revisionUploadOpen}
+                title="Upload Revision"
+                description={`Add a revision to ${drawing.drawing_number} — ${drawing.title}.`}
+                onClose={closeRevisionUpload}
+            >
+                <form onSubmit={submit} className="space-y-5">
+                    <div className="space-y-2">
+                        <Label htmlFor="tablet_revision_code">
+                            Revision Code
+                        </Label>
+
+                        <Input
+                            id="tablet_revision_code"
+                            value={form.data.revision_code}
+                            onChange={(event) =>
+                                form.setData(
+                                    'revision_code',
+                                    event.target.value,
+                                )
+                            }
+                            placeholder="Example: 0, A or B"
+                        />
+
+                        {form.errors.revision_code && (
+                            <p className="text-sm text-red-600">
+                                {form.errors.revision_code}
+                            </p>
+                        )}
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label htmlFor="tablet_issued_at">Issue Date</Label>
+
+                        <Input
+                            id="tablet_issued_at"
+                            type="date"
+                            value={form.data.issued_at}
+                            onChange={(event) =>
+                                form.setData('issued_at', event.target.value)
+                            }
+                        />
+
+                        {form.errors.issued_at && (
+                            <p className="text-sm text-red-600">
+                                {form.errors.issued_at}
+                            </p>
+                        )}
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label htmlFor="tablet_revision_file">
+                            Revision File
+                        </Label>
+
+                        <Input
+                            ref={tabletRevisionFileInput}
+                            id="tablet_revision_file"
+                            type="file"
+                            accept=".pdf,.dwg,.dxf"
+                            onChange={(event) =>
+                                form.setData(
+                                    'file',
+                                    event.target.files?.[0] ?? null,
+                                )
+                            }
+                        />
+
+                        <p className="text-xs text-muted-foreground">
+                            PDF, DWG or DXF. Maximum 50 MB.
+                        </p>
+
+                        {form.errors.file && (
+                            <p className="text-sm text-red-600">
+                                {form.errors.file}
+                            </p>
+                        )}
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label htmlFor="tablet_revision_notes">
+                            Revision Notes
+                        </Label>
+
+                        <textarea
+                            id="tablet_revision_notes"
+                            rows={5}
+                            value={form.data.revision_notes}
+                            onChange={(event) =>
+                                form.setData(
+                                    'revision_notes',
+                                    event.target.value,
+                                )
+                            }
+                            placeholder="Describe what changed..."
+                            className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm outline-none"
+                        />
+
+                        {form.errors.revision_notes && (
+                            <p className="text-sm text-red-600">
+                                {form.errors.revision_notes}
+                            </p>
+                        )}
+                    </div>
+
+                    {form.progress && (
+                        <div className="space-y-2">
+                            <div className="h-2 overflow-hidden rounded-full bg-muted">
+                                <div
+                                    className="h-full bg-primary"
+                                    style={{
+                                        width: `${form.progress.percentage ?? 0}%`,
+                                    }}
+                                />
+                            </div>
+
+                            <p className="text-center text-xs text-muted-foreground">
+                                {form.progress.percentage ?? 0}%
+                            </p>
+                        </div>
+                    )}
+
+                    <div className="flex flex-col-reverse gap-3 border-t pt-5 sm:flex-row sm:justify-end">
+                        <Button
+                            type="button"
+                            variant="outline"
+                            disabled={form.processing}
+                            onClick={closeRevisionUpload}
+                        >
+                            Cancel
+                        </Button>
+
+                        <Button type="submit" disabled={form.processing}>
+                            {form.processing
+                                ? 'Uploading...'
+                                : 'Upload Revision'}
+                        </Button>
+                    </div>
+                </form>
+            </FormModal>
+
+            <FormModal
+                open={issueReportOpen}
+                title="Report Site Issue"
+                description={`Link a site problem to drawing ${drawing.drawing_number}.`}
+                onClose={closeIssueReport}
+            >
+                <form onSubmit={submitIssue} className="space-y-5">
+                    <div className="space-y-2">
+                        <Label htmlFor="tablet_issue_title">Issue Title</Label>
+
+                        <Input
+                            id="tablet_issue_title"
+                            value={issueForm.data.title}
+                            onChange={(event) =>
+                                issueForm.setData('title', event.target.value)
+                            }
+                            placeholder="Example: Support clashes with column"
+                        />
+
+                        {issueForm.errors.title && (
+                            <p className="text-sm text-red-600">
+                                {issueForm.errors.title}
+                            </p>
+                        )}
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label htmlFor="tablet_issue_location">
+                            Site Location
+                        </Label>
+
+                        <Input
+                            id="tablet_issue_location"
+                            value={issueForm.data.location}
+                            onChange={(event) =>
+                                issueForm.setData(
+                                    'location',
+                                    event.target.value,
+                                )
+                            }
+                            placeholder="Example: Zone B, Row 4"
+                        />
+
+                        {issueForm.errors.location && (
+                            <p className="text-sm text-red-600">
+                                {issueForm.errors.location}
+                            </p>
+                        )}
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label htmlFor="tablet_issue_priority">Priority</Label>
+
+                        <select
+                            id="tablet_issue_priority"
+                            value={issueForm.data.priority}
+                            onChange={(event) =>
+                                issueForm.setData(
+                                    'priority',
+                                    event.target.value,
+                                )
+                            }
+                            className="flex h-11 w-full rounded-md border border-input bg-background px-3 text-sm"
+                        >
+                            <option value="low">Low</option>
+                            <option value="medium">Medium</option>
+                            <option value="high">High</option>
+                            <option value="critical">Critical</option>
+                        </select>
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label htmlFor="tablet_issue_description">
+                            Description
+                        </Label>
+
+                        <textarea
+                            id="tablet_issue_description"
+                            rows={5}
+                            value={issueForm.data.description}
+                            onChange={(event) =>
+                                issueForm.setData(
+                                    'description',
+                                    event.target.value,
+                                )
+                            }
+                            placeholder="Explain the problem..."
+                            className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm outline-none"
+                        />
+
+                        {issueForm.errors.description && (
+                            <p className="text-sm text-red-600">
+                                {issueForm.errors.description}
+                            </p>
+                        )}
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label htmlFor="tablet_issue_photo">Site Photo</Label>
+
+                        <Input
+                            ref={tabletIssuePhotoInput}
+                            id="tablet_issue_photo"
+                            type="file"
+                            accept="image/jpeg,image/png,image/webp"
+                            onChange={(event) =>
+                                issueForm.setData(
+                                    'photo',
+                                    event.target.files?.[0] ?? null,
+                                )
+                            }
+                        />
+
+                        <p className="text-xs text-muted-foreground">
+                            Choose the camera, Photo Library, or Files. Maximum
+                            5 MB.
+                        </p>
+
+                        {issueForm.errors.photo && (
+                            <p className="text-sm text-red-600">
+                                {issueForm.errors.photo}
+                            </p>
+                        )}
+                    </div>
+
+                    <div className="flex flex-col-reverse gap-3 border-t pt-5 sm:flex-row sm:justify-end">
+                        <Button
+                            type="button"
+                            variant="outline"
+                            disabled={issueForm.processing}
+                            onClick={closeIssueReport}
+                        >
+                            Cancel
+                        </Button>
+
+                        <Button type="submit" disabled={issueForm.processing}>
+                            {issueForm.processing
+                                ? 'Reporting...'
+                                : 'Report Issue'}
+                        </Button>
+                    </div>
+                </form>
+            </FormModal>
+
+            <FormModal
+                open={editingRevision !== null}
+                title={
+                    editingRevision
+                        ? `Edit Revision ${editingRevision.revision_code}`
+                        : 'Edit Revision'
+                }
+                description="Update revision metadata. The original drawing file will not be replaced."
+                onClose={closeEditRevision}
+            >
+                <form onSubmit={submitRevisionEdit} className="space-y-5">
+                    <div className="space-y-2">
+                        <Label htmlFor="edit_revision_code">
+                            Revision Code
+                        </Label>
+
+                        <Input
+                            id="edit_revision_code"
+                            value={revisionEditForm.data.revision_code}
+                            onChange={(event) =>
+                                revisionEditForm.setData(
+                                    'revision_code',
+                                    event.target.value,
+                                )
+                            }
+                        />
+
+                        {revisionEditForm.errors.revision_code && (
+                            <p className="text-sm text-red-600">
+                                {revisionEditForm.errors.revision_code}
+                            </p>
+                        )}
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label htmlFor="edit_issued_at">Issue Date</Label>
+
+                        <Input
+                            id="edit_issued_at"
+                            type="date"
+                            value={revisionEditForm.data.issued_at}
+                            onChange={(event) =>
+                                revisionEditForm.setData(
+                                    'issued_at',
+                                    event.target.value,
+                                )
+                            }
+                        />
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label htmlFor="edit_revision_notes">
+                            Revision Notes
+                        </Label>
+
+                        <textarea
+                            id="edit_revision_notes"
+                            rows={5}
+                            value={revisionEditForm.data.revision_notes}
+                            onChange={(event) =>
+                                revisionEditForm.setData(
+                                    'revision_notes',
+                                    event.target.value,
+                                )
+                            }
+                            className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm outline-none"
+                        />
+                    </div>
+
+                    <div className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
+                        The uploaded file cannot be replaced through editing.
+                        Upload a new revision when the actual drawing file
+                        changes.
+                    </div>
+
+                    <div className="flex justify-end gap-3 border-t pt-5">
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={closeEditRevision}
+                        >
+                            Cancel
+                        </Button>
+
+                        <Button
+                            type="submit"
+                            disabled={revisionEditForm.processing}
+                        >
+                            {revisionEditForm.processing
+                                ? 'Saving...'
+                                : 'Save Changes'}
+                        </Button>
+                    </div>
+                </form>
+            </FormModal>
+
+            <FormModal
+                open={recordsModalOpen}
+                title="Drawing Records"
+                description={`${drawing.drawing_number} — revisions and linked site issues.`}
+                onClose={() => setRecordsModalOpen(false)}
+                panelClassName="max-w-5xl"
+            >
+                <div className="grid grid-cols-2 border-b">
+                    <button
+                        type="button"
+                        onClick={() => setRecordsTab('revisions')}
+                        className={cn(
+                            'min-h-12 border-b-2 px-4 text-sm font-medium',
+                            recordsTab === 'revisions'
+                                ? 'border-primary'
+                                : 'border-transparent text-muted-foreground',
+                        )}
+                    >
+                        Revision History ({drawing.revisions.length})
+                    </button>
+
+                    <button
+                        type="button"
+                        onClick={() => setRecordsTab('issues')}
+                        className={cn(
+                            'min-h-12 border-b-2 px-4 text-sm font-medium',
+                            recordsTab === 'issues'
+                                ? 'border-primary'
+                                : 'border-transparent text-muted-foreground',
+                        )}
+                    >
+                        Site Issues ({drawing.issues.length})
+                    </button>
+                </div>
+
+                {recordsTab === 'revisions' ? (
+                    <div className="mt-5 space-y-4">
+                        {revisionActionError && (
+                            <div className="mt-4 rounded-lg border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive">
+                                {revisionActionError}
+                            </div>
+                        )}
+
+                        {drawing.revisions.length === 0 ? (
+                            <p className="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">
+                                No revisions uploaded.
+                            </p>
+                        ) : (
+                            drawing.revisions.map((revision) => (
+                                <article
+                                    key={revision.id}
+                                    className="rounded-xl border p-4"
+                                >
+                                    <div className="flex flex-col justify-between gap-4 sm:flex-row">
+                                        <div className="min-w-0">
+                                            <div className="flex flex-wrap items-center gap-2">
+                                                <p className="font-mono font-semibold">
+                                                    Revision{' '}
+                                                    {revision.revision_code}
+                                                </p>
+
+                                                <span
+                                                    className={cn(
+                                                        'rounded-full border px-2 py-0.5 text-xs capitalize',
+                                                        revision.is_current &&
+                                                            'border-green-600/40 bg-green-600/10 text-green-700 dark:text-green-400',
+                                                        revision.is_archived &&
+                                                            'border-muted-foreground/40 bg-muted text-muted-foreground',
+                                                    )}
+                                                >
+                                                    {formatStatus(
+                                                        revision.lifecycle_status,
+                                                    )}
+                                                </span>
+                                            </div>
+
+                                            <p className="mt-1 text-sm break-all">
+                                                {revision.original_filename}
+                                            </p>
+
+                                            <p className="mt-1 text-xs text-muted-foreground uppercase">
+                                                {revision.file_extension ??
+                                                    'File'}{' '}
+                                                ·{' '}
+                                                {formatFileSize(
+                                                    revision.file_size,
+                                                )}
+                                            </p>
+
+                                            {revision.revision_notes && (
+                                                <p className="mt-3 text-sm text-muted-foreground">
+                                                    {revision.revision_notes}
+                                                </p>
+                                            )}
+
+                                            <p className="mt-3 text-xs text-muted-foreground">
+                                                Uploaded by{' '}
+                                                {revision.uploaded_by} on{' '}
+                                                {revision.uploaded_at}
+                                            </p>
+                                        </div>
+
+                                        <div className="flex shrink-0 flex-wrap gap-2">
+                                            {!revision.is_archived &&
+                                                (revision.can_preview ||
+                                                    revision.can_view_dwg) && (
+                                                    <Button
+                                                        type="button"
+                                                        size="sm"
+                                                        onClick={() =>
+                                                            viewRevisionFromHistory(
+                                                                revision,
+                                                            )
+                                                        }
+                                                    >
+                                                        View
+                                                    </Button>
+                                                )}
+
+                                            {revision.can_make_current && (
+                                                <Button
+                                                    type="button"
+                                                    size="sm"
+                                                    variant="outline"
+                                                    onClick={() =>
+                                                        makeRevisionCurrent(
+                                                            revision,
+                                                        )
+                                                    }
+                                                >
+                                                    Make Current
+                                                </Button>
+                                            )}
+
+                                            {!revision.is_archived && (
+                                                <Button
+                                                    type="button"
+                                                    size="sm"
+                                                    variant="outline"
+                                                    onClick={() =>
+                                                        openEditRevision(
+                                                            revision,
+                                                        )
+                                                    }
+                                                >
+                                                    Edit
+                                                </Button>
+                                            )}
+
+                                            {revision.can_archive && (
+                                                <Button
+                                                    type="button"
+                                                    size="sm"
+                                                    variant="outline"
+                                                    onClick={() =>
+                                                        archiveRevision(
+                                                            revision,
+                                                        )
+                                                    }
+                                                >
+                                                    Archive
+                                                </Button>
+                                            )}
+
+                                            {revision.can_restore && (
+                                                <Button
+                                                    type="button"
+                                                    size="sm"
+                                                    variant="outline"
+                                                    onClick={() =>
+                                                        restoreRevision(
+                                                            revision,
+                                                        )
+                                                    }
+                                                >
+                                                    Restore
+                                                </Button>
+                                            )}
+
+                                            {revision.can_delete && (
+                                                <Button
+                                                    type="button"
+                                                    size="sm"
+                                                    variant="destructive"
+                                                    onClick={() =>
+                                                        deleteRevision(revision)
+                                                    }
+                                                >
+                                                    Delete
+                                                </Button>
+                                            )}
+
+                                            <Button
+                                                asChild
+                                                size="sm"
+                                                variant="outline"
+                                            >
+                                                <a
+                                                    href={`/projects/${project.id}/drawings/${drawing.id}/revisions/${revision.id}/download`}
+                                                >
+                                                    Download
+                                                </a>
+                                            </Button>
+                                        </div>
+                                    </div>
+                                </article>
+                            ))
+                        )}
+                    </div>
+                ) : (
+                    <div className="mt-5 space-y-4">
+                        {drawing.issues.length === 0 ? (
+                            <p className="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">
+                                No site issues reported.
+                            </p>
+                        ) : (
+                            drawing.issues.map((issue) => (
+                                <article
+                                    key={issue.id}
+                                    className="rounded-xl border p-4"
+                                >
+                                    <div className="flex flex-col justify-between gap-4 sm:flex-row">
+                                        <div className="min-w-0">
+                                            <div className="flex flex-wrap gap-2">
+                                                <span className="font-mono text-sm font-semibold">
+                                                    {issue.issue_number}
+                                                </span>
+
+                                                <span className="rounded-full border px-2 py-0.5 text-xs capitalize">
+                                                    {formatStatus(
+                                                        issue.priority,
+                                                    )}
+                                                </span>
+
+                                                <span className="rounded-full border px-2 py-0.5 text-xs capitalize">
+                                                    {formatStatus(issue.status)}
+                                                </span>
+                                            </div>
+
+                                            <h3 className="mt-3 font-semibold">
+                                                {issue.title}
+                                            </h3>
+
+                                            <p className="mt-2 text-sm whitespace-pre-line text-muted-foreground">
+                                                {issue.description}
+                                            </p>
+
+                                            {issue.location && (
+                                                <p className="mt-3 text-sm">
+                                                    Location: {issue.location}
+                                                </p>
+                                            )}
+
+                                            {issue.resolution && (
+                                                <div className="mt-4 rounded-lg bg-muted/40 p-4">
+                                                    <p className="text-sm font-medium">
+                                                        Resolution
+                                                    </p>
+
+                                                    <p className="mt-1 text-sm text-muted-foreground">
+                                                        {issue.resolution}
+                                                    </p>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="flex shrink-0 flex-wrap gap-2">
+                                            {issue.has_photo && (
+                                                <Button
+                                                    type="button"
+                                                    size="sm"
+                                                    variant="outline"
+                                                    onClick={() =>
+                                                        setPhotoPreviewIssue(
+                                                            issue,
+                                                        )
+                                                    }
+                                                >
+                                                    View Photo
+                                                </Button>
+                                            )}
+
+                                            <Button
+                                                asChild
+                                                size="sm"
+                                                variant="outline"
+                                            >
+                                                <Link
+                                                    href={`/projects/${project.id}/drawings/${drawing.id}/issues/${issue.id}/edit`}
+                                                >
+                                                    Update
+                                                </Link>
+                                            </Button>
+                                        </div>
+                                    </div>
+                                </article>
+                            ))
+                        )}
+                    </div>
+                )}
+            </FormModal>
 
             {photoPreviewIssue && (
                 <div
