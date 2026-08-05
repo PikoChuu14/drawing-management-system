@@ -67,6 +67,9 @@ class Drawing extends Model
         return $this->hasMany(SiteIssue::class);
     }
 
+    /**
+     * @return BelongsTo<DrawingRevision, $this>
+     */
     public function currentRevision(): BelongsTo
     {
         return $this->belongsTo(

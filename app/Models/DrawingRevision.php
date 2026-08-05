@@ -10,6 +10,9 @@ use Illuminate\Support\Carbon;
  * @property-read Carbon|null $issued_at
  * @property-read Carbon $created_at
  * @property-read Carbon $updated_at
+ * @property-read Carbon|null $translation_requested_at
+ * @property-read Carbon|null $translation_completed_at
+ * @property-read Carbon|null $archived_at
  */
 class DrawingRevision extends Model
 {
@@ -45,6 +48,7 @@ class DrawingRevision extends Model
 
             'translation_requested_at' => 'datetime',
             'translation_completed_at' => 'datetime',
+            'archived_at' => 'datetime',
         ];
     }
 
