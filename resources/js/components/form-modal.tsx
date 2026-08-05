@@ -1,6 +1,7 @@
-import { Button } from '@/components/ui/button';
 import { X } from 'lucide-react';
-import { useEffect, type ReactNode,} from 'react';
+import type { ReactNode } from 'react';
+import { useEffect } from 'react';
+import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 

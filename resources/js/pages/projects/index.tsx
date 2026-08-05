@@ -1,7 +1,9 @@
 import { Head, Link, router, useForm } from '@inertiajs/react';
-import { useState, type FormEvent } from 'react';
-import FormModal from '@/components/form-modal';
 import { Plus } from 'lucide-react';
+import { useState } from 'react';
+import type { FormEvent } from 'react';
+
+import FormModal from '@/components/form-modal';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
