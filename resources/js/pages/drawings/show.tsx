@@ -2,7 +2,7 @@ import { Head, Link, router, useForm } from '@inertiajs/react';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import ApsViewer from '@/components/aps-viewer';
 import { cn } from '@/lib/utils';
-import { Maximize2, Minimize2 } from 'lucide-react';
+import { Maximize2, Minimize2, X } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -264,6 +264,15 @@ export default function DrawingShow({
     const [dwgPreviewRevision, setDwgPreviewRevision] =
         useState<Revision | null>(null);
 
+    const [photoPreviewIssue, setPhotoPreviewIssue] =
+        useState<SiteIssue | null>(null);
+
+    const getIssuePhotoUrl = (
+        issueId: number,
+    ): string => {
+        return `/projects/${project.id}/drawings/${drawing.id}/issues/${issueId}/photo`;
+    };
+
     type WorkspaceTab =
     | 'details'
     | 'revisions'
@@ -351,6 +360,40 @@ export default function DrawingShow({
             previewableRevisions[0].id,
         );
     }, []);
+
+    useEffect(() => {
+        if (!photoPreviewIssue) {
+            return;
+        }
+
+        const previousOverflow =
+            document.body.style.overflow;
+
+        const closeWithEscape = (
+            event: KeyboardEvent,
+        ) => {
+            if (event.key === 'Escape') {
+                setPhotoPreviewIssue(null);
+            }
+        };
+
+        document.body.style.overflow = 'hidden';
+
+        document.addEventListener(
+            'keydown',
+            closeWithEscape,
+        );
+
+        return () => {
+            document.body.style.overflow =
+                previousOverflow;
+
+            document.removeEventListener(
+                'keydown',
+                closeWithEscape,
+            );
+        };
+    }, [photoPreviewIssue]);
 
     useEffect(() => {
     const handleFullscreenChange = () => {
@@ -565,6 +608,25 @@ export default function DrawingShow({
                                     ))}
                                 </select>
                             </div>
+
+                            {previewRevision && (
+                                <Button
+                                    asChild
+                                    type="button"
+                                    variant="outline"
+                                    className="h-11"
+                                >
+                                    <a
+                                        href={getPreviewUrl(
+                                            previewRevision.id,
+                                        )}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                    >
+                                        Open Full PDF
+                                    </a>
+                                </Button>
+                            )}
 
                             <Button
                                 type="button"
@@ -1445,8 +1507,7 @@ export default function DrawingShow({
                                     ref={issuePhotoInput}
                                     id="issue_photo"
                                     type="file"
-                                    accept="image/*"
-                                    capture="environment"
+                                    accept="image/jpeg,image/png,image/webp"
                                     onChange={(event) =>
                                         issueForm.setData(
                                             'photo',
@@ -1456,8 +1517,8 @@ export default function DrawingShow({
                                 />
 
                                 <p className="text-xs text-muted-foreground">
-                                    Optional JPG, PNG or WebP image. Maximum 5
-                                    MB.
+                                    On a phone or tablet, choose Take Photo,
+                                    Photo Library, or Choose File. Maximum 5 MB.
                                 </p>
 
                                 {issueForm.errors.photo && (
@@ -1585,17 +1646,14 @@ export default function DrawingShow({
                                             <div className="flex shrink-0 flex-wrap gap-2">
                                                 {issue.has_photo && (
                                                     <Button
-                                                        asChild
+                                                        type="button"
                                                         size="sm"
                                                         variant="outline"
+                                                        onClick={() =>
+                                                            setPhotoPreviewIssue(issue)
+                                                        }
                                                     >
-                                                        <a
-                                                            href={`/projects/${project.id}/drawings/${drawing.id}/issues/${issue.id}/photo`}
-                                                            target="_blank"
-                                                            rel="noreferrer"
-                                                        >
-                                                            View Photo
-                                                        </a>
+                                                        View Photo
                                                     </Button>
                                                 )}
 
@@ -1619,6 +1677,97 @@ export default function DrawingShow({
                     </div>
                 </section>
             </div>
+
+            {photoPreviewIssue && (
+                <div
+                    role="dialog"
+                    aria-modal="true"
+                    aria-label={`Photo for ${
+                        photoPreviewIssue.issue_number ??
+                        'site issue'
+                    }`}
+                    className="fixed inset-0 z-[250] flex items-center justify-center bg-black/80 p-2 sm:p-6"
+                    onMouseDown={(event) => {
+                        if (
+                            event.target ===
+                            event.currentTarget
+                        ) {
+                            setPhotoPreviewIssue(null);
+                        }
+                    }}
+                >
+                    <div className="flex max-h-[96dvh] w-full max-w-6xl flex-col overflow-hidden rounded-xl border bg-background shadow-2xl">
+                        <div className="flex items-center justify-between gap-4 border-b p-4">
+                            <div className="min-w-0">
+                                <p className="font-mono text-sm font-semibold">
+                                    {photoPreviewIssue.issue_number ??
+                                        'Site Issue'}
+                                </p>
+
+                                <h2 className="mt-1 truncate font-semibold">
+                                    {photoPreviewIssue.title}
+                                </h2>
+
+                                {photoPreviewIssue.location && (
+                                    <p className="mt-1 truncate text-xs text-muted-foreground">
+                                        {
+                                            photoPreviewIssue.location
+                                        }
+                                    </p>
+                                )}
+                            </div>
+
+                            <Button
+                                type="button"
+                                size="icon"
+                                variant="ghost"
+                                aria-label="Close photo preview"
+                                onClick={() =>
+                                    setPhotoPreviewIssue(null)
+                                }
+                            >
+                                <X className="size-5" />
+                            </Button>
+                        </div>
+
+                        <div className="flex min-h-0 flex-1 items-center justify-center overflow-auto bg-neutral-950 p-2 sm:p-4">
+                            <img
+                                src={getIssuePhotoUrl(
+                                    photoPreviewIssue.id,
+                                )}
+                                alt={`Site issue: ${photoPreviewIssue.title}`}
+                                className="max-h-[78dvh] max-w-full object-contain"
+                            />
+                        </div>
+
+                        <div className="flex flex-wrap justify-end gap-2 border-t p-4">
+                            <Button
+                                asChild
+                                variant="outline"
+                            >
+                                <a
+                                    href={getIssuePhotoUrl(
+                                        photoPreviewIssue.id,
+                                    )}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                >
+                                    Open Original
+                                </a>
+                            </Button>
+
+                            <Button
+                                type="button"
+                                onClick={() =>
+                                    setPhotoPreviewIssue(null)
+                                }
+                            >
+                                Close
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </AppLayout>
     );
 }
