@@ -1,13 +1,15 @@
 import { Head, Link, router, useForm } from '@inertiajs/react';
-import { useEffect, useRef, useState, type FormEvent } from 'react';
-import ApsViewer from '@/components/aps-viewer';
-import { cn } from '@/lib/utils';
 import { Maximize2, Minimize2, X } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import type { FormEvent } from 'react';
+
+import ApsViewer from '@/components/aps-viewer';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
+import { cn } from '@/lib/utils';
 import type { BreadcrumbItem } from '@/types';
 
 type Project = {
@@ -137,8 +139,19 @@ export default function DrawingShow({
         file: null,
     });
 
+    const initialWorkspaceRevision =
+        drawing.revisions.find(
+            (revision) => revision.can_view_dwg && revision.aps_urn !== null,
+        ) ??
+        drawing.revisions.find((revision) => revision.can_preview) ??
+        null;
+
     const [previewRevision, setPreviewRevision] = useState<Revision | null>(
-        null,
+        initialWorkspaceRevision &&
+            initialWorkspaceRevision.can_view_dwg &&
+            initialWorkspaceRevision.aps_urn !== null
+            ? null
+            : initialWorkspaceRevision,
     );
 
     const getPreviewUrl = (revisionId: number) => {
@@ -262,80 +275,58 @@ export default function DrawingShow({
     };
 
     const [dwgPreviewRevision, setDwgPreviewRevision] =
-        useState<Revision | null>(null);
+        useState<Revision | null>(
+            initialWorkspaceRevision &&
+                initialWorkspaceRevision.can_view_dwg &&
+                initialWorkspaceRevision.aps_urn !== null
+                ? initialWorkspaceRevision
+                : null,
+        );
 
     const [photoPreviewIssue, setPhotoPreviewIssue] =
         useState<SiteIssue | null>(null);
 
-    const getIssuePhotoUrl = (
-        issueId: number,
-    ): string => {
+    const getIssuePhotoUrl = (issueId: number): string => {
         return `/projects/${project.id}/drawings/${drawing.id}/issues/${issueId}/photo`;
     };
 
-    type WorkspaceTab =
-    | 'details'
-    | 'revisions'
-    | 'issues';
+    type WorkspaceTab = 'details' | 'revisions' | 'issues';
 
-    const workspaceRef =
-        useRef<HTMLElement>(null);
+    const workspaceRef = useRef<HTMLElement>(null);
 
-    const [
-        activeWorkspaceTab,
-        setActiveWorkspaceTab,
-    ] = useState<WorkspaceTab>('details');
+    const [activeWorkspaceTab, setActiveWorkspaceTab] =
+        useState<WorkspaceTab>('details');
 
-    const [
-        isWorkspaceFullscreen,
-        setIsWorkspaceFullscreen,
-    ] = useState(false);
+    const [isWorkspaceFullscreen, setIsWorkspaceFullscreen] = useState(false);
 
-    const [isFocusMode, setIsFocusMode] =
-        useState(false);
+    const [isFocusMode, setIsFocusMode] = useState(false);
 
-    const previewableRevisions =
-    drawing.revisions.filter(
+    const previewableRevisions = drawing.revisions.filter(
         (revision) =>
             revision.can_preview ||
-            (
-                revision.can_view_dwg &&
-                revision.aps_urn !== null
-            ),
+            (revision.can_view_dwg && revision.aps_urn !== null),
     );
 
-    const selectedWorkspaceRevision =
-        dwgPreviewRevision ?? previewRevision;
+    const selectedWorkspaceRevision = dwgPreviewRevision ?? previewRevision;
 
-    const selectedWorkspaceRevisionId =
-        selectedWorkspaceRevision?.id ?? '';
+    const selectedWorkspaceRevisionId = selectedWorkspaceRevision?.id ?? '';
 
-    const unresolvedIssueCount =
-        drawing.issues.filter(
-            (issue) =>
-                issue.status === 'open' ||
-                issue.status === 'in_progress',
-        ).length;
+    const unresolvedIssueCount = drawing.issues.filter(
+        (issue) => issue.status === 'open' || issue.status === 'in_progress',
+    ).length;
 
-    const workspaceExpanded =
-        isWorkspaceFullscreen || isFocusMode;
+    const workspaceExpanded = isWorkspaceFullscreen || isFocusMode;
 
-    const selectWorkspaceRevision = (
-        revisionId: number,
-    ) => {
-        const revision =
-            drawing.revisions.find(
-                (item) => item.id === revisionId,
-            );
+    const selectWorkspaceRevision = (revisionId: number) => {
+        const revision = drawing.revisions.find(
+            (item) => item.id === revisionId,
+        );
 
         if (!revision) {
             return;
         }
 
-        if (
-            revision.can_view_dwg &&
-            revision.aps_urn
-        ) {
+        if (revision.can_view_dwg && revision.aps_urn) {
             setDwgPreviewRevision(revision);
             setPreviewRevision(null);
 
@@ -349,29 +340,13 @@ export default function DrawingShow({
     };
 
     useEffect(() => {
-        if (
-            selectedWorkspaceRevision ||
-            previewableRevisions.length === 0
-        ) {
-            return;
-        }
-
-        selectWorkspaceRevision(
-            previewableRevisions[0].id,
-        );
-    }, []);
-
-    useEffect(() => {
         if (!photoPreviewIssue) {
             return;
         }
 
-        const previousOverflow =
-            document.body.style.overflow;
+        const previousOverflow = document.body.style.overflow;
 
-        const closeWithEscape = (
-            event: KeyboardEvent,
-        ) => {
+        const closeWithEscape = (event: KeyboardEvent) => {
             if (event.key === 'Escape') {
                 setPhotoPreviewIssue(null);
             }
@@ -379,41 +354,28 @@ export default function DrawingShow({
 
         document.body.style.overflow = 'hidden';
 
-        document.addEventListener(
-            'keydown',
-            closeWithEscape,
-        );
+        document.addEventListener('keydown', closeWithEscape);
 
         return () => {
-            document.body.style.overflow =
-                previousOverflow;
+            document.body.style.overflow = previousOverflow;
 
-            document.removeEventListener(
-                'keydown',
-                closeWithEscape,
-            );
+            document.removeEventListener('keydown', closeWithEscape);
         };
     }, [photoPreviewIssue]);
 
     useEffect(() => {
         const handleFullscreenChange = () => {
             const isFullscreen =
-                document.fullscreenElement ===
-                workspaceRef.current;
+                document.fullscreenElement === workspaceRef.current;
 
             setIsWorkspaceFullscreen(isFullscreen);
 
             window.setTimeout(() => {
-                window.dispatchEvent(
-                    new Event('resize'),
-                );
+                window.dispatchEvent(new Event('resize'));
             }, 150);
         };
 
-        document.addEventListener(
-            'fullscreenchange',
-            handleFullscreenChange,
-        );
+        document.addEventListener('fullscreenchange', handleFullscreenChange);
 
         return () => {
             document.removeEventListener(
@@ -424,44 +386,34 @@ export default function DrawingShow({
     }, []);
 
     useEffect(() => {
-    if (!isFocusMode) {
-        return;
-    }
+        if (!isFocusMode) {
+            return;
+        }
 
-    const previousOverflow =
-        document.body.style.overflow;
+        const previousOverflow = document.body.style.overflow;
 
-    document.body.style.overflow = 'hidden';
+        document.body.style.overflow = 'hidden';
 
-    return () => {
-        document.body.style.overflow =
-            previousOverflow;
-    };
-}, [isFocusMode]);
+        return () => {
+            document.body.style.overflow = previousOverflow;
+        };
+    }, [isFocusMode]);
 
-    const enterWorkspaceFullscreen =
-    async () => {
-        const workspace =
-            workspaceRef.current;
+    const enterWorkspaceFullscreen = async () => {
+        const workspace = workspaceRef.current;
 
         if (!workspace) {
             return;
         }
 
         try {
-            if (
-                document.fullscreenEnabled &&
-                workspace.requestFullscreen
-            ) {
+            if (document.fullscreenEnabled && workspace.requestFullscreen) {
                 await workspace.requestFullscreen();
 
                 return;
             }
         } catch (error) {
-            console.warn(
-                'Browser fullscreen was unavailable.',
-                error,
-            );
+            console.warn('Browser fullscreen was unavailable.', error);
         }
 
         /*
@@ -471,8 +423,7 @@ export default function DrawingShow({
         setIsFocusMode(true);
     };
 
-    const exitWorkspaceFullscreen =
-    async () => {
+    const exitWorkspaceFullscreen = async () => {
         if (document.fullscreenElement) {
             await document.exitFullscreen();
 
@@ -601,18 +552,20 @@ export default function DrawingShow({
                                         </option>
                                     )}
 
-                                    {previewableRevisions.map((revision, index) => (
-                                        <option
-                                            key={revision.id}
-                                            value={revision.id}
-                                        >
-                                            Rev {revision.revision_code} —{' '}
-                                            {revision.file_extension?.toUpperCase()}
-                                            {index === 0
-                                                ? ' (Latest viewable)'
-                                                : ''}
-                                        </option>
-                                    ))}
+                                    {previewableRevisions.map(
+                                        (revision, index) => (
+                                            <option
+                                                key={revision.id}
+                                                value={revision.id}
+                                            >
+                                                Rev {revision.revision_code} —{' '}
+                                                {revision.file_extension?.toUpperCase()}
+                                                {index === 0
+                                                    ? ' (Latest viewable)'
+                                                    : ''}
+                                            </option>
+                                        ),
+                                    )}
                                 </select>
                             </div>
 
@@ -624,9 +577,7 @@ export default function DrawingShow({
                                     className="h-11"
                                 >
                                     <a
-                                        href={getPreviewUrl(
-                                            previewRevision.id,
-                                        )}
+                                        href={getPreviewUrl(previewRevision.id)}
                                         target="_blank"
                                         rel="noreferrer"
                                     >
@@ -724,7 +675,10 @@ export default function DrawingShow({
                                         [
                                             ['details', 'Details'],
                                             ['revisions', 'Revisions'],
-                                            ['issues', `Issues (${unresolvedIssueCount})`],
+                                            [
+                                                'issues',
+                                                `Issues (${unresolvedIssueCount})`,
+                                            ],
                                         ] as const
                                     ).map(([value, label]) => (
                                         <button
@@ -753,7 +707,7 @@ export default function DrawingShow({
                                     {activeWorkspaceTab === 'details' && (
                                         <div className="space-y-5">
                                             <div>
-                                                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                                                <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
                                                     Drawing
                                                 </p>
 
@@ -793,7 +747,10 @@ export default function DrawingShow({
                                                         Revisions
                                                     </dt>
                                                     <dd className="mt-1 font-medium">
-                                                        {drawing.revisions.length}
+                                                        {
+                                                            drawing.revisions
+                                                                .length
+                                                        }
                                                     </dd>
                                                 </div>
 
@@ -809,80 +766,88 @@ export default function DrawingShow({
 
                                             {drawing.description && (
                                                 <div>
-                                                    <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                                                    <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
                                                         Description
                                                     </p>
 
-                                                    <p className="mt-2 whitespace-pre-line text-sm text-muted-foreground">
+                                                    <p className="mt-2 text-sm whitespace-pre-line text-muted-foreground">
                                                         {drawing.description}
                                                     </p>
                                                 </div>
                                             )}
 
                                             <p className="text-xs text-muted-foreground">
-                                                Registered by {drawing.creator_name}
+                                                Registered by{' '}
+                                                {drawing.creator_name}
                                             </p>
                                         </div>
                                     )}
 
                                     {activeWorkspaceTab === 'revisions' && (
                                         <div className="space-y-3">
-                                            {drawing.revisions.map((revision) => (
-                                                <div
-                                                    key={revision.id}
-                                                    className={cn(
-                                                        'rounded-lg border p-4',
-                                                        selectedWorkspaceRevision?.id ===
-                                                            revision.id &&
-                                                            'border-primary bg-primary/5',
-                                                    )}
-                                                >
-                                                    <div className="flex items-start justify-between gap-3">
-                                                        <div className="min-w-0">
-                                                            <p className="font-mono font-semibold">
-                                                                Rev {revision.revision_code}
-                                                            </p>
+                                            {drawing.revisions.map(
+                                                (revision) => (
+                                                    <div
+                                                        key={revision.id}
+                                                        className={cn(
+                                                            'rounded-lg border p-4',
+                                                            selectedWorkspaceRevision?.id ===
+                                                                revision.id &&
+                                                                'border-primary bg-primary/5',
+                                                        )}
+                                                    >
+                                                        <div className="flex items-start justify-between gap-3">
+                                                            <div className="min-w-0">
+                                                                <p className="font-mono font-semibold">
+                                                                    Rev{' '}
+                                                                    {
+                                                                        revision.revision_code
+                                                                    }
+                                                                </p>
 
-                                                            <p className="mt-1 truncate text-sm">
-                                                                {
-                                                                    revision.original_filename
-                                                                }
-                                                            </p>
+                                                                <p className="mt-1 truncate text-sm">
+                                                                    {
+                                                                        revision.original_filename
+                                                                    }
+                                                                </p>
 
-                                                            <p className="mt-1 text-xs uppercase text-muted-foreground">
-                                                                {revision.file_extension ??
-                                                                    'File'}{' '}
-                                                                ·{' '}
-                                                                {formatFileSize(
-                                                                    revision.file_size,
-                                                                )}
-                                                            </p>
+                                                                <p className="mt-1 text-xs text-muted-foreground uppercase">
+                                                                    {revision.file_extension ??
+                                                                        'File'}{' '}
+                                                                    ·{' '}
+                                                                    {formatFileSize(
+                                                                        revision.file_size,
+                                                                    )}
+                                                                </p>
+                                                            </div>
+
+                                                            {(revision.can_preview ||
+                                                                revision.can_view_dwg) && (
+                                                                <Button
+                                                                    type="button"
+                                                                    size="sm"
+                                                                    variant="outline"
+                                                                    onClick={() =>
+                                                                        selectWorkspaceRevision(
+                                                                            revision.id,
+                                                                        )
+                                                                    }
+                                                                >
+                                                                    View
+                                                                </Button>
+                                                            )}
                                                         </div>
 
-                                                        {(revision.can_preview ||
-                                                            revision.can_view_dwg) && (
-                                                            <Button
-                                                                type="button"
-                                                                size="sm"
-                                                                variant="outline"
-                                                                onClick={() =>
-                                                                    selectWorkspaceRevision(
-                                                                        revision.id,
-                                                                    )
+                                                        {revision.revision_notes && (
+                                                            <p className="mt-3 text-sm text-muted-foreground">
+                                                                {
+                                                                    revision.revision_notes
                                                                 }
-                                                            >
-                                                                View
-                                                            </Button>
+                                                            </p>
                                                         )}
                                                     </div>
-
-                                                    {revision.revision_notes && (
-                                                        <p className="mt-3 text-sm text-muted-foreground">
-                                                            {revision.revision_notes}
-                                                        </p>
-                                                    )}
-                                                </div>
-                                            ))}
+                                                ),
+                                            )}
                                         </div>
                                     )}
 
@@ -890,7 +855,8 @@ export default function DrawingShow({
                                         <div className="space-y-3">
                                             {drawing.issues.length === 0 ? (
                                                 <p className="rounded-lg border border-dashed p-5 text-center text-sm text-muted-foreground">
-                                                    No site issues are linked to this drawing.
+                                                    No site issues are linked to
+                                                    this drawing.
                                                 </p>
                                             ) : (
                                                 drawing.issues.map((issue) => (
@@ -900,7 +866,9 @@ export default function DrawingShow({
                                                     >
                                                         <div className="flex flex-wrap gap-2">
                                                             <span className="font-mono text-xs font-semibold">
-                                                                {issue.issue_number}
+                                                                {
+                                                                    issue.issue_number
+                                                                }
                                                             </span>
 
                                                             <span className="rounded-full border px-2 py-0.5 text-xs capitalize">
@@ -933,14 +901,17 @@ export default function DrawingShow({
                                                                 variant="outline"
                                                                 className="mt-3"
                                                                 onClick={() =>
-                                                                    setPhotoPreviewIssue(issue)
+                                                                    setPhotoPreviewIssue(
+                                                                        issue,
+                                                                    )
                                                                 }
                                                             >
                                                                 View Photo
                                                             </Button>
                                                         ) : (
                                                             <p className="mt-3 text-xs text-muted-foreground">
-                                                                No photo attached
+                                                                No photo
+                                                                attached
                                                             </p>
                                                         )}
                                                     </div>
@@ -1663,7 +1634,9 @@ export default function DrawingShow({
                                                         size="sm"
                                                         variant="outline"
                                                         onClick={() =>
-                                                            setPhotoPreviewIssue(issue)
+                                                            setPhotoPreviewIssue(
+                                                                issue,
+                                                            )
                                                         }
                                                     >
                                                         View Photo
@@ -1696,15 +1669,11 @@ export default function DrawingShow({
                     role="dialog"
                     aria-modal="true"
                     aria-label={`Photo for ${
-                        photoPreviewIssue.issue_number ??
-                        'site issue'
+                        photoPreviewIssue.issue_number ?? 'site issue'
                     }`}
                     className="fixed inset-0 z-[250] flex items-center justify-center bg-black/80 p-2 sm:p-6"
                     onMouseDown={(event) => {
-                        if (
-                            event.target ===
-                            event.currentTarget
-                        ) {
+                        if (event.target === event.currentTarget) {
                             setPhotoPreviewIssue(null);
                         }
                     }}
@@ -1723,9 +1692,7 @@ export default function DrawingShow({
 
                                 {photoPreviewIssue.location && (
                                     <p className="mt-1 truncate text-xs text-muted-foreground">
-                                        {
-                                            photoPreviewIssue.location
-                                        }
+                                        {photoPreviewIssue.location}
                                     </p>
                                 )}
                             </div>
@@ -1735,9 +1702,7 @@ export default function DrawingShow({
                                 size="icon"
                                 variant="ghost"
                                 aria-label="Close photo preview"
-                                onClick={() =>
-                                    setPhotoPreviewIssue(null)
-                                }
+                                onClick={() => setPhotoPreviewIssue(null)}
                             >
                                 <X className="size-5" />
                             </Button>
@@ -1745,19 +1710,14 @@ export default function DrawingShow({
 
                         <div className="flex min-h-0 flex-1 items-center justify-center overflow-auto bg-neutral-950 p-2 sm:p-4">
                             <img
-                                src={getIssuePhotoUrl(
-                                    photoPreviewIssue.id,
-                                )}
+                                src={getIssuePhotoUrl(photoPreviewIssue.id)}
                                 alt={`Site issue: ${photoPreviewIssue.title}`}
                                 className="max-h-[78dvh] max-w-full object-contain"
                             />
                         </div>
 
                         <div className="flex flex-wrap justify-end gap-2 border-t p-4">
-                            <Button
-                                asChild
-                                variant="outline"
-                            >
+                            <Button asChild variant="outline">
                                 <a
                                     href={getIssuePhotoUrl(
                                         photoPreviewIssue.id,
@@ -1771,9 +1731,7 @@ export default function DrawingShow({
 
                             <Button
                                 type="button"
-                                onClick={() =>
-                                    setPhotoPreviewIssue(null)
-                                }
+                                onClick={() => setPhotoPreviewIssue(null)}
                             >
                                 Close
                             </Button>

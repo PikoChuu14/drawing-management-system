@@ -14,7 +14,12 @@ type ApsViewerProps = {
     className?: string;
 };
 
-export default function ApsViewer({ urn, tokenUrl, api, className }: ApsViewerProps) {
+export default function ApsViewer({
+    urn,
+    tokenUrl,
+    api,
+    className,
+}: ApsViewerProps) {
     const containerRef = useRef<HTMLDivElement>(null);
 
     const viewerRef = useRef<Autodesk.Viewing.GuiViewer3D | null>(null);
@@ -98,9 +103,10 @@ export default function ApsViewer({ urn, tokenUrl, api, className }: ApsViewerPr
 
                         viewerRef.current = viewer;
 
-                        const viewerWithResize = viewer as Autodesk.Viewing.GuiViewer3D & {
-                            resize?: () => void;
-                        };
+                        const viewerWithResize =
+                            viewer as Autodesk.Viewing.GuiViewer3D & {
+                                resize?: () => void;
+                            };
 
                         resizeObserver = new ResizeObserver(() => {
                             viewerWithResize.resize?.();
@@ -212,14 +218,12 @@ export default function ApsViewer({ urn, tokenUrl, api, className }: ApsViewerPr
     }, [api, tokenUrl, urn]);
 
     return (
-        
-            <div
-                className={cn(
-                    'relative w-full overflow-hidden bg-neutral-900',
-                    className,
-                )}
-            >
-
+        <div
+            className={cn(
+                'relative w-full overflow-hidden bg-neutral-900',
+                className,
+            )}
+        >
             <div ref={containerRef} className="absolute inset-0" />
 
             {loading && !error && (
