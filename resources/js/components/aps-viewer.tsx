@@ -215,7 +215,7 @@ export default function ApsViewer({ urn, tokenUrl, api, className }: ApsViewerPr
         
             <div
                 className={cn(
-                    'relative min-h-[420px] w-full overflow-hidden rounded-lg bg-neutral-900',
+                    'relative w-full overflow-hidden bg-neutral-900',
                     className,
                 )}
             >

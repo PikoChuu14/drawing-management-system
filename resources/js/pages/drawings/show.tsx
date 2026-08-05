@@ -396,25 +396,32 @@ export default function DrawingShow({
     }, [photoPreviewIssue]);
 
     useEffect(() => {
-    const handleFullscreenChange = () => {
-        setIsWorkspaceFullscreen(
-            document.fullscreenElement ===
-                workspaceRef.current,
-        );
-    };
+        const handleFullscreenChange = () => {
+            const isFullscreen =
+                document.fullscreenElement ===
+                workspaceRef.current;
 
-    document.addEventListener(
-        'fullscreenchange',
-        handleFullscreenChange,
-    );
+            setIsWorkspaceFullscreen(isFullscreen);
 
-    return () => {
-        document.removeEventListener(
+            window.setTimeout(() => {
+                window.dispatchEvent(
+                    new Event('resize'),
+                );
+            }, 150);
+        };
+
+        document.addEventListener(
             'fullscreenchange',
             handleFullscreenChange,
         );
-    };
-}, []);
+
+        return () => {
+            document.removeEventListener(
+                'fullscreenchange',
+                handleFullscreenChange,
+            );
+        };
+    }, []);
 
     useEffect(() => {
     if (!isFocusMode) {
@@ -542,7 +549,7 @@ export default function DrawingShow({
                     className={cn(
                         'overflow-hidden rounded-xl border bg-card shadow-sm',
                         workspaceExpanded &&
-                            'fixed inset-0 z-[100] flex h-[100dvh] w-screen flex-col rounded-none border-0 bg-background',
+                            'fixed inset-0 z-[100] grid h-[100dvh] w-screen grid-rows-[auto_minmax(0,1fr)] rounded-none border-0 bg-background',
                     )}
                 >
                     <div className="flex flex-col gap-4 border-b p-4 lg:flex-row lg:items-center lg:justify-between">
@@ -654,17 +661,18 @@ export default function DrawingShow({
                     </div>
 
                     <div
-                        className={cn(
-                            'grid min-h-0 gap-4 p-2 sm:p-4 xl:grid-cols-[minmax(0,1fr)_360px]',
-                            workspaceExpanded && 'flex flex-1 p-0',
-                        )}
+                        className={
+                            workspaceExpanded
+                                ? 'relative min-h-0 overflow-hidden'
+                                : 'grid min-h-0 gap-4 p-2 sm:p-4 xl:grid-cols-[minmax(0,1fr)_360px]'
+                        }
                     >
                         <div
-                            className={cn(
-                                'min-w-0 overflow-hidden rounded-lg border bg-neutral-950',
-                                workspaceExpanded &&
-                                    'h-full flex-1 rounded-none border-0',
-                            )}
+                            className={
+                                workspaceExpanded
+                                    ? 'absolute inset-0 overflow-hidden bg-neutral-950'
+                                    : 'min-h-0 min-w-0 overflow-hidden rounded-lg border bg-neutral-950'
+                            }
                         >
                             {dwgPreviewRevision?.aps_urn ? (
                                 <ApsViewer
@@ -672,22 +680,22 @@ export default function DrawingShow({
                                     urn={dwgPreviewRevision.aps_urn}
                                     tokenUrl={apsViewer.token_url}
                                     api={apsViewer.api}
-                                    className={cn(
-                                        'h-[62dvh] min-h-[460px] md:h-[68dvh]',
-                                        workspaceExpanded &&
-                                            'h-full min-h-0 rounded-none',
-                                    )}
+                                    className={
+                                        workspaceExpanded
+                                            ? 'absolute inset-0 h-full min-h-0 w-full rounded-none'
+                                            : 'h-[62dvh] min-h-[460px] rounded-lg md:h-[68dvh]'
+                                    }
                                 />
                             ) : previewRevision ? (
                                 <iframe
                                     key={previewRevision.id}
                                     src={getPreviewUrl(previewRevision.id)}
                                     title={`PDF preview for revision ${previewRevision.revision_code}`}
-                                    className={cn(
-                                        'h-[62dvh] min-h-[460px] w-full bg-white md:h-[68dvh]',
-                                        workspaceExpanded &&
-                                            'h-full min-h-0',
-                                    )}
+                                    className={
+                                        workspaceExpanded
+                                            ? 'absolute inset-0 h-full min-h-0 w-full border-0 bg-white'
+                                            : 'h-[62dvh] min-h-[460px] w-full border-0 bg-white md:h-[68dvh]'
+                                    }
                                 />
                             ) : (
                                 <div className="flex h-[62dvh] min-h-[460px] items-center justify-center p-6 text-center text-white">
