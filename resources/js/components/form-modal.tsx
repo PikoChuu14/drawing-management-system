@@ -1,9 +1,8 @@
 import { Button } from '@/components/ui/button';
 import { X } from 'lucide-react';
-import {
-    useEffect,
-    type ReactNode,
-} from 'react';
+import { useEffect, type ReactNode,} from 'react';
+import { cn } from '@/lib/utils';
+
 
 type FormModalProps = {
     open: boolean;
@@ -11,6 +10,7 @@ type FormModalProps = {
     description?: string;
     onClose: () => void;
     children: ReactNode;
+    panelClassName?: string;
 };
 
 export default function FormModal({
@@ -19,6 +19,7 @@ export default function FormModal({
     description,
     onClose,
     children,
+    panelClassName,
 }: FormModalProps) {
     useEffect(() => {
         if (!open) {
@@ -73,7 +74,12 @@ export default function FormModal({
                 }
             }}
         >
-            <div className="flex max-h-[94dvh] w-full max-w-2xl flex-col overflow-hidden rounded-xl border bg-background shadow-2xl">
+            <div
+                className={cn(
+                    'flex max-h-[94dvh] w-full max-w-2xl flex-col overflow-hidden rounded-xl border bg-background shadow-2xl',
+                    panelClassName,
+                )}
+            >
                 <div className="flex items-start justify-between gap-4 border-b p-5 sm:p-6">
                     <div>
                         <h2 className="text-xl font-semibold">
