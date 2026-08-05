@@ -1,7 +1,8 @@
 import { Head, Link, router, useForm } from '@inertiajs/react';
-import { useState, type FormEvent } from 'react';
-import FormModal from '@/components/form-modal';
 import { Plus } from 'lucide-react';
+import type { FormEvent } from 'react';
+import { useState } from 'react';
+import FormModal from '@/components/form-modal';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -51,11 +52,7 @@ export default function ProjectsIndex({
     projects,
     filters,
 }: ProjectsPageProps) {
-
-    const [
-        createProjectOpen,
-        setCreateProjectOpen,
-    ] = useState(false);
+    const [createProjectOpen, setCreateProjectOpen] = useState(false);
 
     const form = useForm<ProjectForm>({
         project_code: '',
@@ -71,9 +68,7 @@ export default function ProjectsIndex({
         status: filters.status,
     });
 
-    const submit = (
-        event: FormEvent<HTMLFormElement>,
-    ) => {
+    const submit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
 
         form.post('/projects', {
@@ -225,7 +220,8 @@ export default function ProjectsIndex({
                             <p className="font-medium">No projects yet</p>
 
                             <p className="mt-1 text-sm text-muted-foreground">
-                                Use the Create Project button to add your first project.
+                                Use the Create Project button to add your first
+                                project.
                             </p>
                         </div>
                     ) : (
@@ -253,73 +249,69 @@ export default function ProjectsIndex({
                                             Drawings
                                         </th>
 
-                                            <th className="px-6 py-3 font-medium">
-                                                Matching
-                                            </th>
+                                        <th className="px-6 py-3 font-medium">
+                                            Matching
+                                        </th>
 
-                                            <th className="px-6 py-3 font-medium">
-                                                Created By
-                                            </th>
-                                        </tr>
+                                        <th className="px-6 py-3 font-medium">
+                                            Created By
+                                        </th>
+                                    </tr>
                                 </thead>
 
-                                    <tbody>
-                                        {projects.map((project) => (
-                                            <tr
-                                                key={project.id}
-                                                className="border-b last:border-b-0"
-                                            >
-                                                <td className="px-6 py-4 font-mono font-medium">
-                                                    {project.project_code}
-                                                </td>
+                                <tbody>
+                                    {projects.map((project) => (
+                                        <tr
+                                            key={project.id}
+                                            className="border-b last:border-b-0"
+                                        >
+                                            <td className="px-6 py-4 font-mono font-medium">
+                                                {project.project_code}
+                                            </td>
 
-                                                <td className="px-6 py-4">
-                                                    <Link
-                                                        href={`/projects/${project.id}`}
-                                                        className="font-medium hover:underline"
-                                                    >
-                                                        {project.name}
-                                                    </Link>
+                                            <td className="px-6 py-4">
+                                                <Link
+                                                    href={`/projects/${project.id}`}
+                                                    className="font-medium hover:underline"
+                                                >
+                                                    {project.name}
+                                                </Link>
 
-                                                    {project.description && (
-                                                        <p className="mt-1 max-w-md text-muted-foreground">
-                                                            {
-                                                                project.description
-                                                            }
-                                                        </p>
-                                                    )}
-                                                </td>
-
-                                                <td className="px-6 py-4 capitalize">
-                                                    {formatStatus(
-                                                        project.status,
-                                                    )}
-                                                </td>
-
-                                                <td className="px-6 py-4 text-muted-foreground">
-                                                    <p>
-                                                        Start:{' '}
-                                                        {project.start_date ??
-                                                            'Not set'}
+                                                {project.description && (
+                                                    <p className="mt-1 max-w-md text-muted-foreground">
+                                                        {project.description}
                                                     </p>
+                                                )}
+                                            </td>
 
-                                                    <p>
-                                                        End:{' '}
-                                                        {project.end_date ??
-                                                            'Not set'}
-                                                    </p>
-                                                </td>
+                                            <td className="px-6 py-4 capitalize">
+                                                {formatStatus(project.status)}
+                                            </td>
 
-                                                <td className="px-6 py-4">
-                                                    {project.drawing_count}
-                                                </td>
+                                            <td className="px-6 py-4 text-muted-foreground">
+                                                <p>
+                                                    Start:{' '}
+                                                    {project.start_date ??
+                                                        'Not set'}
+                                                </p>
 
-                                                <td className="px-6 py-4">
-                                                    {project.creator_name}
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
+                                                <p>
+                                                    End:{' '}
+                                                    {project.end_date ??
+                                                        'Not set'}
+                                                </p>
+                                            </td>
+
+                                            <td className="px-6 py-4">
+                                                {project.drawing_count}
+                                            </td>
+
+                                            <td className="px-6 py-4">
+                                                {project.creator_name}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
                             </table>
                         </div>
                     )}
@@ -333,9 +325,7 @@ export default function ProjectsIndex({
                 >
                     <form onSubmit={submit} className="space-y-5">
                         <div className="space-y-2">
-                            <Label htmlFor="project_code">
-                                Project Code
-                            </Label>
+                            <Label htmlFor="project_code">Project Code</Label>
 
                             <Input
                                 id="project_code"
@@ -406,10 +396,7 @@ export default function ProjectsIndex({
                                 id="status"
                                 value={form.data.status}
                                 onChange={(event) =>
-                                    form.setData(
-                                        'status',
-                                        event.target.value,
-                                    )
+                                    form.setData('status', event.target.value)
                                 }
                                 className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                             >
@@ -433,9 +420,7 @@ export default function ProjectsIndex({
 
                         <div className="grid gap-4 sm:grid-cols-2">
                             <div className="space-y-2">
-                                <Label htmlFor="start_date">
-                                    Start Date
-                                </Label>
+                                <Label htmlFor="start_date">Start Date</Label>
 
                                 <Input
                                     id="start_date"
@@ -489,10 +474,7 @@ export default function ProjectsIndex({
                                 Cancel
                             </Button>
 
-                            <Button
-                                type="submit"
-                                disabled={form.processing}
-                            >
+                            <Button type="submit" disabled={form.processing}>
                                 {form.processing
                                     ? 'Creating...'
                                     : 'Create Project'}

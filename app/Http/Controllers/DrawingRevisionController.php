@@ -483,11 +483,10 @@ class DrawingRevisionController extends Controller
                     'revision_code',
                 )
                     ->where(
-                        fn ($query) =>
-                            $query->where(
-                                'drawing_id',
-                                $drawing->id,
-                            ),
+                        fn ($query) => $query->where(
+                            'drawing_id',
+                            $drawing->id,
+                        ),
                     )
                     ->ignore($revision),
             ],
@@ -531,14 +530,12 @@ class DrawingRevisionController extends Controller
                 'drawings.show',
                 [$project, $drawing],
             )->withErrors([
-                'revision' =>
-                    'Restore the archived revision before making it current.',
+                'revision' => 'Restore the archived revision before making it current.',
             ]);
         }
 
         $drawing->update([
-            'current_revision_id' =>
-                $revision->id,
+            'current_revision_id' => $revision->id,
         ]);
 
         return to_route(
@@ -569,8 +566,7 @@ class DrawingRevisionController extends Controller
                 'drawings.show',
                 [$project, $drawing],
             )->withErrors([
-                'revision' =>
-                    'The current revision cannot be archived. Make another revision current first.',
+                'revision' => 'The current revision cannot be archived. Make another revision current first.',
             ]);
         }
 
@@ -630,8 +626,7 @@ class DrawingRevisionController extends Controller
                 'drawings.show',
                 [$project, $drawing],
             )->withErrors([
-                'revision' =>
-                    'The current revision cannot be deleted. Upload or select another current revision first.',
+                'revision' => 'The current revision cannot be deleted. Upload or select another current revision first.',
             ]);
         }
 

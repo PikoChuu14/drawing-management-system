@@ -79,23 +79,18 @@ export default function ProjectShow({ project, filters }: ProjectShowProps) {
         drawing_status: filters.drawing_status,
     });
 
-    const submit = (
-        event: FormEvent<HTMLFormElement>,
-    ) => {
+    const submit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
 
-        form.post(
-            `/projects/${project.id}/drawings`,
-            {
-                preserveScroll: true,
+        form.post(`/projects/${project.id}/drawings`, {
+            preserveScroll: true,
 
-                onSuccess: () => {
-                    form.reset();
-                    form.clearErrors();
-                    setRegisterDrawingOpen(false);
-                },
+            onSuccess: () => {
+                form.reset();
+                form.clearErrors();
+                setRegisterDrawingOpen(false);
             },
-        );
+        });
     };
 
     const closeRegisterDrawing = () => {
@@ -131,10 +126,7 @@ export default function ProjectShow({ project, filters }: ProjectShowProps) {
         );
     };
 
-    const [
-        registerDrawingOpen,
-        setRegisterDrawingOpen,
-    ] = useState(false);
+    const [registerDrawingOpen, setRegisterDrawingOpen] = useState(false);
 
     const formatStatus = (status: string) => {
         return status.replaceAll('_', ' ');
@@ -249,9 +241,7 @@ export default function ProjectShow({ project, filters }: ProjectShowProps) {
                             <Button
                                 type="button"
                                 className="h-11 gap-2"
-                                onClick={() =>
-                                    setRegisterDrawingOpen(true)
-                                }
+                                onClick={() => setRegisterDrawingOpen(true)}
                             >
                                 <Plus className="size-4" />
                                 Register Drawing
@@ -263,66 +253,60 @@ export default function ProjectShow({ project, filters }: ProjectShowProps) {
                             className="mt-5 grid gap-3 lg:grid-cols-[1fr_160px_160px_auto_auto]"
                         >
                             <Input
-                                    type="search"
-                                    value={filterForm.data.search}
-                                    onChange={(event) =>
-                                        filterForm.setData(
-                                            'search',
-                                            event.target.value,
-                                        )
-                                    }
-                                    placeholder="Search number, title or description..."
-                                    aria-label="Search drawings"
-                                />
+                                type="search"
+                                value={filterForm.data.search}
+                                onChange={(event) =>
+                                    filterForm.setData(
+                                        'search',
+                                        event.target.value,
+                                    )
+                                }
+                                placeholder="Search number, title or description..."
+                                aria-label="Search drawings"
+                            />
 
-                                <select
-                                    value={filterForm.data.discipline}
-                                    onChange={(event) =>
-                                        filterForm.setData(
-                                            'discipline',
-                                            event.target.value,
-                                        )
-                                    }
-                                    aria-label="Filter drawing discipline"
-                                    className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
-                                >
-                                    <option value="">All disciplines</option>
-                                    <option value="Architectural">
-                                        Architectural
-                                    </option>
-                                    <option value="Civil">Civil</option>
-                                    <option value="Mechanical">
-                                        Mechanical
-                                    </option>
-                                    <option value="Electrical">
-                                        Electrical
-                                    </option>
-                                    <option value="Control">Control</option>
-                                    <option value="Process">Process</option>
-                                    <option value="Other">Other</option>
-                                </select>
+                            <select
+                                value={filterForm.data.discipline}
+                                onChange={(event) =>
+                                    filterForm.setData(
+                                        'discipline',
+                                        event.target.value,
+                                    )
+                                }
+                                aria-label="Filter drawing discipline"
+                                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                            >
+                                <option value="">All disciplines</option>
+                                <option value="Architectural">
+                                    Architectural
+                                </option>
+                                <option value="Civil">Civil</option>
+                                <option value="Mechanical">Mechanical</option>
+                                <option value="Electrical">Electrical</option>
+                                <option value="Control">Control</option>
+                                <option value="Process">Process</option>
+                                <option value="Other">Other</option>
+                            </select>
 
-                                <select
-                                    value={filterForm.data.drawing_status}
-                                    onChange={(event) =>
-                                        filterForm.setData(
-                                            'drawing_status',
-                                            event.target.value,
-                                        )
-                                    }
-                                    aria-label="Filter drawing status"
-                                    className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
-                                >
-                                    <option value="">All statuses</option>
-                                    <option value="draft">Draft</option>
-                                    <option value="under_review">
-                                        Under Review
-                                    </option>
-                                    <option value="approved">Approved</option>
-                                    <option value="superseded">
-                                        Superseded
-                                    </option>
-                                </select>
+                            <select
+                                value={filterForm.data.drawing_status}
+                                onChange={(event) =>
+                                    filterForm.setData(
+                                        'drawing_status',
+                                        event.target.value,
+                                    )
+                                }
+                                aria-label="Filter drawing status"
+                                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                            >
+                                <option value="">All statuses</option>
+                                <option value="draft">Draft</option>
+                                <option value="under_review">
+                                    Under Review
+                                </option>
+                                <option value="approved">Approved</option>
+                                <option value="superseded">Superseded</option>
+                            </select>
 
                             <Button
                                 type="submit"
@@ -400,9 +384,7 @@ export default function ProjectShow({ project, filters }: ProjectShowProps) {
 
                                                 {drawing.description && (
                                                     <p className="mt-1 max-w-md text-muted-foreground">
-                                                        {
-                                                            drawing.description
-                                                        }
+                                                        {drawing.description}
                                                     </p>
                                                 )}
                                             </td>
@@ -413,15 +395,11 @@ export default function ProjectShow({ project, filters }: ProjectShowProps) {
                                             </td>
 
                                             <td className="px-6 py-4 capitalize">
-                                                {formatStatus(
-                                                    drawing.status,
-                                                )}
+                                                {formatStatus(drawing.status)}
                                             </td>
 
                                             <td className="px-6 py-4">
-                                                <p>
-                                                    {drawing.creator_name}
-                                                </p>
+                                                <p>{drawing.creator_name}</p>
 
                                                 <p className="text-xs text-muted-foreground">
                                                     {drawing.created_at}
@@ -504,12 +482,8 @@ export default function ProjectShow({ project, filters }: ProjectShowProps) {
                                     Architectural
                                 </option>
                                 <option value="Civil">Civil</option>
-                                <option value="Mechanical">
-                                    Mechanical
-                                </option>
-                                <option value="Electrical">
-                                    Electrical
-                                </option>
+                                <option value="Mechanical">Mechanical</option>
+                                <option value="Electrical">Electrical</option>
                                 <option value="Control">Control</option>
                                 <option value="Process">Process</option>
                                 <option value="Other">Other</option>
@@ -582,10 +556,7 @@ export default function ProjectShow({ project, filters }: ProjectShowProps) {
                                 Cancel
                             </Button>
 
-                            <Button
-                                type="submit"
-                                disabled={form.processing}
-                            >
+                            <Button type="submit" disabled={form.processing}>
                                 {form.processing
                                     ? 'Registering...'
                                     : 'Register Drawing'}

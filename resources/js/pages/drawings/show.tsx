@@ -1,6 +1,13 @@
 import { Head, Link, router, useForm } from '@inertiajs/react';
-import { History, ListChecks, Plus, Maximize2, Minimize2, X } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import {
+    History,
+    ListChecks,
+    Plus,
+    Maximize2,
+    Minimize2,
+    X,
+} from 'lucide-react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
 import ApsViewer from '@/components/aps-viewer';
 import FormModal from '@/components/form-modal';
@@ -40,10 +47,7 @@ type Revision = {
     can_view_dwg: boolean;
     aps_urn: string | null;
 
-        lifecycle_status:
-        | 'current'
-        | 'superseded'
-        | 'archived';
+    lifecycle_status: 'current' | 'superseded' | 'archived';
 
     is_current: boolean;
     is_archived: boolean;
@@ -179,35 +183,27 @@ export default function DrawingShow({
         return `/projects/${project.id}/drawings/${drawing.id}/revisions/${revisionId}/preview`;
     };
 
-    const submit = (
-        event: FormEvent<HTMLFormElement>,
-    ) => {
+    const submit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
 
-        form.post(
-            `/projects/${project.id}/drawings/${drawing.id}/revisions`,
-            {
-                forceFormData: true,
-                preserveScroll: true,
+        form.post(`/projects/${project.id}/drawings/${drawing.id}/revisions`, {
+            forceFormData: true,
+            preserveScroll: true,
 
-                onSuccess: () => {
-                    form.reset();
+            onSuccess: () => {
+                form.reset();
 
-                    if (fileInput.current) {
-                        fileInput.current.value = '';
-                    }
+                if (fileInput.current) {
+                    fileInput.current.value = '';
+                }
 
-                    if (
-                        tabletRevisionFileInput.current
-                    ) {
-                        tabletRevisionFileInput.current.value =
-                            '';
-                    }
+                if (tabletRevisionFileInput.current) {
+                    tabletRevisionFileInput.current.value = '';
+                }
 
-                    setRevisionUploadOpen(false);
-                },
+                setRevisionUploadOpen(false);
             },
-        );
+        });
     };
 
     const issuePhotoInput = useRef<HTMLInputElement>(null);
@@ -220,9 +216,7 @@ export default function DrawingShow({
         photo: null,
     });
 
-    const submitIssue = (
-        event: FormEvent<HTMLFormElement>,
-    ) => {
+    const submitIssue = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
 
         issueForm.post(
@@ -235,15 +229,11 @@ export default function DrawingShow({
                     issueForm.reset();
 
                     if (issuePhotoInput.current) {
-                        issuePhotoInput.current.value =
-                            '';
+                        issuePhotoInput.current.value = '';
                     }
 
-                    if (
-                        tabletIssuePhotoInput.current
-                    ) {
-                        tabletIssuePhotoInput.current.value =
-                            '';
+                    if (tabletIssuePhotoInput.current) {
+                        tabletIssuePhotoInput.current.value = '';
                     }
 
                     setIssueReportOpen(false);
@@ -348,18 +338,13 @@ export default function DrawingShow({
 
     const [isFocusMode, setIsFocusMode] = useState(false);
 
-    const revisionsNewestFirst = [
-        ...drawing.revisions,
-    ].sort(
-        (first, second) =>
-            second.id - first.id,
+    const revisionsNewestFirst = [...drawing.revisions].sort(
+        (first, second) => second.id - first.id,
     );
 
-    const activeRevisions =
-        revisionsNewestFirst.filter(
-            (revision) =>
-                !revision.is_archived,
-        );
+    const activeRevisions = revisionsNewestFirst.filter(
+        (revision) => !revision.is_archived,
+    );
 
     const previewableRevisions = activeRevisions.filter(
         (revision) =>
@@ -377,27 +362,30 @@ export default function DrawingShow({
 
     const workspaceExpanded = isWorkspaceFullscreen || isFocusMode;
 
-    const selectWorkspaceRevision = (revisionId: number) => {
-        const revision = drawing.revisions.find(
-            (item) => item.id === revisionId,
-        );
+    const selectWorkspaceRevision = useCallback(
+        (revisionId: number) => {
+            const revision = drawing.revisions.find(
+                (item) => item.id === revisionId,
+            );
 
-        if (!revision) {
-            return;
-        }
+            if (!revision) {
+                return;
+            }
 
-        if (revision.can_view_dwg && revision.aps_urn) {
-            setDwgPreviewRevision(revision);
-            setPreviewRevision(null);
+            if (revision.can_view_dwg && revision.aps_urn) {
+                setDwgPreviewRevision(revision);
+                setPreviewRevision(null);
 
-            return;
-        }
+                return;
+            }
 
-        if (revision.can_preview) {
-            setPreviewRevision(revision);
-            setDwgPreviewRevision(null);
-        }
-    };
+            if (revision.can_preview) {
+                setPreviewRevision(revision);
+                setDwgPreviewRevision(null);
+            }
+        },
+        [drawing.revisions],
+    );
 
     useEffect(() => {
         if (!photoPreviewIssue) {
@@ -495,36 +483,19 @@ export default function DrawingShow({
 
     type RecordsTab = 'revisions' | 'issues';
 
-    const [
-        revisionUploadOpen,
-        setRevisionUploadOpen,
-    ] = useState(false);
+    const [revisionUploadOpen, setRevisionUploadOpen] = useState(false);
 
-    const [
-        issueReportOpen,
-        setIssueReportOpen,
-    ] = useState(false);
+    const [issueReportOpen, setIssueReportOpen] = useState(false);
 
-    const [
-        recordsModalOpen,
-        setRecordsModalOpen,
-    ] = useState(false);
+    const [recordsModalOpen, setRecordsModalOpen] = useState(false);
 
-    const [
-        recordsTab,
-        setRecordsTab,
-    ] = useState<RecordsTab>('revisions');
+    const [recordsTab, setRecordsTab] = useState<RecordsTab>('revisions');
 
-    const tabletRevisionFileInput =
-        useRef<HTMLInputElement>(null);
+    const tabletRevisionFileInput = useRef<HTMLInputElement>(null);
 
-    const tabletIssuePhotoInput =
-        useRef<HTMLInputElement>(null);
+    const tabletIssuePhotoInput = useRef<HTMLInputElement>(null);
 
-
-    const openRecordsModal = (
-        tab: RecordsTab,
-    ) => {
+    const openRecordsModal = (tab: RecordsTab) => {
         setRecordsTab(tab);
         setRecordsModalOpen(true);
     };
@@ -559,9 +530,7 @@ export default function DrawingShow({
         setIssueReportOpen(false);
     };
 
-    const viewRevisionFromHistory = (
-        revision: Revision,
-    ) => {
+    const viewRevisionFromHistory = (revision: Revision) => {
         selectWorkspaceRevision(revision.id);
         setRecordsModalOpen(false);
 
@@ -573,9 +542,7 @@ export default function DrawingShow({
         }, 0);
     };
 
-    const viewRevisionInWorkspace = (
-        revision: Revision,
-    ) => {
+    const viewRevisionInWorkspace = (revision: Revision) => {
         selectWorkspaceRevision(revision.id);
 
         window.setTimeout(() => {
@@ -591,60 +558,41 @@ export default function DrawingShow({
             return;
         }
 
-        const currentViewable =
-            activeRevisions.find(
-                (revision) =>
-                    revision.is_current &&
-                    (
-                        revision.can_preview ||
-                        (
-                            revision.can_view_dwg &&
-                            revision.aps_urn
-                        )
-                    ),
-            );
+        const currentViewable = activeRevisions.find(
+            (revision) =>
+                revision.is_current &&
+                (revision.can_preview ||
+                    (revision.can_view_dwg && revision.aps_urn)),
+        );
 
-        const latestViewable =
-            activeRevisions.find(
-                (revision) =>
-                    revision.can_preview ||
-                    (
-                        revision.can_view_dwg &&
-                        revision.aps_urn
-                    ),
-            );
+        const latestViewable = activeRevisions.find(
+            (revision) =>
+                revision.can_preview ||
+                (revision.can_view_dwg && revision.aps_urn),
+        );
 
-        const target =
-            currentViewable ?? latestViewable;
+        const target = currentViewable ?? latestViewable;
 
         if (target) {
             queueMicrotask(() => {
                 selectWorkspaceRevision(target.id);
             });
         }
-    }, [drawing.id]);
+    }, [activeRevisions, selectedWorkspaceRevision, selectWorkspaceRevision]);
 
-    const issuesNewestFirst = [
-        ...drawing.issues,
-    ].sort(
-        (first, second) =>
-            second.id - first.id,
+    const issuesNewestFirst = [...drawing.issues].sort(
+        (first, second) => second.id - first.id,
     );
 
-    const latestTabletRevisions =
-        activeRevisions.slice(0, 3);
+    const latestTabletRevisions = activeRevisions.slice(0, 3);
 
-    const latestTabletIssues =
-        issuesNewestFirst.slice(0, 3);
+    const latestTabletIssues = issuesNewestFirst.slice(0, 3);
 
-    const [
-        revisionActionError,
-        setRevisionActionError,
-    ] = useState<string | null>(null);
+    const [revisionActionError, setRevisionActionError] = useState<
+        string | null
+    >(null);
 
-    const makeRevisionCurrent = (
-        revision: Revision,
-    ) => {
+    const makeRevisionCurrent = (revision: Revision) => {
         setRevisionActionError(null);
 
         router.patch(
@@ -661,9 +609,7 @@ export default function DrawingShow({
         );
     };
 
-    const archiveRevision = (
-        revision: Revision,
-    ) => {
+    const archiveRevision = (revision: Revision) => {
         if (
             !window.confirm(
                 `Archive revision ${revision.revision_code}? It will be hidden from normal viewing but remain in Full History.`,
@@ -688,9 +634,7 @@ export default function DrawingShow({
         );
     };
 
-    const restoreRevision = (
-        revision: Revision,
-    ) => {
+    const restoreRevision = (revision: Revision) => {
         router.patch(
             `/projects/${project.id}/drawings/${drawing.id}/revisions/${revision.id}/restore`,
             {},
@@ -700,9 +644,7 @@ export default function DrawingShow({
         );
     };
 
-    const deleteRevision = (
-        revision: Revision,
-    ) => {
+    const deleteRevision = (revision: Revision) => {
         if (
             !window.confirm(
                 `Permanently delete revision ${revision.revision_code} and its uploaded file?\n\nThis action cannot be undone.`,
@@ -719,37 +661,29 @@ export default function DrawingShow({
                 preserveScroll: true,
                 onError: (errors) =>
                     setRevisionActionError(
-                        errors.revision ??
-                            'The revision could not be deleted.',
+                        errors.revision ?? 'The revision could not be deleted.',
                     ),
             },
         );
     };
 
-    const [
-        editingRevision,
-        setEditingRevision,
-    ] = useState<Revision | null>(null);
+    const [editingRevision, setEditingRevision] = useState<Revision | null>(
+        null,
+    );
 
-    const revisionEditForm =
-        useForm<RevisionEditForm>({
-            revision_code: '',
-            issued_at: '',
-            revision_notes: '',
-        });
+    const revisionEditForm = useForm<RevisionEditForm>({
+        revision_code: '',
+        issued_at: '',
+        revision_notes: '',
+    });
 
-    const openEditRevision = (
-        revision: Revision,
-    ) => {
+    const openEditRevision = (revision: Revision) => {
         revisionEditForm.setData({
-            revision_code:
-                revision.revision_code,
+            revision_code: revision.revision_code,
 
-            issued_at:
-                revision.issued_at ?? '',
+            issued_at: revision.issued_at ?? '',
 
-            revision_notes:
-                revision.revision_notes ?? '',
+            revision_notes: revision.revision_notes ?? '',
         });
 
         revisionEditForm.clearErrors();
@@ -766,9 +700,7 @@ export default function DrawingShow({
         setEditingRevision(null);
     };
 
-    const submitRevisionEdit = (
-        event: FormEvent<HTMLFormElement>,
-    ) => {
+    const submitRevisionEdit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
 
         if (!editingRevision) {
@@ -1144,7 +1076,9 @@ export default function DrawingShow({
                                                     type="button"
                                                     className="h-11 gap-2"
                                                     onClick={() =>
-                                                        setRevisionUploadOpen(true)
+                                                        setRevisionUploadOpen(
+                                                            true,
+                                                        )
                                                     }
                                                 >
                                                     <Plus className="size-4" />
@@ -1156,7 +1090,9 @@ export default function DrawingShow({
                                                     variant="outline"
                                                     className="h-11 gap-2"
                                                     onClick={() =>
-                                                        openRecordsModal('revisions')
+                                                        openRecordsModal(
+                                                            'revisions',
+                                                        )
                                                     }
                                                 >
                                                     <History className="size-4" />
@@ -1247,7 +1183,8 @@ export default function DrawingShow({
                                             {activeRevisions.length > 3 && (
                                                 <p className="mt-3 text-center text-xs text-muted-foreground xl:hidden">
                                                     Showing the latest 3 of{' '}
-                                                    {activeRevisions.length} active revisions.
+                                                    {activeRevisions.length}{' '}
+                                                    active revisions.
                                                 </p>
                                             )}
                                         </div>
@@ -1272,7 +1209,9 @@ export default function DrawingShow({
                                                     variant="outline"
                                                     className="h-11 gap-2"
                                                     onClick={() =>
-                                                        openRecordsModal('issues')
+                                                        openRecordsModal(
+                                                            'issues',
+                                                        )
                                                     }
                                                 >
                                                     <ListChecks className="size-4" />
@@ -1286,67 +1225,73 @@ export default function DrawingShow({
                                                     this drawing.
                                                 </p>
                                             ) : (
-                                                latestTabletIssues.map((issue) => (
-                                                    <div
-                                                        key={issue.id}
-                                                        className={cn(
-                                                            'rounded-lg border p-4',
-                                                        )}
-                                                    >
-                                                        <div className="flex flex-wrap gap-2">
-                                                            <span className="font-mono text-xs font-semibold">
-                                                                {
-                                                                    issue.issue_number
-                                                                }
-                                                            </span>
-
-                                                            <span className="rounded-full border px-2 py-0.5 text-xs capitalize">
-                                                                {formatStatus(
-                                                                    issue.priority,
-                                                                )}
-                                                            </span>
-
-                                                            <span className="rounded-full border px-2 py-0.5 text-xs capitalize">
-                                                                {formatStatus(
-                                                                    issue.status,
-                                                                )}
-                                                            </span>
-                                                        </div>
-
-                                                        <p className="mt-3 text-sm font-medium">
-                                                            {issue.title}
-                                                        </p>
-
-                                                        {issue.location && (
-                                                            <p className="mt-2 text-xs text-muted-foreground">
-                                                                {issue.location}
-                                                            </p>
-                                                        )}
-
-                                                        <div className="mt-3 flex flex-wrap gap-2">
-                                                            {issue.has_photo && (
-                                                                <Button
-                                                                    type="button"
-                                                                    size="sm"
-                                                                    variant="outline"
-                                                                    onClick={() =>
-                                                                        setPhotoPreviewIssue(
-                                                                            issue,
-                                                                        )
-                                                                    }
-                                                                >
-                                                                    View Photo
-                                                                </Button>
+                                                latestTabletIssues.map(
+                                                    (issue) => (
+                                                        <div
+                                                            key={issue.id}
+                                                            className={cn(
+                                                                'rounded-lg border p-4',
                                                             )}
+                                                        >
+                                                            <div className="flex flex-wrap gap-2">
+                                                                <span className="font-mono text-xs font-semibold">
+                                                                    {
+                                                                        issue.issue_number
+                                                                    }
+                                                                </span>
+
+                                                                <span className="rounded-full border px-2 py-0.5 text-xs capitalize">
+                                                                    {formatStatus(
+                                                                        issue.priority,
+                                                                    )}
+                                                                </span>
+
+                                                                <span className="rounded-full border px-2 py-0.5 text-xs capitalize">
+                                                                    {formatStatus(
+                                                                        issue.status,
+                                                                    )}
+                                                                </span>
+                                                            </div>
+
+                                                            <p className="mt-3 text-sm font-medium">
+                                                                {issue.title}
+                                                            </p>
+
+                                                            {issue.location && (
+                                                                <p className="mt-2 text-xs text-muted-foreground">
+                                                                    {
+                                                                        issue.location
+                                                                    }
+                                                                </p>
+                                                            )}
+
+                                                            <div className="mt-3 flex flex-wrap gap-2">
+                                                                {issue.has_photo && (
+                                                                    <Button
+                                                                        type="button"
+                                                                        size="sm"
+                                                                        variant="outline"
+                                                                        onClick={() =>
+                                                                            setPhotoPreviewIssue(
+                                                                                issue,
+                                                                            )
+                                                                        }
+                                                                    >
+                                                                        View
+                                                                        Photo
+                                                                    </Button>
+                                                                )}
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                ))
+                                                    ),
+                                                )
                                             )}
 
                                             {issuesNewestFirst.length > 3 && (
                                                 <p className="mt-3 text-center text-xs text-muted-foreground xl:hidden">
                                                     Showing the latest 3 of{' '}
-                                                    {issuesNewestFirst.length} site issues.
+                                                    {issuesNewestFirst.length}{' '}
+                                                    site issues.
                                                 </p>
                                             )}
                                         </div>
@@ -1563,7 +1508,9 @@ export default function DrawingShow({
                                                 <td className="px-6 py-4">
                                                     <div className="flex flex-wrap items-center gap-2">
                                                         <p className="font-mono font-semibold">
-                                                            {revision.revision_code}
+                                                            {
+                                                                revision.revision_code
+                                                            }
                                                         </p>
 
                                                         <span
@@ -1653,18 +1600,18 @@ export default function DrawingShow({
                                                         {!revision.is_archived &&
                                                             (revision.can_preview ||
                                                                 revision.can_view_dwg) && (
-                                                            <Button
-                                                                type="button"
-                                                                size="sm"
-                                                                onClick={() =>
-                                                                    viewRevisionInWorkspace(
-                                                                        revision,
-                                                                    )
-                                                                }
-                                                            >
-                                                                View
-                                                            </Button>
-                                                        )}
+                                                                <Button
+                                                                    type="button"
+                                                                    size="sm"
+                                                                    onClick={() =>
+                                                                        viewRevisionInWorkspace(
+                                                                            revision,
+                                                                        )
+                                                                    }
+                                                                >
+                                                                    View
+                                                                </Button>
+                                                            )}
 
                                                         {revision.can_make_current && (
                                                             <Button
@@ -1997,7 +1944,8 @@ export default function DrawingShow({
                                 />
 
                                 <p className="text-xs text-muted-foreground">
-                                    Take Photo, Photo Library, or Choose File. Maximum 5 MB.
+                                    Take Photo, Photo Library, or Choose File.
+                                    Maximum 5 MB.
                                 </p>
 
                                 {issueForm.errors.photo && (
@@ -2165,10 +2113,7 @@ export default function DrawingShow({
                 description={`Add a revision to ${drawing.drawing_number} — ${drawing.title}.`}
                 onClose={closeRevisionUpload}
             >
-                <form
-                    onSubmit={submit}
-                    className="space-y-5"
-                >
+                <form onSubmit={submit} className="space-y-5">
                     <div className="space-y-2">
                         <Label htmlFor="tablet_revision_code">
                             Revision Code
@@ -2194,19 +2139,14 @@ export default function DrawingShow({
                     </div>
 
                     <div className="space-y-2">
-                        <Label htmlFor="tablet_issued_at">
-                            Issue Date
-                        </Label>
+                        <Label htmlFor="tablet_issued_at">Issue Date</Label>
 
                         <Input
                             id="tablet_issued_at"
                             type="date"
                             value={form.data.issued_at}
                             onChange={(event) =>
-                                form.setData(
-                                    'issued_at',
-                                    event.target.value,
-                                )
+                                form.setData('issued_at', event.target.value)
                             }
                         />
 
@@ -2230,8 +2170,7 @@ export default function DrawingShow({
                             onChange={(event) =>
                                 form.setData(
                                     'file',
-                                    event.target.files?.[0] ??
-                                        null,
+                                    event.target.files?.[0] ?? null,
                                 )
                             }
                         />
@@ -2300,10 +2239,7 @@ export default function DrawingShow({
                             Cancel
                         </Button>
 
-                        <Button
-                            type="submit"
-                            disabled={form.processing}
-                        >
+                        <Button type="submit" disabled={form.processing}>
                             {form.processing
                                 ? 'Uploading...'
                                 : 'Upload Revision'}
@@ -2318,23 +2254,15 @@ export default function DrawingShow({
                 description={`Link a site problem to drawing ${drawing.drawing_number}.`}
                 onClose={closeIssueReport}
             >
-                <form
-                    onSubmit={submitIssue}
-                    className="space-y-5"
-                >
+                <form onSubmit={submitIssue} className="space-y-5">
                     <div className="space-y-2">
-                        <Label htmlFor="tablet_issue_title">
-                            Issue Title
-                        </Label>
+                        <Label htmlFor="tablet_issue_title">Issue Title</Label>
 
                         <Input
                             id="tablet_issue_title"
                             value={issueForm.data.title}
                             onChange={(event) =>
-                                issueForm.setData(
-                                    'title',
-                                    event.target.value,
-                                )
+                                issueForm.setData('title', event.target.value)
                             }
                             placeholder="Example: Support clashes with column"
                         />
@@ -2371,9 +2299,7 @@ export default function DrawingShow({
                     </div>
 
                     <div className="space-y-2">
-                        <Label htmlFor="tablet_issue_priority">
-                            Priority
-                        </Label>
+                        <Label htmlFor="tablet_issue_priority">Priority</Label>
 
                         <select
                             id="tablet_issue_priority"
@@ -2389,9 +2315,7 @@ export default function DrawingShow({
                             <option value="low">Low</option>
                             <option value="medium">Medium</option>
                             <option value="high">High</option>
-                            <option value="critical">
-                                Critical
-                            </option>
+                            <option value="critical">Critical</option>
                         </select>
                     </div>
 
@@ -2422,9 +2346,7 @@ export default function DrawingShow({
                     </div>
 
                     <div className="space-y-2">
-                        <Label htmlFor="tablet_issue_photo">
-                            Site Photo
-                        </Label>
+                        <Label htmlFor="tablet_issue_photo">Site Photo</Label>
 
                         <Input
                             ref={tabletIssuePhotoInput}
@@ -2434,15 +2356,14 @@ export default function DrawingShow({
                             onChange={(event) =>
                                 issueForm.setData(
                                     'photo',
-                                    event.target.files?.[0] ??
-                                        null,
+                                    event.target.files?.[0] ?? null,
                                 )
                             }
                         />
 
                         <p className="text-xs text-muted-foreground">
-                            Choose the camera, Photo Library, or
-                            Files. Maximum 5 MB.
+                            Choose the camera, Photo Library, or Files. Maximum
+                            5 MB.
                         </p>
 
                         {issueForm.errors.photo && (
@@ -2462,10 +2383,7 @@ export default function DrawingShow({
                             Cancel
                         </Button>
 
-                        <Button
-                            type="submit"
-                            disabled={issueForm.processing}
-                        >
+                        <Button type="submit" disabled={issueForm.processing}>
                             {issueForm.processing
                                 ? 'Reporting...'
                                 : 'Report Issue'}
@@ -2484,10 +2402,7 @@ export default function DrawingShow({
                 description="Update revision metadata. The original drawing file will not be replaced."
                 onClose={closeEditRevision}
             >
-                <form
-                    onSubmit={submitRevisionEdit}
-                    className="space-y-5"
-                >
+                <form onSubmit={submitRevisionEdit} className="space-y-5">
                     <div className="space-y-2">
                         <Label htmlFor="edit_revision_code">
                             Revision Code
@@ -2495,10 +2410,7 @@ export default function DrawingShow({
 
                         <Input
                             id="edit_revision_code"
-                            value={
-                                revisionEditForm.data
-                                    .revision_code
-                            }
+                            value={revisionEditForm.data.revision_code}
                             onChange={(event) =>
                                 revisionEditForm.setData(
                                     'revision_code',
@@ -2507,29 +2419,20 @@ export default function DrawingShow({
                             }
                         />
 
-                        {revisionEditForm.errors
-                            .revision_code && (
+                        {revisionEditForm.errors.revision_code && (
                             <p className="text-sm text-red-600">
-                                {
-                                    revisionEditForm.errors
-                                        .revision_code
-                                }
+                                {revisionEditForm.errors.revision_code}
                             </p>
                         )}
                     </div>
 
                     <div className="space-y-2">
-                        <Label htmlFor="edit_issued_at">
-                            Issue Date
-                        </Label>
+                        <Label htmlFor="edit_issued_at">Issue Date</Label>
 
                         <Input
                             id="edit_issued_at"
                             type="date"
-                            value={
-                                revisionEditForm.data
-                                    .issued_at
-                            }
+                            value={revisionEditForm.data.issued_at}
                             onChange={(event) =>
                                 revisionEditForm.setData(
                                     'issued_at',
@@ -2547,10 +2450,7 @@ export default function DrawingShow({
                         <textarea
                             id="edit_revision_notes"
                             rows={5}
-                            value={
-                                revisionEditForm.data
-                                    .revision_notes
-                            }
+                            value={revisionEditForm.data.revision_notes}
                             onChange={(event) =>
                                 revisionEditForm.setData(
                                     'revision_notes',
@@ -2562,9 +2462,9 @@ export default function DrawingShow({
                     </div>
 
                     <div className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
-                        The uploaded file cannot be replaced through
-                        editing. Upload a new revision when the actual
-                        drawing file changes.
+                        The uploaded file cannot be replaced through editing.
+                        Upload a new revision when the actual drawing file
+                        changes.
                     </div>
 
                     <div className="flex justify-end gap-3 border-t pt-5">
@@ -2578,9 +2478,7 @@ export default function DrawingShow({
 
                         <Button
                             type="submit"
-                            disabled={
-                                revisionEditForm.processing
-                            }
+                            disabled={revisionEditForm.processing}
                         >
                             {revisionEditForm.processing
                                 ? 'Saving...'
@@ -2594,17 +2492,13 @@ export default function DrawingShow({
                 open={recordsModalOpen}
                 title="Drawing Records"
                 description={`${drawing.drawing_number} — revisions and linked site issues.`}
-                onClose={() =>
-                    setRecordsModalOpen(false)
-                }
+                onClose={() => setRecordsModalOpen(false)}
                 panelClassName="max-w-5xl"
             >
                 <div className="grid grid-cols-2 border-b">
                     <button
                         type="button"
-                        onClick={() =>
-                            setRecordsTab('revisions')
-                        }
+                        onClick={() => setRecordsTab('revisions')}
                         className={cn(
                             'min-h-12 border-b-2 px-4 text-sm font-medium',
                             recordsTab === 'revisions'
@@ -2612,15 +2506,12 @@ export default function DrawingShow({
                                 : 'border-transparent text-muted-foreground',
                         )}
                     >
-                        Revision History (
-                        {drawing.revisions.length})
+                        Revision History ({drawing.revisions.length})
                     </button>
 
                     <button
                         type="button"
-                        onClick={() =>
-                            setRecordsTab('issues')
-                        }
+                        onClick={() => setRecordsTab('issues')}
                         className={cn(
                             'min-h-12 border-b-2 px-4 text-sm font-medium',
                             recordsTab === 'issues'
@@ -2655,9 +2546,7 @@ export default function DrawingShow({
                                             <div className="flex flex-wrap items-center gap-2">
                                                 <p className="font-mono font-semibold">
                                                     Revision{' '}
-                                                    {
-                                                        revision.revision_code
-                                                    }
+                                                    {revision.revision_code}
                                                 </p>
 
                                                 <span
@@ -2675,13 +2564,11 @@ export default function DrawingShow({
                                                 </span>
                                             </div>
 
-                                            <p className="mt-1 break-all text-sm">
-                                                {
-                                                    revision.original_filename
-                                                }
+                                            <p className="mt-1 text-sm break-all">
+                                                {revision.original_filename}
                                             </p>
 
-                                            <p className="mt-1 text-xs uppercase text-muted-foreground">
+                                            <p className="mt-1 text-xs text-muted-foreground uppercase">
                                                 {revision.file_extension ??
                                                     'File'}{' '}
                                                 ·{' '}
@@ -2692,9 +2579,7 @@ export default function DrawingShow({
 
                                             {revision.revision_notes && (
                                                 <p className="mt-3 text-sm text-muted-foreground">
-                                                    {
-                                                        revision.revision_notes
-                                                    }
+                                                    {revision.revision_notes}
                                                 </p>
                                             )}
 
@@ -2709,18 +2594,18 @@ export default function DrawingShow({
                                             {!revision.is_archived &&
                                                 (revision.can_preview ||
                                                     revision.can_view_dwg) && (
-                                                <Button
-                                                    type="button"
-                                                    size="sm"
-                                                    onClick={() =>
-                                                        viewRevisionFromHistory(
-                                                            revision,
-                                                        )
-                                                    }
-                                                >
-                                                    View
-                                                </Button>
-                                            )}
+                                                    <Button
+                                                        type="button"
+                                                        size="sm"
+                                                        onClick={() =>
+                                                            viewRevisionFromHistory(
+                                                                revision,
+                                                            )
+                                                        }
+                                                    >
+                                                        View
+                                                    </Button>
+                                                )}
 
                                             {revision.can_make_current && (
                                                 <Button
@@ -2788,9 +2673,7 @@ export default function DrawingShow({
                                                     size="sm"
                                                     variant="destructive"
                                                     onClick={() =>
-                                                        deleteRevision(
-                                                            revision,
-                                                        )
+                                                        deleteRevision(revision)
                                                     }
                                                 >
                                                     Delete
@@ -2830,9 +2713,7 @@ export default function DrawingShow({
                                         <div className="min-w-0">
                                             <div className="flex flex-wrap gap-2">
                                                 <span className="font-mono text-sm font-semibold">
-                                                    {
-                                                        issue.issue_number
-                                                    }
+                                                    {issue.issue_number}
                                                 </span>
 
                                                 <span className="rounded-full border px-2 py-0.5 text-xs capitalize">
@@ -2842,9 +2723,7 @@ export default function DrawingShow({
                                                 </span>
 
                                                 <span className="rounded-full border px-2 py-0.5 text-xs capitalize">
-                                                    {formatStatus(
-                                                        issue.status,
-                                                    )}
+                                                    {formatStatus(issue.status)}
                                                 </span>
                                             </div>
 
@@ -2852,14 +2731,13 @@ export default function DrawingShow({
                                                 {issue.title}
                                             </h3>
 
-                                            <p className="mt-2 whitespace-pre-line text-sm text-muted-foreground">
+                                            <p className="mt-2 text-sm whitespace-pre-line text-muted-foreground">
                                                 {issue.description}
                                             </p>
 
                                             {issue.location && (
                                                 <p className="mt-3 text-sm">
-                                                    Location:{' '}
-                                                    {issue.location}
+                                                    Location: {issue.location}
                                                 </p>
                                             )}
 
@@ -2870,9 +2748,7 @@ export default function DrawingShow({
                                                     </p>
 
                                                     <p className="mt-1 text-sm text-muted-foreground">
-                                                        {
-                                                            issue.resolution
-                                                        }
+                                                        {issue.resolution}
                                                     </p>
                                                 </div>
                                             )}

@@ -1,8 +1,9 @@
-import { Button } from '@/components/ui/button';
 import { X } from 'lucide-react';
-import { useEffect, type ReactNode,} from 'react';
-import { cn } from '@/lib/utils';
+import type { ReactNode } from 'react';
+import { useEffect } from 'react';
 
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 type FormModalProps = {
     open: boolean;
@@ -26,12 +27,9 @@ export default function FormModal({
             return;
         }
 
-        const previousOverflow =
-            document.body.style.overflow;
+        const previousOverflow = document.body.style.overflow;
 
-        const handleKeyDown = (
-            event: KeyboardEvent,
-        ) => {
+        const handleKeyDown = (event: KeyboardEvent) => {
             if (event.key === 'Escape') {
                 onClose();
             }
@@ -39,19 +37,12 @@ export default function FormModal({
 
         document.body.style.overflow = 'hidden';
 
-        document.addEventListener(
-            'keydown',
-            handleKeyDown,
-        );
+        document.addEventListener('keydown', handleKeyDown);
 
         return () => {
-            document.body.style.overflow =
-                previousOverflow;
+            document.body.style.overflow = previousOverflow;
 
-            document.removeEventListener(
-                'keydown',
-                handleKeyDown,
-            );
+            document.removeEventListener('keydown', handleKeyDown);
         };
     }, [open, onClose]);
 
@@ -66,10 +57,7 @@ export default function FormModal({
             aria-label={title}
             className="fixed inset-0 z-[200] flex items-center justify-center bg-black/70 p-2 sm:p-6"
             onMouseDown={(event) => {
-                if (
-                    event.target ===
-                    event.currentTarget
-                ) {
+                if (event.target === event.currentTarget) {
                     onClose();
                 }
             }}
@@ -82,9 +70,7 @@ export default function FormModal({
             >
                 <div className="flex items-start justify-between gap-4 border-b p-5 sm:p-6">
                     <div>
-                        <h2 className="text-xl font-semibold">
-                            {title}
-                        </h2>
+                        <h2 className="text-xl font-semibold">{title}</h2>
 
                         {description && (
                             <p className="mt-1 text-sm text-muted-foreground">

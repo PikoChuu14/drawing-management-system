@@ -143,10 +143,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     )->name('aps.viewer-token');
 
     Route::put(
-    'projects/{project}/drawings/{drawing}/revisions/{revision}',
-    [
-        DrawingRevisionController::class,
-        'update', ],
+        'projects/{project}/drawings/{drawing}/revisions/{revision}',
+        [
+            DrawingRevisionController::class,
+            'update', ],
     )->name('revisions.update');
 
     Route::patch(
