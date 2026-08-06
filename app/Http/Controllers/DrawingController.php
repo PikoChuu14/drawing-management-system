@@ -52,6 +52,7 @@ class DrawingController extends Controller
             'status' => [
                 'required',
                 Rule::in([
+                    'active',
                     'draft',
                     'under_review',
                     'approved',
@@ -331,20 +332,14 @@ class DrawingController extends Controller
 
             'discipline' => [
                 'nullable',
-                Rule::in([
-                    'Architectural',
-                    'Civil',
-                    'Mechanical',
-                    'Electrical',
-                    'Control',
-                    'Process',
-                    'Other',
-                ]),
+                'string',
+                'max:100',
             ],
 
             'status' => [
                 'required',
                 Rule::in([
+                    'active',
                     'draft',
                     'under_review',
                     'approved',

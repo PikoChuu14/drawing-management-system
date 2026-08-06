@@ -56,7 +56,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         [ProjectController::class, 'edit'],
     )->name('projects.edit');
 
-    Route::put(
+    Route::match(
+        ['put', 'patch'],
         'projects/{project}',
         [ProjectController::class, 'update'],
     )->name('projects.update');
@@ -76,7 +77,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         [DrawingController::class, 'edit'],
     )->name('drawings.edit');
 
-    Route::put(
+    Route::match(
+        ['put', 'patch'],
         'projects/{project}/drawings/{drawing}',
         [DrawingController::class, 'update'],
     )->name('drawings.update');
