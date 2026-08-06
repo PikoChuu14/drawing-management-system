@@ -217,9 +217,7 @@ export default function ProjectsIndex({
 
                     {projects.length === 0 ? (
                         <div className="p-10 text-center">
-                            <p className="font-medium">
-                                No matching projects
-                            </p>
+                            <p className="font-medium">No matching projects</p>
 
                             <p className="mt-1 text-sm text-muted-foreground">
                                 Adjust the filters or create a new project.
@@ -285,7 +283,8 @@ export default function ProjectsIndex({
                                                 </dt>
 
                                                 <dd className="mt-1 font-medium">
-                                                    {project.start_date ?? 'Not set'}
+                                                    {project.start_date ??
+                                                        'Not set'}
                                                 </dd>
                                             </div>
 
@@ -295,7 +294,8 @@ export default function ProjectsIndex({
                                                 </dt>
 
                                                 <dd className="mt-1 font-medium">
-                                                    {project.end_date ?? 'Not set'}
+                                                    {project.end_date ??
+                                                        'Not set'}
                                                 </dd>
                                             </div>
                                         </dl>
@@ -304,7 +304,9 @@ export default function ProjectsIndex({
                                             asChild
                                             className="mt-5 h-11 w-full"
                                         >
-                                            <Link href={`/projects/${project.id}`}>
+                                            <Link
+                                                href={`/projects/${project.id}`}
+                                            >
                                                 Open Project
                                             </Link>
                                         </Button>
@@ -313,93 +315,97 @@ export default function ProjectsIndex({
                             </div>
 
                             <div className="hidden overflow-x-auto xl:block">
-                            <table className="w-full text-left text-sm">
-                                <thead className="border-b bg-muted/50">
-                                    <tr>
-                                        <th className="px-6 py-3 font-medium">
-                                            Code
-                                        </th>
+                                <table className="w-full text-left text-sm">
+                                    <thead className="border-b bg-muted/50">
+                                        <tr>
+                                            <th className="px-6 py-3 font-medium">
+                                                Code
+                                            </th>
 
-                                        <th className="px-6 py-3 font-medium">
-                                            Project
-                                        </th>
+                                            <th className="px-6 py-3 font-medium">
+                                                Project
+                                            </th>
 
-                                        <th className="px-6 py-3 font-medium">
-                                            Status
-                                        </th>
+                                            <th className="px-6 py-3 font-medium">
+                                                Status
+                                            </th>
 
-                                        <th className="px-6 py-3 font-medium">
-                                            Dates
-                                        </th>
+                                            <th className="px-6 py-3 font-medium">
+                                                Dates
+                                            </th>
 
-                                        <th className="px-6 py-3 font-medium">
-                                            Drawings
-                                        </th>
+                                            <th className="px-6 py-3 font-medium">
+                                                Drawings
+                                            </th>
 
-                                        <th className="px-6 py-3 font-medium">
-                                            Matching
-                                        </th>
+                                            <th className="px-6 py-3 font-medium">
+                                                Matching
+                                            </th>
 
-                                        <th className="px-6 py-3 font-medium">
-                                            Created By
-                                        </th>
-                                    </tr>
-                                </thead>
-
-                                <tbody>
-                                    {projects.map((project) => (
-                                        <tr
-                                            key={project.id}
-                                            className="border-b last:border-b-0"
-                                        >
-                                            <td className="px-6 py-4 font-mono font-medium">
-                                                {project.project_code}
-                                            </td>
-
-                                            <td className="px-6 py-4">
-                                                <Link
-                                                    href={`/projects/${project.id}`}
-                                                    className="font-medium hover:underline"
-                                                >
-                                                    {project.name}
-                                                </Link>
-
-                                                {project.description && (
-                                                    <p className="mt-1 max-w-md text-muted-foreground">
-                                                        {project.description}
-                                                    </p>
-                                                )}
-                                            </td>
-
-                                            <td className="px-6 py-4 capitalize">
-                                                {formatStatus(project.status)}
-                                            </td>
-
-                                            <td className="px-6 py-4 text-muted-foreground">
-                                                <p>
-                                                    Start:{' '}
-                                                    {project.start_date ??
-                                                        'Not set'}
-                                                </p>
-
-                                                <p>
-                                                    End:{' '}
-                                                    {project.end_date ??
-                                                        'Not set'}
-                                                </p>
-                                            </td>
-
-                                            <td className="px-6 py-4">
-                                                {project.drawing_count}
-                                            </td>
-
-                                            <td className="px-6 py-4">
-                                                {project.creator_name}
-                                            </td>
+                                            <th className="px-6 py-3 font-medium">
+                                                Created By
+                                            </th>
                                         </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                                    </thead>
+
+                                    <tbody>
+                                        {projects.map((project) => (
+                                            <tr
+                                                key={project.id}
+                                                className="border-b last:border-b-0"
+                                            >
+                                                <td className="px-6 py-4 font-mono font-medium">
+                                                    {project.project_code}
+                                                </td>
+
+                                                <td className="px-6 py-4">
+                                                    <Link
+                                                        href={`/projects/${project.id}`}
+                                                        className="font-medium hover:underline"
+                                                    >
+                                                        {project.name}
+                                                    </Link>
+
+                                                    {project.description && (
+                                                        <p className="mt-1 max-w-md text-muted-foreground">
+                                                            {
+                                                                project.description
+                                                            }
+                                                        </p>
+                                                    )}
+                                                </td>
+
+                                                <td className="px-6 py-4 capitalize">
+                                                    {formatStatus(
+                                                        project.status,
+                                                    )}
+                                                </td>
+
+                                                <td className="px-6 py-4 text-muted-foreground">
+                                                    <p>
+                                                        Start:{' '}
+                                                        {project.start_date ??
+                                                            'Not set'}
+                                                    </p>
+
+                                                    <p>
+                                                        End:{' '}
+                                                        {project.end_date ??
+                                                            'Not set'}
+                                                    </p>
+                                                </td>
+
+                                                <td className="px-6 py-4">
+                                                    {project.drawing_count}
+                                                </td>
+
+                                                <td className="px-6 py-4">
+                                                    {project.creator_name}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
                             </div>
                         </>
                     )}

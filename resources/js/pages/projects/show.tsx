@@ -401,7 +401,10 @@ export default function ProjectShow({ project, filters }: ProjectShowProps) {
                                             </div>
                                         </dl>
 
-                                        <Button asChild className="mt-5 h-11 w-full">
+                                        <Button
+                                            asChild
+                                            className="mt-5 h-11 w-full"
+                                        >
                                             <Link
                                                 href={`/projects/${project.id}/drawings/${drawing.id}`}
                                             >
@@ -458,7 +461,9 @@ export default function ProjectShow({ project, filters }: ProjectShowProps) {
 
                                                     {drawing.description && (
                                                         <p className="mt-1 max-w-md text-muted-foreground">
-                                                            {drawing.description}
+                                                            {
+                                                                drawing.description
+                                                            }
                                                         </p>
                                                     )}
                                                 </td>
@@ -469,11 +474,15 @@ export default function ProjectShow({ project, filters }: ProjectShowProps) {
                                                 </td>
 
                                                 <td className="px-6 py-4 capitalize">
-                                                    {formatStatus(drawing.status)}
+                                                    {formatStatus(
+                                                        drawing.status,
+                                                    )}
                                                 </td>
 
                                                 <td className="px-6 py-4">
-                                                    <p>{drawing.creator_name}</p>
+                                                    <p>
+                                                        {drawing.creator_name}
+                                                    </p>
 
                                                     <p className="text-xs text-muted-foreground">
                                                         {drawing.created_at}

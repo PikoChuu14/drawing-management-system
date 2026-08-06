@@ -389,7 +389,7 @@ export default function Dashboard({
                                                 {revision.project_code}
                                             </p>
 
-                                            <p className="mt-4 break-all text-sm">
+                                            <p className="mt-4 text-sm break-all">
                                                 {revision.original_filename}
                                             </p>
 
@@ -477,7 +477,9 @@ export default function Dashboard({
                                                     </Link>
 
                                                     <p className="mt-1 font-mono text-xs text-muted-foreground">
-                                                        {revision.drawing_number}
+                                                        {
+                                                            revision.drawing_number
+                                                        }
                                                     </p>
                                                 </td>
 
@@ -487,7 +489,9 @@ export default function Dashboard({
 
                                                 <td className="px-6 py-4">
                                                     <p className="max-w-64 truncate">
-                                                        {revision.original_filename}
+                                                        {
+                                                            revision.original_filename
+                                                        }
                                                     </p>
 
                                                     <p className="mt-1 text-xs text-muted-foreground">
@@ -498,7 +502,9 @@ export default function Dashboard({
                                                 </td>
 
                                                 <td className="px-6 py-4">
-                                                    <p>{revision.uploaded_by}</p>
+                                                    <p>
+                                                        {revision.uploaded_by}
+                                                    </p>
 
                                                     <p className="mt-1 text-xs text-muted-foreground">
                                                         {revision.uploaded_at}

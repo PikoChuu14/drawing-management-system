@@ -101,7 +101,8 @@ export default function Trash({ projects, drawings }: TrashProps) {
                                         </h3>
 
                                         <p className="mt-3 text-sm text-muted-foreground">
-                                            Deleted {project.deleted_at ?? 'Unknown'}
+                                            Deleted{' '}
+                                            {project.deleted_at ?? 'Unknown'}
                                         </p>
 
                                         <Button
@@ -119,51 +120,57 @@ export default function Trash({ projects, drawings }: TrashProps) {
                             </div>
 
                             <div className="hidden overflow-x-auto xl:block">
-                            <table className="w-full text-left text-sm">
-                                <thead className="border-b bg-muted/50">
-                                    <tr>
-                                        <th className="px-6 py-3">Code</th>
-                                        <th className="px-6 py-3">Project</th>
-                                        <th className="px-6 py-3">Deleted</th>
-                                        <th className="px-6 py-3">Action</th>
-                                    </tr>
-                                </thead>
-
-                                <tbody>
-                                    {projects.map((project) => (
-                                        <tr
-                                            key={project.id}
-                                            className="border-b last:border-0"
-                                        >
-                                            <td className="px-6 py-4 font-mono">
-                                                {project.project_code}
-                                            </td>
-
-                                            <td className="px-6 py-4 font-medium">
-                                                {project.name}
-                                            </td>
-
-                                            <td className="px-6 py-4 text-muted-foreground">
-                                                {project.deleted_at}
-                                            </td>
-
-                                            <td className="px-6 py-4">
-                                                <Button
-                                                    size="sm"
-                                                    variant="outline"
-                                                    onClick={() =>
-                                                        restoreProject(
-                                                            project.id,
-                                                        )
-                                                    }
-                                                >
-                                                    Restore
-                                                </Button>
-                                            </td>
+                                <table className="w-full text-left text-sm">
+                                    <thead className="border-b bg-muted/50">
+                                        <tr>
+                                            <th className="px-6 py-3">Code</th>
+                                            <th className="px-6 py-3">
+                                                Project
+                                            </th>
+                                            <th className="px-6 py-3">
+                                                Deleted
+                                            </th>
+                                            <th className="px-6 py-3">
+                                                Action
+                                            </th>
                                         </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                                    </thead>
+
+                                    <tbody>
+                                        {projects.map((project) => (
+                                            <tr
+                                                key={project.id}
+                                                className="border-b last:border-0"
+                                            >
+                                                <td className="px-6 py-4 font-mono">
+                                                    {project.project_code}
+                                                </td>
+
+                                                <td className="px-6 py-4 font-medium">
+                                                    {project.name}
+                                                </td>
+
+                                                <td className="px-6 py-4 text-muted-foreground">
+                                                    {project.deleted_at}
+                                                </td>
+
+                                                <td className="px-6 py-4">
+                                                    <Button
+                                                        size="sm"
+                                                        variant="outline"
+                                                        onClick={() =>
+                                                            restoreProject(
+                                                                project.id,
+                                                            )
+                                                        }
+                                                    >
+                                                        Restore
+                                                    </Button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
                             </div>
                         </>
                     )}
@@ -212,7 +219,8 @@ export default function Trash({ projects, drawings }: TrashProps) {
                                         </div>
 
                                         <p className="mt-4 text-sm text-muted-foreground">
-                                            Deleted {drawing.deleted_at ?? 'Unknown'}
+                                            Deleted{' '}
+                                            {drawing.deleted_at ?? 'Unknown'}
                                         </p>
 
                                         <Button
@@ -233,65 +241,77 @@ export default function Trash({ projects, drawings }: TrashProps) {
                             </div>
 
                             <div className="hidden overflow-x-auto xl:block">
-                            <table className="w-full text-left text-sm">
-                                <thead className="border-b bg-muted/50">
-                                    <tr>
-                                        <th className="px-6 py-3">Number</th>
-                                        <th className="px-6 py-3">Drawing</th>
-                                        <th className="px-6 py-3">Project</th>
-                                        <th className="px-6 py-3">Deleted</th>
-                                        <th className="px-6 py-3">Action</th>
-                                    </tr>
-                                </thead>
-
-                                <tbody>
-                                    {drawings.map((drawing) => (
-                                        <tr
-                                            key={drawing.id}
-                                            className="border-b last:border-0"
-                                        >
-                                            <td className="px-6 py-4 font-mono">
-                                                {drawing.drawing_number}
-                                            </td>
-
-                                            <td className="px-6 py-4 font-medium">
-                                                {drawing.title}
-                                            </td>
-
-                                            <td className="px-6 py-4">
-                                                <p>{drawing.project_name}</p>
-
-                                                <p className="font-mono text-xs text-muted-foreground">
-                                                    {drawing.project_code}
-                                                </p>
-                                            </td>
-
-                                            <td className="px-6 py-4 text-muted-foreground">
-                                                {drawing.deleted_at}
-                                            </td>
-
-                                            <td className="px-6 py-4">
-                                                <Button
-                                                    size="sm"
-                                                    variant="outline"
-                                                    disabled={
-                                                        drawing.project_deleted
-                                                    }
-                                                    onClick={() =>
-                                                        restoreDrawing(
-                                                            drawing.id,
-                                                        )
-                                                    }
-                                                >
-                                                    {drawing.project_deleted
-                                                        ? 'Restore project first'
-                                                        : 'Restore'}
-                                                </Button>
-                                            </td>
+                                <table className="w-full text-left text-sm">
+                                    <thead className="border-b bg-muted/50">
+                                        <tr>
+                                            <th className="px-6 py-3">
+                                                Number
+                                            </th>
+                                            <th className="px-6 py-3">
+                                                Drawing
+                                            </th>
+                                            <th className="px-6 py-3">
+                                                Project
+                                            </th>
+                                            <th className="px-6 py-3">
+                                                Deleted
+                                            </th>
+                                            <th className="px-6 py-3">
+                                                Action
+                                            </th>
                                         </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                                    </thead>
+
+                                    <tbody>
+                                        {drawings.map((drawing) => (
+                                            <tr
+                                                key={drawing.id}
+                                                className="border-b last:border-0"
+                                            >
+                                                <td className="px-6 py-4 font-mono">
+                                                    {drawing.drawing_number}
+                                                </td>
+
+                                                <td className="px-6 py-4 font-medium">
+                                                    {drawing.title}
+                                                </td>
+
+                                                <td className="px-6 py-4">
+                                                    <p>
+                                                        {drawing.project_name}
+                                                    </p>
+
+                                                    <p className="font-mono text-xs text-muted-foreground">
+                                                        {drawing.project_code}
+                                                    </p>
+                                                </td>
+
+                                                <td className="px-6 py-4 text-muted-foreground">
+                                                    {drawing.deleted_at}
+                                                </td>
+
+                                                <td className="px-6 py-4">
+                                                    <Button
+                                                        size="sm"
+                                                        variant="outline"
+                                                        disabled={
+                                                            drawing.project_deleted
+                                                        }
+                                                        onClick={() =>
+                                                            restoreDrawing(
+                                                                drawing.id,
+                                                            )
+                                                        }
+                                                    >
+                                                        {drawing.project_deleted
+                                                            ? 'Restore project first'
+                                                            : 'Restore'}
+                                                    </Button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
                             </div>
                         </>
                     )}
