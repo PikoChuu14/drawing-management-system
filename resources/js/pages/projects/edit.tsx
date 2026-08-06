@@ -67,7 +67,7 @@ export default function ProjectEdit({ project }: ProjectEditProps) {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={`Edit ${project.project_code}`} />
 
-            <div className="flex flex-1 justify-center p-4 md:p-6">
+            <div className="flex flex-1 justify-center px-3 py-4 sm:px-5 md:p-6">
                 <section className="w-full max-w-2xl rounded-xl border bg-card p-6 shadow-sm">
                     <div>
                         <h1 className="text-2xl font-semibold">Edit Project</h1>

@@ -58,7 +58,7 @@ export default function Trash({ projects, drawings }: TrashProps) {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Trash" />
 
-            <div className="flex flex-1 flex-col gap-6 p-4 md:p-6">
+            <div className="flex flex-1 flex-col gap-6 px-3 py-4 sm:px-5 md:p-6">
                 <header>
                     <h1 className="text-2xl font-semibold">Deleted Items</h1>
 
@@ -85,7 +85,40 @@ export default function Trash({ projects, drawings }: TrashProps) {
                             No deleted projects.
                         </p>
                     ) : (
-                        <div className="overflow-x-auto">
+                        <>
+                            <div className="divide-y xl:hidden">
+                                {projects.map((project) => (
+                                    <article
+                                        key={project.id}
+                                        className="p-5 sm:p-6"
+                                    >
+                                        <p className="font-mono text-sm text-muted-foreground">
+                                            {project.project_code}
+                                        </p>
+
+                                        <h3 className="mt-1 text-lg font-semibold">
+                                            {project.name}
+                                        </h3>
+
+                                        <p className="mt-3 text-sm text-muted-foreground">
+                                            Deleted {project.deleted_at ?? 'Unknown'}
+                                        </p>
+
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            className="mt-5 h-11 w-full"
+                                            onClick={() =>
+                                                restoreProject(project.id)
+                                            }
+                                        >
+                                            Restore Project
+                                        </Button>
+                                    </article>
+                                ))}
+                            </div>
+
+                            <div className="hidden overflow-x-auto xl:block">
                             <table className="w-full text-left text-sm">
                                 <thead className="border-b bg-muted/50">
                                     <tr>
@@ -131,7 +164,8 @@ export default function Trash({ projects, drawings }: TrashProps) {
                                     ))}
                                 </tbody>
                             </table>
-                        </div>
+                            </div>
+                        </>
                     )}
                 </section>
 
@@ -152,7 +186,53 @@ export default function Trash({ projects, drawings }: TrashProps) {
                             No deleted drawings.
                         </p>
                     ) : (
-                        <div className="overflow-x-auto">
+                        <>
+                            <div className="divide-y xl:hidden">
+                                {drawings.map((drawing) => (
+                                    <article
+                                        key={drawing.id}
+                                        className="p-5 sm:p-6"
+                                    >
+                                        <p className="font-mono text-sm text-muted-foreground">
+                                            {drawing.drawing_number}
+                                        </p>
+
+                                        <h3 className="mt-1 text-lg font-semibold">
+                                            {drawing.title}
+                                        </h3>
+
+                                        <div className="mt-4 rounded-lg bg-muted/40 p-4 text-sm">
+                                            <p className="font-medium">
+                                                {drawing.project_name}
+                                            </p>
+
+                                            <p className="mt-1 font-mono text-xs text-muted-foreground">
+                                                {drawing.project_code}
+                                            </p>
+                                        </div>
+
+                                        <p className="mt-4 text-sm text-muted-foreground">
+                                            Deleted {drawing.deleted_at ?? 'Unknown'}
+                                        </p>
+
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            className="mt-5 h-11 w-full"
+                                            disabled={drawing.project_deleted}
+                                            onClick={() =>
+                                                restoreDrawing(drawing.id)
+                                            }
+                                        >
+                                            {drawing.project_deleted
+                                                ? 'Restore Parent Project First'
+                                                : 'Restore Drawing'}
+                                        </Button>
+                                    </article>
+                                ))}
+                            </div>
+
+                            <div className="hidden overflow-x-auto xl:block">
                             <table className="w-full text-left text-sm">
                                 <thead className="border-b bg-muted/50">
                                     <tr>
@@ -212,7 +292,8 @@ export default function Trash({ projects, drawings }: TrashProps) {
                                     ))}
                                 </tbody>
                             </table>
-                        </div>
+                            </div>
+                        </>
                     )}
                 </section>
             </div>

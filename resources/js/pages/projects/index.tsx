@@ -162,7 +162,7 @@ export default function ProjectsIndex({
 
                         <form
                             onSubmit={submitFilters}
-                            className="mt-5 grid gap-3 md:grid-cols-[1fr_180px_auto_auto]"
+                            className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-[1fr_180px_auto_auto]"
                         >
                             <Input
                                 type="search"
@@ -217,15 +217,102 @@ export default function ProjectsIndex({
 
                     {projects.length === 0 ? (
                         <div className="p-10 text-center">
-                            <p className="font-medium">No projects yet</p>
+                            <p className="font-medium">
+                                No matching projects
+                            </p>
 
                             <p className="mt-1 text-sm text-muted-foreground">
-                                Use the Create Project button to add your first
-                                project.
+                                Adjust the filters or create a new project.
                             </p>
                         </div>
                     ) : (
-                        <div className="overflow-x-auto">
+                        <>
+                            <div className="divide-y xl:hidden">
+                                {projects.map((project) => (
+                                    <article
+                                        key={project.id}
+                                        className="p-5 sm:p-6"
+                                    >
+                                        <div className="flex items-start justify-between gap-4">
+                                            <div className="min-w-0">
+                                                <p className="font-mono text-sm font-semibold text-muted-foreground">
+                                                    {project.project_code}
+                                                </p>
+
+                                                <Link
+                                                    href={`/projects/${project.id}`}
+                                                    className="mt-1 block text-lg font-semibold hover:underline"
+                                                >
+                                                    {project.name}
+                                                </Link>
+                                            </div>
+
+                                            <span className="shrink-0 rounded-full border px-2.5 py-1 text-xs capitalize">
+                                                {formatStatus(project.status)}
+                                            </span>
+                                        </div>
+
+                                        {project.description && (
+                                            <p className="mt-3 line-clamp-3 text-sm text-muted-foreground">
+                                                {project.description}
+                                            </p>
+                                        )}
+
+                                        <dl className="mt-5 grid grid-cols-2 gap-4 rounded-lg bg-muted/40 p-4 text-sm">
+                                            <div>
+                                                <dt className="text-xs text-muted-foreground">
+                                                    Drawings
+                                                </dt>
+
+                                                <dd className="mt-1 font-semibold">
+                                                    {project.drawing_count}
+                                                </dd>
+                                            </div>
+
+                                            <div>
+                                                <dt className="text-xs text-muted-foreground">
+                                                    Created By
+                                                </dt>
+
+                                                <dd className="mt-1 truncate font-medium">
+                                                    {project.creator_name}
+                                                </dd>
+                                            </div>
+
+                                            <div>
+                                                <dt className="text-xs text-muted-foreground">
+                                                    Start Date
+                                                </dt>
+
+                                                <dd className="mt-1 font-medium">
+                                                    {project.start_date ?? 'Not set'}
+                                                </dd>
+                                            </div>
+
+                                            <div>
+                                                <dt className="text-xs text-muted-foreground">
+                                                    End Date
+                                                </dt>
+
+                                                <dd className="mt-1 font-medium">
+                                                    {project.end_date ?? 'Not set'}
+                                                </dd>
+                                            </div>
+                                        </dl>
+
+                                        <Button
+                                            asChild
+                                            className="mt-5 h-11 w-full"
+                                        >
+                                            <Link href={`/projects/${project.id}`}>
+                                                Open Project
+                                            </Link>
+                                        </Button>
+                                    </article>
+                                ))}
+                            </div>
+
+                            <div className="hidden overflow-x-auto xl:block">
                             <table className="w-full text-left text-sm">
                                 <thead className="border-b bg-muted/50">
                                     <tr>
@@ -313,7 +400,8 @@ export default function ProjectsIndex({
                                     ))}
                                 </tbody>
                             </table>
-                        </div>
+                            </div>
+                        </>
                     )}
                 </section>
 
