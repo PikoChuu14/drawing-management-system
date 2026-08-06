@@ -329,87 +329,171 @@ export default function ProjectShow({ project, filters }: ProjectShowProps) {
 
                     {project.drawings.length === 0 ? (
                         <div className="p-10 text-center">
-                            <p className="font-medium">
-                                No drawings registered
-                            </p>
+                            <p className="font-medium">No drawings found</p>
 
                             <p className="mt-1 text-sm text-muted-foreground">
-                                Use Register Drawing to add the first drawing.
+                                Adjust the filters or register a drawing.
                             </p>
                         </div>
                     ) : (
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-left text-sm">
-                                <thead className="border-b bg-muted/50">
-                                    <tr>
-                                        <th className="px-6 py-3 font-medium">
-                                            Number
-                                        </th>
+                        <>
+                            <div className="divide-y xl:hidden">
+                                {project.drawings.map((drawing) => (
+                                    <article
+                                        key={drawing.id}
+                                        className="p-5 sm:p-6"
+                                    >
+                                        <div className="flex items-start justify-between gap-4">
+                                            <div className="min-w-0">
+                                                <p className="font-mono text-sm font-semibold text-muted-foreground">
+                                                    {drawing.drawing_number}
+                                                </p>
 
-                                        <th className="px-6 py-3 font-medium">
-                                            Drawing
-                                        </th>
-
-                                        <th className="px-6 py-3 font-medium">
-                                            Discipline
-                                        </th>
-
-                                        <th className="px-6 py-3 font-medium">
-                                            Status
-                                        </th>
-
-                                        <th className="px-6 py-3 font-medium">
-                                            Registered By
-                                        </th>
-                                    </tr>
-                                </thead>
-
-                                <tbody>
-                                    {project.drawings.map((drawing) => (
-                                        <tr
-                                            key={drawing.id}
-                                            className="border-b last:border-b-0"
-                                        >
-                                            <td className="px-6 py-4 font-mono font-medium">
-                                                {drawing.drawing_number}
-                                            </td>
-
-                                            <td className="px-6 py-4">
                                                 <Link
                                                     href={`/projects/${project.id}/drawings/${drawing.id}`}
-                                                    className="font-medium hover:underline"
+                                                    className="mt-1 block text-lg font-semibold hover:underline"
                                                 >
                                                     {drawing.title}
                                                 </Link>
+                                            </div>
 
-                                                {drawing.description && (
-                                                    <p className="mt-1 max-w-md text-muted-foreground">
-                                                        {drawing.description}
-                                                    </p>
-                                                )}
-                                            </td>
-
-                                            <td className="px-6 py-4">
-                                                {drawing.discipline ??
-                                                    'Not set'}
-                                            </td>
-
-                                            <td className="px-6 py-4 capitalize">
+                                            <span className="shrink-0 rounded-full border px-2.5 py-1 text-xs capitalize">
                                                 {formatStatus(drawing.status)}
-                                            </td>
+                                            </span>
+                                        </div>
 
-                                            <td className="px-6 py-4">
-                                                <p>{drawing.creator_name}</p>
+                                        {drawing.description && (
+                                            <p className="mt-3 line-clamp-3 text-sm text-muted-foreground">
+                                                {drawing.description}
+                                            </p>
+                                        )}
 
-                                                <p className="text-xs text-muted-foreground">
+                                        <dl className="mt-5 grid grid-cols-2 gap-4 rounded-lg bg-muted/40 p-4 text-sm">
+                                            <div>
+                                                <dt className="text-xs text-muted-foreground">
+                                                    Discipline
+                                                </dt>
+
+                                                <dd className="mt-1 font-medium">
+                                                    {drawing.discipline ??
+                                                        'Not set'}
+                                                </dd>
+                                            </div>
+
+                                            <div>
+                                                <dt className="text-xs text-muted-foreground">
+                                                    Registered By
+                                                </dt>
+
+                                                <dd className="mt-1 truncate font-medium">
+                                                    {drawing.creator_name}
+                                                </dd>
+                                            </div>
+
+                                            <div className="col-span-2">
+                                                <dt className="text-xs text-muted-foreground">
+                                                    Registered At
+                                                </dt>
+
+                                                <dd className="mt-1 font-medium">
                                                     {drawing.created_at}
-                                                </p>
-                                            </td>
+                                                </dd>
+                                            </div>
+                                        </dl>
+
+                                        <Button
+                                            asChild
+                                            className="mt-5 h-11 w-full"
+                                        >
+                                            <Link
+                                                href={`/projects/${project.id}/drawings/${drawing.id}`}
+                                            >
+                                                Open Drawing
+                                            </Link>
+                                        </Button>
+                                    </article>
+                                ))}
+                            </div>
+
+                            <div className="hidden overflow-x-auto xl:block">
+                                <table className="w-full text-left text-sm">
+                                    <thead className="border-b bg-muted/50">
+                                        <tr>
+                                            <th className="px-6 py-3 font-medium">
+                                                Number
+                                            </th>
+
+                                            <th className="px-6 py-3 font-medium">
+                                                Drawing
+                                            </th>
+
+                                            <th className="px-6 py-3 font-medium">
+                                                Discipline
+                                            </th>
+
+                                            <th className="px-6 py-3 font-medium">
+                                                Status
+                                            </th>
+
+                                            <th className="px-6 py-3 font-medium">
+                                                Registered By
+                                            </th>
                                         </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
+                                    </thead>
+
+                                    <tbody>
+                                        {project.drawings.map((drawing) => (
+                                            <tr
+                                                key={drawing.id}
+                                                className="border-b last:border-b-0"
+                                            >
+                                                <td className="px-6 py-4 font-mono font-medium">
+                                                    {drawing.drawing_number}
+                                                </td>
+
+                                                <td className="px-6 py-4">
+                                                    <Link
+                                                        href={`/projects/${project.id}/drawings/${drawing.id}`}
+                                                        className="font-medium hover:underline"
+                                                    >
+                                                        {drawing.title}
+                                                    </Link>
+
+                                                    {drawing.description && (
+                                                        <p className="mt-1 max-w-md text-muted-foreground">
+                                                            {
+                                                                drawing.description
+                                                            }
+                                                        </p>
+                                                    )}
+                                                </td>
+
+                                                <td className="px-6 py-4">
+                                                    {drawing.discipline ??
+                                                        'Not set'}
+                                                </td>
+
+                                                <td className="px-6 py-4 capitalize">
+                                                    {formatStatus(
+                                                        drawing.status,
+                                                    )}
+                                                </td>
+
+                                                <td className="px-6 py-4">
+                                                    <p>
+                                                        {drawing.creator_name}
+                                                    </p>
+
+                                                    <p className="text-xs text-muted-foreground">
+                                                        {drawing.created_at}
+                                                    </p>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </>
                     )}
                 </section>
 

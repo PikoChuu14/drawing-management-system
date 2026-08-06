@@ -7,6 +7,7 @@ import {
     Plus,
 } from 'lucide-react';
 
+import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
 
@@ -155,7 +156,7 @@ export default function Dashboard({
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Dashboard" />
 
-            <div className="flex flex-1 flex-col gap-6 p-4 md:p-6">
+            <div className="flex flex-1 flex-col gap-6 px-3 py-4 sm:px-5 md:p-6">
                 <header className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
                     <div>
                         <h1 className="text-2xl font-semibold">
@@ -353,92 +354,168 @@ export default function Dashboard({
                             </p>
                         </div>
                     ) : (
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-left text-sm">
-                                <thead className="border-b bg-muted/50">
-                                    <tr>
-                                        <th className="px-6 py-3 font-medium">
-                                            Project
-                                        </th>
-
-                                        <th className="px-6 py-3 font-medium">
-                                            Drawing
-                                        </th>
-
-                                        <th className="px-6 py-3 font-medium">
-                                            Revision
-                                        </th>
-
-                                        <th className="px-6 py-3 font-medium">
-                                            File
-                                        </th>
-
-                                        <th className="px-6 py-3 font-medium">
-                                            Uploaded
-                                        </th>
-                                    </tr>
-                                </thead>
-
-                                <tbody>
-                                    {recentRevisions.map((revision) => (
-                                        <tr
-                                            key={revision.id}
-                                            className="border-b last:border-b-0"
-                                        >
-                                            <td className="px-6 py-4">
-                                                <Link
-                                                    href={`/projects/${revision.project_id}`}
-                                                    className="font-medium hover:underline"
-                                                >
-                                                    {revision.project_name}
-                                                </Link>
-
-                                                <p className="mt-1 font-mono text-xs text-muted-foreground">
-                                                    {revision.project_code}
-                                                </p>
-                                            </td>
-
-                                            <td className="px-6 py-4">
+                        <>
+                            <div className="divide-y xl:hidden">
+                                {recentRevisions.map((revision) => (
+                                    <article
+                                        key={revision.id}
+                                        className="p-5 sm:p-6"
+                                    >
+                                        <div className="flex items-start justify-between gap-4">
+                                            <div className="min-w-0">
                                                 <Link
                                                     href={`/projects/${revision.project_id}/drawings/${revision.drawing_id}`}
-                                                    className="font-medium hover:underline"
+                                                    className="block font-semibold hover:underline"
                                                 >
                                                     {revision.drawing_title}
                                                 </Link>
 
-                                                <p className="mt-1 font-mono text-xs text-muted-foreground">
+                                                <p className="mt-1 font-mono text-sm text-muted-foreground">
                                                     {revision.drawing_number}
                                                 </p>
-                                            </td>
+                                            </div>
 
-                                            <td className="px-6 py-4 font-mono font-semibold">
-                                                {revision.revision_code}
-                                            </td>
+                                            <span className="shrink-0 rounded-full border px-3 py-1 font-mono text-sm font-semibold">
+                                                Rev {revision.revision_code}
+                                            </span>
+                                        </div>
 
-                                            <td className="px-6 py-4">
-                                                <p className="max-w-64 truncate">
-                                                    {revision.original_filename}
-                                                </p>
+                                        <div className="mt-4 rounded-lg bg-muted/40 p-4 text-sm">
+                                            <p className="font-medium">
+                                                {revision.project_name}
+                                            </p>
 
-                                                <p className="mt-1 text-xs text-muted-foreground">
-                                                    {formatFileSize(
-                                                        revision.file_size,
-                                                    )}
-                                                </p>
-                                            </td>
+                                            <p className="mt-1 font-mono text-xs text-muted-foreground">
+                                                {revision.project_code}
+                                            </p>
 
-                                            <td className="px-6 py-4">
-                                                <p>{revision.uploaded_by}</p>
+                                            <p className="mt-4 text-sm break-all">
+                                                {revision.original_filename}
+                                            </p>
 
-                                                <p className="mt-1 text-xs text-muted-foreground">
-                                                    {revision.uploaded_at}
-                                                </p>
-                                            </td>
+                                            <p className="mt-1 text-xs text-muted-foreground">
+                                                {formatFileSize(
+                                                    revision.file_size,
+                                                )}
+                                            </p>
+                                        </div>
+
+                                        <div className="mt-4 flex items-center justify-between gap-4 text-xs text-muted-foreground">
+                                            <span>{revision.uploaded_by}</span>
+
+                                            <span className="text-right">
+                                                {revision.uploaded_at}
+                                            </span>
+                                        </div>
+
+                                        <Button
+                                            asChild
+                                            variant="outline"
+                                            className="mt-5 h-11 w-full"
+                                        >
+                                            <Link
+                                                href={`/projects/${revision.project_id}/drawings/${revision.drawing_id}`}
+                                            >
+                                                Open Drawing
+                                            </Link>
+                                        </Button>
+                                    </article>
+                                ))}
+                            </div>
+
+                            <div className="hidden overflow-x-auto xl:block">
+                                <table className="w-full text-left text-sm">
+                                    <thead className="border-b bg-muted/50">
+                                        <tr>
+                                            <th className="px-6 py-3 font-medium">
+                                                Project
+                                            </th>
+
+                                            <th className="px-6 py-3 font-medium">
+                                                Drawing
+                                            </th>
+
+                                            <th className="px-6 py-3 font-medium">
+                                                Revision
+                                            </th>
+
+                                            <th className="px-6 py-3 font-medium">
+                                                File
+                                            </th>
+
+                                            <th className="px-6 py-3 font-medium">
+                                                Uploaded
+                                            </th>
                                         </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
+                                    </thead>
+
+                                    <tbody>
+                                        {recentRevisions.map((revision) => (
+                                            <tr
+                                                key={revision.id}
+                                                className="border-b last:border-b-0"
+                                            >
+                                                <td className="px-6 py-4">
+                                                    <Link
+                                                        href={`/projects/${revision.project_id}`}
+                                                        className="font-medium hover:underline"
+                                                    >
+                                                        {revision.project_name}
+                                                    </Link>
+
+                                                    <p className="mt-1 font-mono text-xs text-muted-foreground">
+                                                        {revision.project_code}
+                                                    </p>
+                                                </td>
+
+                                                <td className="px-6 py-4">
+                                                    <Link
+                                                        href={`/projects/${revision.project_id}/drawings/${revision.drawing_id}`}
+                                                        className="font-medium hover:underline"
+                                                    >
+                                                        {revision.drawing_title}
+                                                    </Link>
+
+                                                    <p className="mt-1 font-mono text-xs text-muted-foreground">
+                                                        {
+                                                            revision.drawing_number
+                                                        }
+                                                    </p>
+                                                </td>
+
+                                                <td className="px-6 py-4 font-mono font-semibold">
+                                                    {revision.revision_code}
+                                                </td>
+
+                                                <td className="px-6 py-4">
+                                                    <p className="max-w-64 truncate">
+                                                        {
+                                                            revision.original_filename
+                                                        }
+                                                    </p>
+
+                                                    <p className="mt-1 text-xs text-muted-foreground">
+                                                        {formatFileSize(
+                                                            revision.file_size,
+                                                        )}
+                                                    </p>
+                                                </td>
+
+                                                <td className="px-6 py-4">
+                                                    <p>
+                                                        {revision.uploaded_by}
+                                                    </p>
+
+                                                    <p className="mt-1 text-xs text-muted-foreground">
+                                                        {revision.uploaded_at}
+                                                    </p>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </>
                     )}
                 </section>
             </div>

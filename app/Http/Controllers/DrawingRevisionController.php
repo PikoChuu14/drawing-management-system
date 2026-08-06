@@ -10,6 +10,7 @@ use App\Services\ApsService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -605,12 +606,14 @@ class DrawingRevisionController extends Controller
     }
 
     /**
-     * Permanently delete a non-current revision.
+     * Permanently delete a non-current revision and all
+     * associated local and APS files.
      */
     public function destroy(
         Project $project,
         Drawing $drawing,
         DrawingRevision $revision,
+        ApsService $apsService,
     ): RedirectResponse {
         $this->ensureRevisionBelongsToDrawing(
             $project,
@@ -618,6 +621,10 @@ class DrawingRevisionController extends Controller
             $revision,
         );
 
+        /*
+        * The active revision must always remain traceable.
+        * Another revision must be made current first.
+        */
         if (
             $drawing->current_revision_id ===
             $revision->id
@@ -626,21 +633,71 @@ class DrawingRevisionController extends Controller
                 'drawings.show',
                 [$project, $drawing],
             )->withErrors([
-                'revision' => 'The current revision cannot be deleted. Upload or select another current revision first.',
+                'revision' => 'The current revision cannot be deleted. '
+                    .'Upload or select another current revision first.',
             ]);
         }
 
-        $filePath = $revision->file_path;
+        $localFilePath = $revision->file_path;
+
+        try {
+            /*
+            * Do this before deleting the database record.
+            * The APS identifiers remain available when a
+            * cloud request fails and the user needs to retry.
+            */
+            $apsService->deleteRevisionAssets(
+                $revision->aps_urn,
+                $revision->aps_object_key,
+            );
+        } catch (Throwable $exception) {
+            Log::error(
+                'APS revision cleanup failed.',
+                [
+                    'revision_id' => $revision->id,
+                    'drawing_id' => $drawing->id,
+                    'aps_object_key' => $revision->aps_object_key,
+                    'message' => $exception->getMessage(),
+                ],
+            );
+
+            return to_route(
+                'drawings.show',
+                [$project, $drawing],
+            )->withErrors([
+                'revision' => 'The revision was not deleted because '
+                    .'its Autodesk APS files could not be '
+                    .'cleaned up. Please try again. Details: '
+                    .$exception->getMessage(),
+            ]);
+        }
 
         /*
-        * Delete the database record first so the revision
-        * immediately disappears from the system.
+        * APS cleanup succeeded, so the database record can
+        * now be permanently removed.
         */
         $revision->delete();
 
-        Storage::disk('local')->delete(
-            $filePath,
+        /*
+        * Remove the original private Laravel copy.
+        */
+        $localDeleted = Storage::disk('local')->delete(
+            $localFilePath,
         );
+
+        if (! $localDeleted) {
+            /*
+            * The database record is already gone, so log the
+            * unusual local-storage failure for maintenance.
+            */
+            Log::warning(
+                'Revision database record was deleted, but its local file could not be removed.',
+                [
+                    'drawing_id' => $drawing->id,
+                    'file_path' => $localFilePath,
+                ],
+            );
+        }
 
         return to_route(
             'drawings.show',

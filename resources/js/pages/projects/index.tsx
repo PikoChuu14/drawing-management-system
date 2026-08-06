@@ -162,7 +162,7 @@ export default function ProjectsIndex({
 
                         <form
                             onSubmit={submitFilters}
-                            className="mt-5 grid gap-3 md:grid-cols-[1fr_180px_auto_auto]"
+                            className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-[1fr_180px_auto_auto]"
                         >
                             <Input
                                 type="search"
@@ -217,103 +217,197 @@ export default function ProjectsIndex({
 
                     {projects.length === 0 ? (
                         <div className="p-10 text-center">
-                            <p className="font-medium">No projects yet</p>
+                            <p className="font-medium">No matching projects</p>
 
                             <p className="mt-1 text-sm text-muted-foreground">
-                                Use the Create Project button to add your first
-                                project.
+                                Adjust the filters or create a new project.
                             </p>
                         </div>
                     ) : (
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-left text-sm">
-                                <thead className="border-b bg-muted/50">
-                                    <tr>
-                                        <th className="px-6 py-3 font-medium">
-                                            Code
-                                        </th>
+                        <>
+                            <div className="divide-y xl:hidden">
+                                {projects.map((project) => (
+                                    <article
+                                        key={project.id}
+                                        className="p-5 sm:p-6"
+                                    >
+                                        <div className="flex items-start justify-between gap-4">
+                                            <div className="min-w-0">
+                                                <p className="font-mono text-sm font-semibold text-muted-foreground">
+                                                    {project.project_code}
+                                                </p>
 
-                                        <th className="px-6 py-3 font-medium">
-                                            Project
-                                        </th>
-
-                                        <th className="px-6 py-3 font-medium">
-                                            Status
-                                        </th>
-
-                                        <th className="px-6 py-3 font-medium">
-                                            Dates
-                                        </th>
-
-                                        <th className="px-6 py-3 font-medium">
-                                            Drawings
-                                        </th>
-
-                                        <th className="px-6 py-3 font-medium">
-                                            Matching
-                                        </th>
-
-                                        <th className="px-6 py-3 font-medium">
-                                            Created By
-                                        </th>
-                                    </tr>
-                                </thead>
-
-                                <tbody>
-                                    {projects.map((project) => (
-                                        <tr
-                                            key={project.id}
-                                            className="border-b last:border-b-0"
-                                        >
-                                            <td className="px-6 py-4 font-mono font-medium">
-                                                {project.project_code}
-                                            </td>
-
-                                            <td className="px-6 py-4">
                                                 <Link
                                                     href={`/projects/${project.id}`}
-                                                    className="font-medium hover:underline"
+                                                    className="mt-1 block text-lg font-semibold hover:underline"
                                                 >
                                                     {project.name}
                                                 </Link>
+                                            </div>
 
-                                                {project.description && (
-                                                    <p className="mt-1 max-w-md text-muted-foreground">
-                                                        {project.description}
-                                                    </p>
-                                                )}
-                                            </td>
-
-                                            <td className="px-6 py-4 capitalize">
+                                            <span className="shrink-0 rounded-full border px-2.5 py-1 text-xs capitalize">
                                                 {formatStatus(project.status)}
-                                            </td>
+                                            </span>
+                                        </div>
 
-                                            <td className="px-6 py-4 text-muted-foreground">
-                                                <p>
-                                                    Start:{' '}
+                                        {project.description && (
+                                            <p className="mt-3 line-clamp-3 text-sm text-muted-foreground">
+                                                {project.description}
+                                            </p>
+                                        )}
+
+                                        <dl className="mt-5 grid grid-cols-2 gap-4 rounded-lg bg-muted/40 p-4 text-sm">
+                                            <div>
+                                                <dt className="text-xs text-muted-foreground">
+                                                    Drawings
+                                                </dt>
+
+                                                <dd className="mt-1 font-semibold">
+                                                    {project.drawing_count}
+                                                </dd>
+                                            </div>
+
+                                            <div>
+                                                <dt className="text-xs text-muted-foreground">
+                                                    Created By
+                                                </dt>
+
+                                                <dd className="mt-1 truncate font-medium">
+                                                    {project.creator_name}
+                                                </dd>
+                                            </div>
+
+                                            <div>
+                                                <dt className="text-xs text-muted-foreground">
+                                                    Start Date
+                                                </dt>
+
+                                                <dd className="mt-1 font-medium">
                                                     {project.start_date ??
                                                         'Not set'}
-                                                </p>
+                                                </dd>
+                                            </div>
 
-                                                <p>
-                                                    End:{' '}
+                                            <div>
+                                                <dt className="text-xs text-muted-foreground">
+                                                    End Date
+                                                </dt>
+
+                                                <dd className="mt-1 font-medium">
                                                     {project.end_date ??
                                                         'Not set'}
-                                                </p>
-                                            </td>
+                                                </dd>
+                                            </div>
+                                        </dl>
 
-                                            <td className="px-6 py-4">
-                                                {project.drawing_count}
-                                            </td>
+                                        <Button
+                                            asChild
+                                            className="mt-5 h-11 w-full"
+                                        >
+                                            <Link
+                                                href={`/projects/${project.id}`}
+                                            >
+                                                Open Project
+                                            </Link>
+                                        </Button>
+                                    </article>
+                                ))}
+                            </div>
 
-                                            <td className="px-6 py-4">
-                                                {project.creator_name}
-                                            </td>
+                            <div className="hidden overflow-x-auto xl:block">
+                                <table className="w-full text-left text-sm">
+                                    <thead className="border-b bg-muted/50">
+                                        <tr>
+                                            <th className="px-6 py-3 font-medium">
+                                                Code
+                                            </th>
+
+                                            <th className="px-6 py-3 font-medium">
+                                                Project
+                                            </th>
+
+                                            <th className="px-6 py-3 font-medium">
+                                                Status
+                                            </th>
+
+                                            <th className="px-6 py-3 font-medium">
+                                                Dates
+                                            </th>
+
+                                            <th className="px-6 py-3 font-medium">
+                                                Drawings
+                                            </th>
+
+                                            <th className="px-6 py-3 font-medium">
+                                                Matching
+                                            </th>
+
+                                            <th className="px-6 py-3 font-medium">
+                                                Created By
+                                            </th>
                                         </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
+                                    </thead>
+
+                                    <tbody>
+                                        {projects.map((project) => (
+                                            <tr
+                                                key={project.id}
+                                                className="border-b last:border-b-0"
+                                            >
+                                                <td className="px-6 py-4 font-mono font-medium">
+                                                    {project.project_code}
+                                                </td>
+
+                                                <td className="px-6 py-4">
+                                                    <Link
+                                                        href={`/projects/${project.id}`}
+                                                        className="font-medium hover:underline"
+                                                    >
+                                                        {project.name}
+                                                    </Link>
+
+                                                    {project.description && (
+                                                        <p className="mt-1 max-w-md text-muted-foreground">
+                                                            {
+                                                                project.description
+                                                            }
+                                                        </p>
+                                                    )}
+                                                </td>
+
+                                                <td className="px-6 py-4 capitalize">
+                                                    {formatStatus(
+                                                        project.status,
+                                                    )}
+                                                </td>
+
+                                                <td className="px-6 py-4 text-muted-foreground">
+                                                    <p>
+                                                        Start:{' '}
+                                                        {project.start_date ??
+                                                            'Not set'}
+                                                    </p>
+
+                                                    <p>
+                                                        End:{' '}
+                                                        {project.end_date ??
+                                                            'Not set'}
+                                                    </p>
+                                                </td>
+
+                                                <td className="px-6 py-4">
+                                                    {project.drawing_count}
+                                                </td>
+
+                                                <td className="px-6 py-4">
+                                                    {project.creator_name}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </>
                     )}
                 </section>
 
