@@ -4,12 +4,12 @@ import {
     FileStack,
     FolderKanban,
     Layers3,
-    Plus,
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
+import InstallPwaButton from '@/components/install-pwa-button';
 
 type DashboardSummary = {
     total_projects: number;
@@ -157,25 +157,19 @@ export default function Dashboard({
             <Head title="Dashboard" />
 
             <div className="flex flex-1 flex-col gap-6 px-3 py-4 sm:px-5 md:p-6">
-                <header className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
+                <header className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
                     <div>
                         <h1 className="text-2xl font-semibold">
-                            Drawing Management Dashboard
+                            Dashboard
                         </h1>
 
                         <p className="mt-1 text-sm text-muted-foreground">
-                            Overview of projects, drawings and revision
-                            activity.
+                            Overview of projects, drawings and recent
+                            revision activity.
                         </p>
                     </div>
 
-                    <Link
-                        href="/projects"
-                        className="inline-flex h-9 items-center justify-center gap-2 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground shadow-xs hover:bg-primary/90"
-                    >
-                        <Plus className="size-4" />
-                        Manage Projects
-                    </Link>
+                    <InstallPwaButton />
                 </header>
 
                 <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
