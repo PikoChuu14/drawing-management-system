@@ -41,6 +41,9 @@ class Project extends Model
         ];
     }
 
+    /**
+     * @return Attribute<Carbon|null, string|null>
+     */
     protected function startDate(): Attribute
     {
         return Attribute::make(
@@ -50,6 +53,9 @@ class Project extends Model
         );
     }
 
+    /**
+     * @return Attribute<Carbon|null, string|null>
+     */
     protected function endDate(): Attribute
     {
         return Attribute::make(
