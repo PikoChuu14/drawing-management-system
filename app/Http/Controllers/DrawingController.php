@@ -110,7 +110,7 @@ class DrawingController extends Controller
             },
         ]);
 
-        $issues = $drawing->siteIssues()->get();
+        $issues = $drawing->siteIssues;
 
         return Inertia::render('drawings/show', [
             'project' => [
