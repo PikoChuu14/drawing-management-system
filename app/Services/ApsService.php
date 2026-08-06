@@ -394,6 +394,113 @@ final class ApsService
     }
 
     /**
+     * Delete the translated manifest and all derivatives
+     * generated from an APS source object.
+     */
+    public function deleteDerivativeManifest(
+        ?string $urn,
+    ): void {
+        $urn = trim((string) $urn);
+
+        if ($urn === '') {
+            return;
+        }
+
+        $token = $this->internalToken()['access_token'];
+        $baseUrl = $this->baseUrl();
+
+        $region = strtoupper(
+            (string) config(
+                'services.aps.region',
+                'US',
+            ),
+        );
+
+        $response = Http::withToken($token)
+            ->acceptJson()
+            ->withHeaders([
+                'x-ads-region' => $region,
+            ])
+            ->connectTimeout(10)
+            ->timeout(60)
+            ->delete(
+                "{$baseUrl}/modelderivative/v2/designdata/"
+                .rawurlencode($urn)
+                .'/manifest',
+            );
+
+        if ($response->failed()) {
+            throw new RuntimeException(
+                'APS derivative cleanup failed '
+                ."({$response->status()}): "
+                .$this->responseError($response),
+            );
+        }
+    }
+
+    /**
+     * Delete the original processing object from the
+     * application's APS Object Storage bucket.
+     */
+    public function deleteObject(
+        ?string $objectKey,
+    ): void {
+        $objectKey = trim((string) $objectKey);
+
+        if ($objectKey === '') {
+            return;
+        }
+
+        $bucketKey = $this->bucketKey();
+        $token = $this->internalToken()['access_token'];
+        $baseUrl = $this->baseUrl();
+
+        $response = Http::withToken($token)
+            ->acceptJson()
+            ->connectTimeout(10)
+            ->timeout(60)
+            ->delete(
+                "{$baseUrl}/oss/v2/buckets/"
+                .rawurlencode($bucketKey)
+                .'/objects/'
+                .rawurlencode($objectKey),
+            );
+
+        /*
+        * A missing object means it was already removed.
+        * Treat this as successful cleanup so deletion can
+        * continue safely.
+        */
+        if ($response->status() === 404) {
+            return;
+        }
+
+        if ($response->failed()) {
+            throw new RuntimeException(
+                'APS object cleanup failed '
+                ."({$response->status()}): "
+                .$this->responseError($response),
+            );
+        }
+    }
+
+    /**
+     * Delete every APS resource associated with a revision.
+     */
+    public function deleteRevisionAssets(
+        ?string $urn,
+        ?string $objectKey,
+    ): void {
+        /*
+        * Delete translated files before deleting the source
+        * object. Removing the source alone does not remove
+        * its existing translated derivatives.
+        */
+        $this->deleteDerivativeManifest($urn);
+        $this->deleteObject($objectKey);
+    }
+
+    /**
      * Request and cache an APS server-to-server token.
      *
      * @param  list<string>  $scopes

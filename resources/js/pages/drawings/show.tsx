@@ -644,10 +644,18 @@ export default function DrawingShow({
         );
     };
 
-    const deleteRevision = (revision: Revision) => {
+    const deleteRevision = (
+        revision: Revision,
+    ) => {
         if (
             !window.confirm(
-                `Permanently delete revision ${revision.revision_code} and its uploaded file?\n\nThis action cannot be undone.`,
+                `Permanently delete revision ${revision.revision_code}?\n\n`
+                    + 'This will remove:\n'
+                    + '• The revision record\n'
+                    + '• The locally uploaded file\n'
+                    + '• The APS processing copy\n'
+                    + '• The translated DWG viewer files\n\n'
+                    + 'This action cannot be undone.',
             )
         ) {
             return;
@@ -659,10 +667,23 @@ export default function DrawingShow({
             `/projects/${project.id}/drawings/${drawing.id}/revisions/${revision.id}`,
             {
                 preserveScroll: true,
-                onError: (errors) =>
+
+                onStart: () => {
+                    setDeletingRevisionId(
+                        revision.id,
+                    );
+                },
+
+                onError: (errors) => {
                     setRevisionActionError(
-                        errors.revision ?? 'The revision could not be deleted.',
-                    ),
+                        errors.revision ??
+                            'The revision could not be permanently deleted.',
+                    );
+                },
+
+                onFinish: () => {
+                    setDeletingRevisionId(null);
+                },
             },
         );
     };
@@ -718,6 +739,11 @@ export default function DrawingShow({
             },
         );
     };
+
+    const [
+        deletingRevisionId,
+        setDeletingRevisionId,
+    ] = useState<number | null>(null);
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -1678,13 +1704,16 @@ export default function DrawingShow({
                                                                 type="button"
                                                                 size="sm"
                                                                 variant="destructive"
+                                                                disabled={
+                                                                    deletingRevisionId === revision.id
+                                                                }
                                                                 onClick={() =>
-                                                                    deleteRevision(
-                                                                        revision,
-                                                                    )
+                                                                    deleteRevision(revision)
                                                                 }
                                                             >
-                                                                Delete
+                                                                {deletingRevisionId === revision.id
+                                                                    ? 'Deleting...'
+                                                                    : 'Delete'}
                                                             </Button>
                                                         )}
 
