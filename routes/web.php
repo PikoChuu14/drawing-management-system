@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ApsViewerController;
+use App\Http\Controllers\ArchivedController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DrawingController;
 use App\Http\Controllers\DrawingRevisionController;
@@ -17,6 +18,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('projects', [ProjectController::class, 'index'])
         ->name('projects.index');
+
+    Route::get(
+        '/archived',
+        [ArchivedController::class, 'index'],
+    )->name('archived.index');
+
+    Route::patch(
+        '/archived/projects/{project}/restore',
+        [ArchivedController::class, 'restore'],
+    )->name('archived.projects.restore');
 
     Route::post('projects', [ProjectController::class, 'store'])
         ->name('projects.store');

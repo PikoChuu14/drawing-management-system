@@ -229,7 +229,7 @@ export default function ProjectsIndex({
                                 {projects.map((project) => (
                                     <article
                                         key={project.id}
-                                        className="p-5 sm:p-6"
+                                        className="px-4 py-5 sm:px-6"
                                     >
                                         <div className="flex items-start justify-between gap-4">
                                             <div className="min-w-0">
@@ -239,7 +239,7 @@ export default function ProjectsIndex({
 
                                                 <Link
                                                     href={`/projects/${project.id}`}
-                                                    className="mt-1 block text-lg font-semibold hover:underline"
+                                                    className="mt-1 block text-lg font-semibold transition-opacity hover:opacity-70"
                                                 >
                                                     {project.name}
                                                 </Link>
@@ -256,13 +256,13 @@ export default function ProjectsIndex({
                                             </p>
                                         )}
 
-                                        <dl className="mt-5 grid grid-cols-2 gap-4 rounded-lg bg-muted/40 p-4 text-sm">
+                                        <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
                                             <div>
                                                 <dt className="text-xs text-muted-foreground">
                                                     Drawings
                                                 </dt>
 
-                                                <dd className="mt-1 font-semibold">
+                                                <dd className="mt-1 font-medium">
                                                     {project.drawing_count}
                                                 </dd>
                                             </div>
@@ -279,7 +279,7 @@ export default function ProjectsIndex({
 
                                             <div>
                                                 <dt className="text-xs text-muted-foreground">
-                                                    Start Date
+                                                    Start
                                                 </dt>
 
                                                 <dd className="mt-1 font-medium">
@@ -290,7 +290,7 @@ export default function ProjectsIndex({
 
                                             <div>
                                                 <dt className="text-xs text-muted-foreground">
-                                                    End Date
+                                                    End
                                                 </dt>
 
                                                 <dd className="mt-1 font-medium">
@@ -299,17 +299,6 @@ export default function ProjectsIndex({
                                                 </dd>
                                             </div>
                                         </dl>
-
-                                        <Button
-                                            asChild
-                                            className="mt-5 h-11 w-full"
-                                        >
-                                            <Link
-                                                href={`/projects/${project.id}`}
-                                            >
-                                                Open Project
-                                            </Link>
-                                        </Button>
                                     </article>
                                 ))}
                             </div>
@@ -512,51 +501,57 @@ export default function ProjectsIndex({
                             )}
                         </div>
 
-                        <div className="grid gap-4 sm:grid-cols-2">
-                            <div className="space-y-2">
-                                <Label htmlFor="start_date">Start Date</Label>
+                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+                                <div className="min-w-0 space-y-2">
+                                    <Label htmlFor="start_date">
+                                        Start Date
+                                    </Label>
 
-                                <Input
-                                    id="start_date"
-                                    type="date"
-                                    value={form.data.start_date}
-                                    onChange={(event) =>
-                                        form.setData(
-                                            'start_date',
-                                            event.target.value,
-                                        )
-                                    }
-                                />
+                                    <Input
+                                        id="start_date"
+                                        type="date"
+                                        className="w-full min-w-0"
+                                        value={form.data.start_date}
+                                        onChange={(event) =>
+                                            form.setData(
+                                                'start_date',
+                                                event.target.value,
+                                            )
+                                        }
+                                    />
 
-                                {form.errors.start_date && (
-                                    <p className="text-sm text-red-600">
-                                        {form.errors.start_date}
-                                    </p>
-                                )}
+                                    {form.errors.start_date && (
+                                        <p className="text-sm text-destructive">
+                                            {form.errors.start_date}
+                                        </p>
+                                    )}
+                                </div>
+
+                                <div className="min-w-0 space-y-2">
+                                    <Label htmlFor="end_date">
+                                        End Date
+                                    </Label>
+
+                                    <Input
+                                        id="end_date"
+                                        type="date"
+                                        className="w-full min-w-0"
+                                        value={form.data.end_date}
+                                        onChange={(event) =>
+                                            form.setData(
+                                                'end_date',
+                                                event.target.value,
+                                            )
+                                        }
+                                    />
+
+                                    {form.errors.end_date && (
+                                        <p className="text-sm text-destructive">
+                                            {form.errors.end_date}
+                                        </p>
+                                    )}
+                                </div>
                             </div>
-
-                            <div className="space-y-2">
-                                <Label htmlFor="end_date">End Date</Label>
-
-                                <Input
-                                    id="end_date"
-                                    type="date"
-                                    value={form.data.end_date}
-                                    onChange={(event) =>
-                                        form.setData(
-                                            'end_date',
-                                            event.target.value,
-                                        )
-                                    }
-                                />
-
-                                {form.errors.end_date && (
-                                    <p className="text-sm text-red-600">
-                                        {form.errors.end_date}
-                                    </p>
-                                )}
-                            </div>
-                        </div>
 
                         <div className="flex flex-col-reverse gap-3 border-t pt-5 sm:flex-row sm:justify-end">
                             <Button

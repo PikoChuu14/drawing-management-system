@@ -1,5 +1,6 @@
 import { Link } from '@inertiajs/react';
 import {
+    Archive,
     BookOpen,
     FolderGit2,
     FolderKanban,
@@ -32,6 +33,11 @@ const mainNavItems: NavItem[] = [
         title: 'Projects',
         href: '/projects',
         icon: FolderKanban,
+    },
+    {
+        title: 'Archived',
+        href: '/archived',
+        icon: Archive,
     },
     {
         title: 'Trash',
