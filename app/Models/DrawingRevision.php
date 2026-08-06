@@ -38,6 +38,7 @@ class DrawingRevision extends Model
         'translation_error',
         'translation_requested_at',
         'translation_completed_at',
+        'archived_at',
     ];
 
     protected function casts(): array
