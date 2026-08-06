@@ -10,10 +10,10 @@ use App\Services\ApsService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
-use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Throwable;
@@ -633,8 +633,7 @@ class DrawingRevisionController extends Controller
                 'drawings.show',
                 [$project, $drawing],
             )->withErrors([
-                'revision' =>
-                    'The current revision cannot be deleted. '
+                'revision' => 'The current revision cannot be deleted. '
                     .'Upload or select another current revision first.',
             ]);
         }
@@ -657,10 +656,8 @@ class DrawingRevisionController extends Controller
                 [
                     'revision_id' => $revision->id,
                     'drawing_id' => $drawing->id,
-                    'aps_object_key' =>
-                        $revision->aps_object_key,
-                    'message' =>
-                        $exception->getMessage(),
+                    'aps_object_key' => $revision->aps_object_key,
+                    'message' => $exception->getMessage(),
                 ],
             );
 
@@ -668,8 +665,7 @@ class DrawingRevisionController extends Controller
                 'drawings.show',
                 [$project, $drawing],
             )->withErrors([
-                'revision' =>
-                    'The revision was not deleted because '
+                'revision' => 'The revision was not deleted because '
                     .'its Autodesk APS files could not be '
                     .'cleaned up. Please try again. Details: '
                     .$exception->getMessage(),
