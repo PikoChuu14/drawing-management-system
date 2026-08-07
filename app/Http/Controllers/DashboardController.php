@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Drawing;
 use App\Models\DrawingRevision;
 use App\Models\Project;
+use App\Models\SiteIssue;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -98,6 +99,10 @@ class DashboardController extends Controller
 
                 'total_revisions' => DrawingRevision::query()
                     ->whereHas('drawing.project')
+                    ->count(),
+
+                'open_issues' => SiteIssue::query()
+                    ->whereNotIn('status', ['resolved', 'closed'])
                     ->count(),
             ],
 

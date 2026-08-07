@@ -219,10 +219,8 @@ export default function ApsViewer({
 
     return (
         <div
-            className={cn(
-                'relative w-full overflow-hidden bg-neutral-900',
-                className,
-            )}
+            data-aps-viewer
+            className={cn('relative w-full overflow-hidden', className)}
         >
             <div ref={containerRef} className="absolute inset-0" />
 

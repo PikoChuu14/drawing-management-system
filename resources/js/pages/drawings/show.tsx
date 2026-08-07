@@ -243,13 +243,18 @@ export default function DrawingShow({
     };
 
     const deleteDrawing = () => {
-        if (
-            window.confirm(
-                'Move this drawing to the Trash? Its revision files will be retained.',
-            )
-        ) {
-            router.delete(`/projects/${project.id}/drawings/${drawing.id}`);
+        const confirmed = window.confirm(
+            `Move ${drawing.drawing_number} — ${drawing.title} to Trash?\n\n` +
+                'The drawing, revisions, files and site issues will remain recoverable.',
+        );
+
+        if (!confirmed) {
+            return;
         }
+
+        router.delete(`/projects/${project.id}/drawings/${drawing.id}`, {
+            preserveScroll: false,
+        });
     };
 
     const [processingRevisionId, setProcessingRevisionId] = useState<
@@ -777,7 +782,7 @@ export default function DrawingShow({
                                     variant="destructive"
                                     onClick={deleteDrawing}
                                 >
-                                    Delete
+                                    Move to Trash
                                 </Button>
                             </div>
 
@@ -804,14 +809,17 @@ export default function DrawingShow({
 
                 <section
                     ref={workspaceRef}
+                    data-workspace-fullscreen={
+                        workspaceExpanded ? 'true' : 'false'
+                    }
                     className={cn(
                         'overflow-hidden rounded-xl border bg-card shadow-sm',
                         workspaceExpanded &&
                             'fixed inset-0 z-[100] grid h-[100dvh] w-screen grid-rows-[auto_minmax(0,1fr)] rounded-none border-0 bg-background',
                     )}
                 >
-                    <div className="flex flex-col gap-4 border-b p-4 lg:flex-row lg:items-center lg:justify-between">
-                        <div className="min-w-0">
+                    <div className="workspace-header flex flex-col gap-4 border-b p-4 lg:flex-row lg:items-center lg:justify-between">
+                        <div className="workspace-title-group min-w-0">
                             <div className="flex flex-wrap items-center gap-2">
                                 <span className="font-mono text-sm font-semibold">
                                     {drawing.drawing_number}
@@ -851,7 +859,7 @@ export default function DrawingShow({
                                         )
                                     }
                                     disabled={previewableRevisions.length === 0}
-                                    className="h-11 w-full rounded-md border border-input bg-background px-3 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                                    className="workspace-revision-select h-11 w-full rounded-md border border-input bg-background px-3 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                                 >
                                     {previewableRevisions.length === 0 && (
                                         <option value="">
@@ -896,7 +904,7 @@ export default function DrawingShow({
                             <Button
                                 type="button"
                                 variant="outline"
-                                className="h-11 gap-2"
+                                className="workspace-exit-button h-11 gap-2"
                                 onClick={
                                     workspaceExpanded
                                         ? exitWorkspaceFullscreen
@@ -906,7 +914,9 @@ export default function DrawingShow({
                                 {workspaceExpanded ? (
                                     <>
                                         <Minimize2 className="size-4" />
-                                        Exit Full Screen
+                                        <span className="workspace-exit-label">
+                                            Exit Full Screen
+                                        </span>
                                     </>
                                 ) : (
                                     <>
@@ -919,11 +929,12 @@ export default function DrawingShow({
                     </div>
 
                     <div
-                        className={
+                        className={cn(
+                            'workspace-preview-shell',
                             workspaceExpanded
                                 ? 'relative min-h-0 overflow-hidden'
-                                : 'grid min-h-0 gap-4 p-2 sm:p-4 xl:grid-cols-[minmax(0,1fr)_360px]'
-                        }
+                                : 'grid min-h-0 gap-4 p-2 sm:p-4 xl:grid-cols-[minmax(0,1fr)_360px]',
+                        )}
                     >
                         <div
                             className={

@@ -3,10 +3,17 @@
 namespace App\Http\Controllers;
 
 use App\Models\Drawing;
+use App\Models\DrawingRevision;
 use App\Models\Project;
+use App\Models\SiteIssue;
+use App\Services\ApsService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
+use Throwable;
 
 class TrashController extends Controller
 {
@@ -88,5 +95,229 @@ class TrashController extends Controller
         $drawing->restore();
 
         return to_route('trash.index');
+    }
+
+    public function destroyProject(
+        int $project,
+        ApsService $apsService,
+    ): RedirectResponse {
+        $projectRecord = Project::onlyTrashed()
+            ->findOrFail($project);
+
+        $drawings = Drawing::withTrashed()
+            ->where(
+                'project_id',
+                $projectRecord->id,
+            )
+            ->get();
+
+        try {
+            /*
+            * Clean all files and APS resources first.
+            */
+            foreach ($drawings as $drawing) {
+                $revisions = DrawingRevision::query()
+                    ->where(
+                        'drawing_id',
+                        $drawing->id,
+                    )
+                    ->get();
+
+                foreach ($revisions as $revision) {
+                    /*
+                    * Remove Autodesk processing resources
+                    * when this revision was sent to APS.
+                    */
+                    $apsService->deleteRevisionAssets(
+                        $revision->aps_urn,
+                        $revision->aps_object_key,
+                    );
+
+                    /*
+                    * Remove Laravel's private drawing file.
+                    */
+                    if ($revision->file_path) {
+                        Storage::disk('local')->delete(
+                            $revision->file_path,
+                        );
+                    }
+                }
+
+                /*
+                * Remove site issue photos.
+                */
+                $issues = SiteIssue::query()
+                    ->where(
+                        'drawing_id',
+                        $drawing->id,
+                    )
+                    ->get();
+
+                foreach ($issues as $issue) {
+                    if ($issue->photo_path) {
+                        Storage::disk('local')->delete(
+                            $issue->photo_path,
+                        );
+                    }
+                }
+            }
+        } catch (Throwable $exception) {
+            Log::error(
+                'Permanent project cleanup failed.',
+                [
+                    'project_id' => $projectRecord->id,
+
+                    'message' => $exception->getMessage(),
+                ],
+            );
+
+            return to_route('trash.index')
+                ->withErrors([
+                    'project' => 'The project was not permanently deleted because some stored files could not be cleaned up. '
+                        .$exception->getMessage(),
+                ]);
+        }
+
+        DB::transaction(
+            function () use (
+                $projectRecord,
+                $drawings,
+            ): void {
+                foreach ($drawings as $drawing) {
+                    /*
+                    * Avoid the circular relationship:
+                    *
+                    * Drawing -> current revision
+                    * Revision -> drawing
+                    */
+                    $drawing->update([
+                        'current_revision_id' => null,
+                    ]);
+
+                    SiteIssue::query()
+                        ->where(
+                            'drawing_id',
+                            $drawing->id,
+                        )
+                        ->delete();
+
+                    DrawingRevision::query()
+                        ->where(
+                            'drawing_id',
+                            $drawing->id,
+                        )
+                        ->delete();
+
+                    /*
+                    * Drawing uses SoftDeletes, therefore
+                    * forceDelete actually removes the row.
+                    */
+                    $drawing->forceDelete();
+                }
+
+                /*
+                * Permanently remove the project itself.
+                */
+                $projectRecord->forceDelete();
+            },
+        );
+
+        return to_route('trash.index')
+            ->with(
+                'success',
+                'Project permanently deleted.',
+            );
+    }
+
+    public function destroyDrawing(
+        int $drawing,
+        ApsService $apsService,
+    ): RedirectResponse {
+        $drawingRecord = Drawing::onlyTrashed()
+            ->findOrFail($drawing);
+
+        $revisions = DrawingRevision::query()
+            ->where(
+                'drawing_id',
+                $drawingRecord->id,
+            )
+            ->get();
+
+        $issues = SiteIssue::query()
+            ->where(
+                'drawing_id',
+                $drawingRecord->id,
+            )
+            ->get();
+
+        try {
+            foreach ($revisions as $revision) {
+                $apsService->deleteRevisionAssets(
+                    $revision->aps_urn,
+                    $revision->aps_object_key,
+                );
+
+                if ($revision->file_path) {
+                    Storage::disk('local')->delete(
+                        $revision->file_path,
+                    );
+                }
+            }
+
+            foreach ($issues as $issue) {
+                if ($issue->photo_path) {
+                    Storage::disk('local')->delete(
+                        $issue->photo_path,
+                    );
+                }
+            }
+        } catch (Throwable $exception) {
+            Log::error(
+                'Permanent drawing cleanup failed.',
+                [
+                    'drawing_id' => $drawingRecord->id,
+
+                    'message' => $exception->getMessage(),
+                ],
+            );
+
+            return to_route('trash.index')
+                ->withErrors([
+                    'drawing' => 'The drawing was not permanently deleted because its stored files could not be cleaned up. '
+                        .$exception->getMessage(),
+                ]);
+        }
+
+        DB::transaction(
+            function () use (
+                $drawingRecord,
+            ): void {
+                $drawingRecord->update([
+                    'current_revision_id' => null,
+                ]);
+
+                SiteIssue::query()
+                    ->where(
+                        'drawing_id',
+                        $drawingRecord->id,
+                    )
+                    ->delete();
+
+                DrawingRevision::query()
+                    ->where(
+                        'drawing_id',
+                        $drawingRecord->id,
+                    )
+                    ->delete();
+
+                $drawingRecord->forceDelete();
+            },
+        );
+
+        return to_route('trash.index')
+            ->with(
+                'success',
+                'Drawing permanently deleted.',
+            );
     }
 }

@@ -137,7 +137,161 @@
         @apply border-border;
     }
 
+    html,
+    body,
+    #app {
+        width: 100%;
+        max-width: 100%;
+        overflow-x: clip;
+    }
+
     body {
         @apply bg-background text-foreground;
+    }
+}
+
+html.pwa-standalone body {
+    overscroll-behavior-x: none;
+    touch-action: manipulation;
+}
+
+html.pwa-standalone [data-aps-viewer] {
+    touch-action: auto;
+}
+
+@media (max-width: 767px) {
+    [data-workspace-fullscreen='true'] {
+        grid-template-rows: auto minmax(0, 1fr);
+    }
+
+    [data-workspace-fullscreen='true'] .workspace-header {
+        padding: 0.75rem;
+    }
+
+    [data-workspace-fullscreen='true'] .workspace-preview-shell {
+        border: 0;
+        border-radius: 0;
+    }
+}
+
+@media (max-width: 767px) and (orientation: landscape) and (max-height: 520px) {
+    [data-workspace-fullscreen='true'] {
+        grid-template-rows: 44px minmax(0, 1fr);
+    }
+
+    [data-workspace-fullscreen='true'] .workspace-header {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 40px;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.25rem 0.5rem;
+    }
+
+    [data-workspace-fullscreen='true'] .workspace-title-group {
+        display: none;
+    }
+
+    [data-workspace-fullscreen='true'] .workspace-revision-select {
+        height: 36px;
+        min-width: 0;
+        font-size: 0.875rem;
+    }
+
+    [data-workspace-fullscreen='true'] .workspace-exit-button {
+        width: 40px;
+        height: 36px;
+        padding: 0;
+    }
+
+    [data-workspace-fullscreen='true'] .workspace-exit-label {
+        display: none;
+    }
+}
+
+.mobile-dashboard-only {
+    display: none;
+}
+
+.desktop-dashboard-only {
+    display: block;
+}
+
+@media (max-width: 767px), (hover: none) and (pointer: coarse) {
+    .mobile-dashboard-only {
+        display: block;
+    }
+
+    .desktop-dashboard-only {
+        display: none;
+    }
+}
+
+@media (min-width: 768px) and (hover: none) and (pointer: coarse) {
+    .mobile-kpi-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .ipad-extra-kpi {
+        display: block;
+    }
+}
+
+@media (max-width: 767px) {
+    .mobile-dashboard-layout {
+        display: flex;
+        height: calc(100dvh - 9.5rem - env(safe-area-inset-bottom));
+        min-height: 0;
+        flex-direction: column;
+        gap: 1rem;
+        overflow: hidden;
+    }
+
+    .mobile-dashboard-chart {
+        min-height: 0;
+        flex: 1;
+    }
+
+    .mobile-chart-content {
+        min-height: 0;
+        flex: 1;
+    }
+
+    .mobile-chart-content > div:first-child {
+        width: min(48vw, 190px);
+        height: min(48vw, 190px);
+    }
+
+    .app-top-header {
+        min-height: 48px;
+        height: 48px;
+    }
+
+    .app-breadcrumb {
+        display: none;
+    }
+}
+
+.project-date-grid > * {
+    min-width: 0;
+}
+
+.project-date-grid input[type='date'] {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+/*
+ * Safari/iPad date inputs have an intrinsic width that can
+ * become awkward inside a two-column form.
+ *
+ * Stack dates on touch devices, but keep the laptop form
+ * side-by-side.
+ */
+@media (hover: none) and (pointer: coarse) {
+    .project-date-grid {
+        grid-template-columns: minmax(0, 1fr);
     }
 }

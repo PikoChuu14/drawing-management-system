@@ -1,9 +1,11 @@
 <?php
 
 use App\Http\Controllers\ApsViewerController;
+use App\Http\Controllers\ArchivedController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DrawingController;
 use App\Http\Controllers\DrawingRevisionController;
+use App\Http\Controllers\IssueInboxController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\SiteIssueController;
 use App\Http\Controllers\TrashController;
@@ -17,6 +19,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('projects', [ProjectController::class, 'index'])
         ->name('projects.index');
+
+    Route::get(
+        '/archived',
+        [ArchivedController::class, 'index'],
+    )->name('archived.index');
+
+    Route::patch(
+        '/archived/projects/{project}/restore',
+        [ArchivedController::class, 'restore'],
+    )->name('archived.projects.restore');
 
     Route::post('projects', [ProjectController::class, 'store'])
         ->name('projects.store');
@@ -56,7 +68,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         [ProjectController::class, 'edit'],
     )->name('projects.edit');
 
-    Route::put(
+    Route::match(
+        ['put', 'patch'],
         'projects/{project}',
         [ProjectController::class, 'update'],
     )->name('projects.update');
@@ -76,7 +89,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         [DrawingController::class, 'edit'],
     )->name('drawings.edit');
 
-    Route::put(
+    Route::match(
+        ['put', 'patch'],
         'projects/{project}/drawings/{drawing}',
         [DrawingController::class, 'update'],
     )->name('drawings.update');
@@ -100,6 +114,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
         'trash/drawings/{drawingId}/restore',
         [TrashController::class, 'restoreDrawing'],
     )->name('trash.drawings.restore');
+
+    Route::delete(
+        'trash/projects/{project}/permanent',
+        [TrashController::class, 'destroyProject'],
+    )->name('trash.projects.destroy');
+
+    Route::delete(
+        'trash/drawings/{drawing}/permanent',
+        [TrashController::class, 'destroyDrawing'],
+    )->name('trash.drawings.destroy');
 
     Route::post(
         'projects/{project}/drawings/{drawing}/issues',
@@ -180,6 +204,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
             'destroy',
         ],
     )->name('revisions.destroy');
+
+    Route::get(
+        '/issues',
+        [IssueInboxController::class, 'index'],
+    )->name('issues.index');
 
 });
 

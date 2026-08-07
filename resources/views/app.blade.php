@@ -2,7 +2,10 @@
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" @class(['dark' => ($appearance ?? 'system') == 'dark'])>
     <head>
         <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1, viewport-fit=cover"
+        >
 
         {{-- Inline script to detect system dark mode preference and apply it immediately --}}
         <script>
@@ -41,6 +44,58 @@
         <x-inertia::head>
             <title>{{ config('app.name', 'Laravel') }}</title>
         </x-inertia::head>
+
+        {{-- Progressive Web App --}}
+        <link
+            rel="manifest"
+            href="{{ asset('manifest.webmanifest') }}"
+        >
+
+        <meta
+            name="theme-color"
+            content="#ffffff"
+            media="(prefers-color-scheme: light)"
+        >
+
+        <meta
+            name="theme-color"
+            content="#111827"
+            media="(prefers-color-scheme: dark)"
+        >
+
+        <meta
+            name="application-name"
+            content="Drawing Management System"
+        >
+
+        {{-- Apple/iPad Home Screen support --}}
+        <link
+            rel="apple-touch-icon"
+            sizes="180x180"
+            href="{{ asset('pwa/apple-touch-icon.png') }}"
+        >
+
+        <meta
+            name="apple-mobile-web-app-capable"
+            content="yes"
+        >
+
+        <meta
+            name="apple-mobile-web-app-status-bar-style"
+            content="default"
+        >
+
+        <meta
+            name="apple-mobile-web-app-title"
+            content="Drawing DMS"
+        >
+
+        {{-- General mobile settings --}}
+        <meta
+            name="mobile-web-app-capable"
+            content="yes"
+        >
+        
     </head>
     <body class="font-sans antialiased">
         <x-inertia::app />

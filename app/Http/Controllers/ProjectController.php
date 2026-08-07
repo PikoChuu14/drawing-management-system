@@ -38,6 +38,7 @@ class ProjectController extends Controller
         $status = (string) ($validated['status'] ?? '');
 
         $projects = Project::query()
+            ->where('status', '!=', 'archived')
             ->with('creator:id,name')
             ->withCount('drawings')
 

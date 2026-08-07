@@ -52,6 +52,7 @@ class DrawingController extends Controller
             'status' => [
                 'required',
                 Rule::in([
+                    'active',
                     'draft',
                     'under_review',
                     'approved',
@@ -110,7 +111,7 @@ class DrawingController extends Controller
             },
         ]);
 
-        $issues = $drawing->siteIssues()->get();
+        $issues = $drawing->siteIssues;
 
         return Inertia::render('drawings/show', [
             'project' => [
@@ -331,20 +332,14 @@ class DrawingController extends Controller
 
             'discipline' => [
                 'nullable',
-                Rule::in([
-                    'Architectural',
-                    'Civil',
-                    'Mechanical',
-                    'Electrical',
-                    'Control',
-                    'Process',
-                    'Other',
-                ]),
+                'string',
+                'max:100',
             ],
 
             'status' => [
                 'required',
                 Rule::in([
+                    'active',
                     'draft',
                     'under_review',
                     'approved',
@@ -374,13 +369,29 @@ class DrawingController extends Controller
         Project $project,
         Drawing $drawing,
     ): RedirectResponse {
-        abort_unless(
-            $drawing->project_id === $project->id,
-            404,
+        $this->ensureDrawingBelongsToProject(
+            $project,
+            $drawing,
         );
 
         $drawing->delete();
 
-        return to_route('projects.show', $project);
+        return to_route(
+            'projects.show',
+            $project,
+        )->with(
+            'success',
+            'Drawing moved to Trash.',
+        );
+    }
+
+    private function ensureDrawingBelongsToProject(
+        Project $project,
+        Drawing $drawing,
+    ): void {
+        abort_unless(
+            $drawing->project_id === $project->id,
+            404,
+        );
     }
 }

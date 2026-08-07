@@ -123,13 +123,13 @@ export default function ProjectsIndex({
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Projects" />
 
-            <div className="flex h-full flex-1 flex-col gap-6 overflow-x-auto rounded-xl p-4">
+            <div className="flex h-full flex-1 flex-col gap-6 overflow-x-auto rounded-xl px-3 py-4 sm:p-6">
                 <div>
                     <h1 className="text-2xl font-semibold">
                         Project Management
                     </h1>
 
-                    <p className="mt-1 text-sm text-muted-foreground">
+                    <p className="mt-1 hidden text-sm text-muted-foreground sm:block">
                         Create projects and organise their engineering drawings.
                     </p>
                 </div>
@@ -229,7 +229,7 @@ export default function ProjectsIndex({
                                 {projects.map((project) => (
                                     <article
                                         key={project.id}
-                                        className="p-5 sm:p-6"
+                                        className="px-4 py-5 sm:px-6"
                                     >
                                         <div className="flex items-start justify-between gap-4">
                                             <div className="min-w-0">
@@ -239,7 +239,7 @@ export default function ProjectsIndex({
 
                                                 <Link
                                                     href={`/projects/${project.id}`}
-                                                    className="mt-1 block text-lg font-semibold hover:underline"
+                                                    className="mt-1 block text-lg font-semibold transition-opacity hover:opacity-70"
                                                 >
                                                     {project.name}
                                                 </Link>
@@ -256,13 +256,13 @@ export default function ProjectsIndex({
                                             </p>
                                         )}
 
-                                        <dl className="mt-5 grid grid-cols-2 gap-4 rounded-lg bg-muted/40 p-4 text-sm">
+                                        <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
                                             <div>
                                                 <dt className="text-xs text-muted-foreground">
                                                     Drawings
                                                 </dt>
 
-                                                <dd className="mt-1 font-semibold">
+                                                <dd className="mt-1 font-medium">
                                                     {project.drawing_count}
                                                 </dd>
                                             </div>
@@ -279,7 +279,7 @@ export default function ProjectsIndex({
 
                                             <div>
                                                 <dt className="text-xs text-muted-foreground">
-                                                    Start Date
+                                                    Start
                                                 </dt>
 
                                                 <dd className="mt-1 font-medium">
@@ -290,7 +290,7 @@ export default function ProjectsIndex({
 
                                             <div>
                                                 <dt className="text-xs text-muted-foreground">
-                                                    End Date
+                                                    End
                                                 </dt>
 
                                                 <dd className="mt-1 font-medium">
@@ -299,17 +299,6 @@ export default function ProjectsIndex({
                                                 </dd>
                                             </div>
                                         </dl>
-
-                                        <Button
-                                            asChild
-                                            className="mt-5 h-11 w-full"
-                                        >
-                                            <Link
-                                                href={`/projects/${project.id}`}
-                                            >
-                                                Open Project
-                                            </Link>
-                                        </Button>
                                     </article>
                                 ))}
                             </div>
@@ -512,13 +501,14 @@ export default function ProjectsIndex({
                             )}
                         </div>
 
-                        <div className="grid gap-4 sm:grid-cols-2">
-                            <div className="space-y-2">
+                        <div className="project-date-grid grid grid-cols-2 gap-4">
+                            <div className="min-w-0 space-y-2">
                                 <Label htmlFor="start_date">Start Date</Label>
 
                                 <Input
                                     id="start_date"
                                     type="date"
+                                    className="block w-full max-w-full min-w-0"
                                     value={form.data.start_date}
                                     onChange={(event) =>
                                         form.setData(
@@ -529,18 +519,19 @@ export default function ProjectsIndex({
                                 />
 
                                 {form.errors.start_date && (
-                                    <p className="text-sm text-red-600">
+                                    <p className="text-sm text-destructive">
                                         {form.errors.start_date}
                                     </p>
                                 )}
                             </div>
 
-                            <div className="space-y-2">
+                            <div className="min-w-0 space-y-2">
                                 <Label htmlFor="end_date">End Date</Label>
 
                                 <Input
                                     id="end_date"
                                     type="date"
+                                    className="block w-full max-w-full min-w-0"
                                     value={form.data.end_date}
                                     onChange={(event) =>
                                         form.setData(
@@ -551,7 +542,7 @@ export default function ProjectsIndex({
                                 />
 
                                 {form.errors.end_date && (
-                                    <p className="text-sm text-red-600">
+                                    <p className="text-sm text-destructive">
                                         {form.errors.end_date}
                                     </p>
                                 )}

@@ -341,7 +341,7 @@ export default function ProjectShow({ project, filters }: ProjectShowProps) {
                                 {project.drawings.map((drawing) => (
                                     <article
                                         key={drawing.id}
-                                        className="p-5 sm:p-6"
+                                        className="px-4 py-5 sm:px-6"
                                     >
                                         <div className="flex items-start justify-between gap-4">
                                             <div className="min-w-0">
@@ -351,7 +351,7 @@ export default function ProjectShow({ project, filters }: ProjectShowProps) {
 
                                                 <Link
                                                     href={`/projects/${project.id}/drawings/${drawing.id}`}
-                                                    className="mt-1 block text-lg font-semibold hover:underline"
+                                                    className="mt-1 block text-lg font-semibold transition-opacity hover:opacity-70"
                                                 >
                                                     {drawing.title}
                                                 </Link>
@@ -368,7 +368,7 @@ export default function ProjectShow({ project, filters }: ProjectShowProps) {
                                             </p>
                                         )}
 
-                                        <dl className="mt-5 grid grid-cols-2 gap-4 rounded-lg bg-muted/40 p-4 text-sm">
+                                        <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
                                             <div>
                                                 <dt className="text-xs text-muted-foreground">
                                                     Discipline
@@ -390,7 +390,7 @@ export default function ProjectShow({ project, filters }: ProjectShowProps) {
                                                 </dd>
                                             </div>
 
-                                            <div className="col-span-2">
+                                            <div>
                                                 <dt className="text-xs text-muted-foreground">
                                                     Registered At
                                                 </dt>
@@ -400,17 +400,6 @@ export default function ProjectShow({ project, filters }: ProjectShowProps) {
                                                 </dd>
                                             </div>
                                         </dl>
-
-                                        <Button
-                                            asChild
-                                            className="mt-5 h-11 w-full"
-                                        >
-                                            <Link
-                                                href={`/projects/${project.id}/drawings/${drawing.id}`}
-                                            >
-                                                Open Drawing
-                                            </Link>
-                                        </Button>
                                     </article>
                                 ))}
                             </div>
