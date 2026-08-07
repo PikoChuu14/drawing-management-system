@@ -369,13 +369,29 @@ class DrawingController extends Controller
         Project $project,
         Drawing $drawing,
     ): RedirectResponse {
-        abort_unless(
-            $drawing->project_id === $project->id,
-            404,
+        $this->ensureDrawingBelongsToProject(
+            $project,
+            $drawing,
         );
 
         $drawing->delete();
 
-        return to_route('projects.show', $project);
+        return to_route(
+            'projects.show',
+            $project,
+        )->with(
+            'success',
+            'Drawing moved to Trash.',
+        );
+    }
+
+    private function ensureDrawingBelongsToProject(
+        Project $project,
+        Drawing $drawing,
+    ): void {
+        abort_unless(
+            $drawing->project_id === $project->id,
+            404,
+        );
     }
 }

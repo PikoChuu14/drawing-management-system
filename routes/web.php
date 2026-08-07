@@ -5,6 +5,7 @@ use App\Http\Controllers\ArchivedController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DrawingController;
 use App\Http\Controllers\DrawingRevisionController;
+use App\Http\Controllers\IssueInboxController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\SiteIssueController;
 use App\Http\Controllers\TrashController;
@@ -119,6 +120,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         [TrashController::class, 'destroyProject'],
     )->name('trash.projects.destroy');
 
+    Route::delete(
+        'trash/drawings/{drawing}/permanent',
+        [TrashController::class, 'destroyDrawing'],
+    )->name('trash.drawings.destroy');
+
     Route::post(
         'projects/{project}/drawings/{drawing}/issues',
         [SiteIssueController::class, 'store'],
@@ -198,6 +204,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
             'destroy',
         ],
     )->name('revisions.destroy');
+
+    Route::get(
+        '/issues',
+        [IssueInboxController::class, 'index'],
+    )->name('issues.index');
 
 });
 

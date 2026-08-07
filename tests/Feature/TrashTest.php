@@ -564,4 +564,28 @@ class TrashTest extends TestCase
             ],
         );
     }
+
+    public function test_deleted_drawing_can_be_permanently_deleted(): void
+    {
+        $project = $this->createProject();
+
+        $drawing = $this->createDrawing(
+            project: $project,
+        );
+
+        $drawing->delete();
+
+        $this->actingAs($this->user)
+            ->delete(
+                "/trash/drawings/{$drawing->id}/permanent",
+            )
+            ->assertRedirect();
+
+        $this->assertDatabaseMissing(
+            'drawings',
+            [
+                'id' => $drawing->id,
+            ],
+        );
+    }
 }

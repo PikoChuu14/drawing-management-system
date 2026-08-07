@@ -243,13 +243,21 @@ export default function DrawingShow({
     };
 
     const deleteDrawing = () => {
-        if (
-            window.confirm(
-                'Move this drawing to the Trash? Its revision files will be retained.',
-            )
-        ) {
-            router.delete(`/projects/${project.id}/drawings/${drawing.id}`);
+        const confirmed = window.confirm(
+            `Move ${drawing.drawing_number} — ${drawing.title} to Trash?\n\n`
+                + 'The drawing, revisions, files and site issues will remain recoverable.',
+        );
+
+        if (!confirmed) {
+            return;
         }
+
+        router.delete(
+            `/projects/${project.id}/drawings/${drawing.id}`,
+            {
+                preserveScroll: false,
+            },
+        );
     };
 
     const [processingRevisionId, setProcessingRevisionId] = useState<
@@ -777,7 +785,7 @@ export default function DrawingShow({
                                     variant="destructive"
                                     onClick={deleteDrawing}
                                 >
-                                    Delete
+                                    Move to Trash
                                 </Button>
                             </div>
 

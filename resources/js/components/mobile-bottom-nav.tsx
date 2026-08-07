@@ -1,17 +1,15 @@
 import { Link, usePage } from '@inertiajs/react';
 import {
-    Archive,
+    CircleAlert,
     LayoutDashboard,
     PanelsTopLeft,
     Trash2,
 } from 'lucide-react';
 
-import { dashboard } from '@/routes';
-
 const items = [
     {
         label: 'Home',
-        href: dashboard(),
+        href: '/dashboard',
         icon: LayoutDashboard,
     },
     {
@@ -20,9 +18,9 @@ const items = [
         icon: PanelsTopLeft,
     },
     {
-        label: 'Archived',
-        href: '/archived',
-        icon: Archive,
+        label: 'Issues',
+        href: '/issues',
+        icon: CircleAlert,
     },
     {
         label: 'Trash',
@@ -37,8 +35,8 @@ export default function MobileBottomNav() {
     const activeIndex = Math.max(
         0,
         items.findIndex((item) => {
-            if (item.href === dashboard()) {
-                return url === dashboard();
+            if (item.href === '/dashboard') {
+                return url === '/dashboard';
             }
 
             return (

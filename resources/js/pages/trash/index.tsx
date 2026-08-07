@@ -60,6 +60,32 @@ const permanentlyDeleteProject = (
     );
 };
 
+const permanentlyDeleteDrawing = (
+    drawing: DeletedDrawing,
+) => {
+    const confirmed = window.confirm(
+        `Permanently delete ${drawing.drawing_number} — ${drawing.title}?\n\n`
+            + 'This will permanently remove:\n'
+            + '• The drawing\n'
+            + '• All revisions\n'
+            + '• Uploaded drawing files\n'
+            + '• Autodesk APS files\n'
+            + '• Site issues and photos\n\n'
+            + 'This action cannot be undone.',
+    );
+
+    if (!confirmed) {
+        return;
+    }
+
+    router.delete(
+        `/trash/drawings/${drawing.id}/permanent`,
+        {
+            preserveScroll: true,
+        },
+    );
+};
+
 export default function Trash({ projects, drawings }: TrashProps) {
     const restoreProject = (projectId: number) => {
         router.patch(
@@ -273,19 +299,34 @@ export default function Trash({ projects, drawings }: TrashProps) {
                                             {drawing.deleted_at ?? 'Unknown'}
                                         </p>
 
-                                        <Button
-                                            type="button"
-                                            variant="outline"
-                                            className="mt-5 h-11 w-full"
-                                            disabled={drawing.project_deleted}
-                                            onClick={() =>
-                                                restoreDrawing(drawing.id)
-                                            }
-                                        >
-                                            {drawing.project_deleted
-                                                ? 'Restore Parent Project First'
-                                                : 'Restore Drawing'}
-                                        </Button>
+                                        <div className="mt-5 flex gap-2">
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                className="h-11 flex-1"
+                                                disabled={drawing.project_deleted}
+                                                onClick={() =>
+                                                    restoreDrawing(drawing.id)
+                                                }
+                                            >
+                                                {drawing.project_deleted
+                                                    ? 'Restore Parent First'
+                                                    : 'Restore'}
+                                            </Button>
+
+                                            <Button
+                                                type="button"
+                                                variant="destructive"
+                                                className="h-11 flex-1"
+                                                onClick={() =>
+                                                    permanentlyDeleteDrawing(
+                                                        drawing,
+                                                    )
+                                                }
+                                            >
+                                                Permanently Delete
+                                            </Button>
+                                        </div>
                                     </article>
                                 ))}
                             </div>
@@ -306,7 +347,7 @@ export default function Trash({ projects, drawings }: TrashProps) {
                                             <th className="px-6 py-3">
                                                 Deleted
                                             </th>
-                                            <th className="w-[280px] px-6 py-3">
+                                            <th className="w-[300px] px-6 py-3">
                                                 Action
                                             </th>
                                         </tr>
@@ -340,23 +381,37 @@ export default function Trash({ projects, drawings }: TrashProps) {
                                                     {drawing.deleted_at}
                                                 </td>
 
-                                                <td className="w-[280px] px-6 py-4">
-                                                    <Button
-                                                        size="sm"
-                                                        variant="outline"
-                                                        disabled={
-                                                            drawing.project_deleted
-                                                        }
-                                                        onClick={() =>
-                                                            restoreDrawing(
-                                                                drawing.id,
-                                                            )
-                                                        }
-                                                    >
-                                                        {drawing.project_deleted
-                                                            ? 'Restore project first'
-                                                            : 'Restore'}
-                                                    </Button>
+                                                <td className="w-[300px] px-6 py-4">
+                                                    <div className="flex flex-wrap gap-2">
+                                                        <Button
+                                                            type="button"
+                                                            variant="outline"
+                                                            disabled={
+                                                                drawing.project_deleted
+                                                            }
+                                                            onClick={() =>
+                                                                restoreDrawing(
+                                                                    drawing.id,
+                                                                )
+                                                            }
+                                                        >
+                                                            {drawing.project_deleted
+                                                                ? 'Restore Parent First'
+                                                                : 'Restore'}
+                                                        </Button>
+
+                                                        <Button
+                                                            type="button"
+                                                            variant="destructive"
+                                                            onClick={() =>
+                                                                permanentlyDeleteDrawing(
+                                                                    drawing,
+                                                                )
+                                                            }
+                                                        >
+                                                            Permanently Delete
+                                                        </Button>
+                                                    </div>
                                                 </td>
                                             </tr>
                                         ))}

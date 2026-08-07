@@ -228,4 +228,96 @@ class TrashController extends Controller
                 'Project permanently deleted.',
             );
     }
+
+    public function destroyDrawing(
+        int $drawing,
+        ApsService $apsService,
+    ): RedirectResponse {
+        $drawingRecord = Drawing::onlyTrashed()
+            ->findOrFail($drawing);
+
+        $revisions = DrawingRevision::query()
+            ->where(
+                'drawing_id',
+                $drawingRecord->id,
+            )
+            ->get();
+
+        $issues = SiteIssue::query()
+            ->where(
+                'drawing_id',
+                $drawingRecord->id,
+            )
+            ->get();
+
+        try {
+            foreach ($revisions as $revision) {
+                $apsService->deleteRevisionAssets(
+                    $revision->aps_urn,
+                    $revision->aps_object_key,
+                );
+
+                if ($revision->file_path) {
+                    Storage::disk('local')->delete(
+                        $revision->file_path,
+                    );
+                }
+            }
+
+            foreach ($issues as $issue) {
+                if ($issue->photo_path) {
+                    Storage::disk('local')->delete(
+                        $issue->photo_path,
+                    );
+                }
+            }
+        } catch (Throwable $exception) {
+            Log::error(
+                'Permanent drawing cleanup failed.',
+                [
+                    'drawing_id' => $drawingRecord->id,
+
+                    'message' => $exception->getMessage(),
+                ],
+            );
+
+            return to_route('trash.index')
+                ->withErrors([
+                    'drawing' => 'The drawing was not permanently deleted because its stored files could not be cleaned up. '
+                        .$exception->getMessage(),
+                ]);
+        }
+
+        DB::transaction(
+            function () use (
+                $drawingRecord,
+            ): void {
+                $drawingRecord->update([
+                    'current_revision_id' => null,
+                ]);
+
+                SiteIssue::query()
+                    ->where(
+                        'drawing_id',
+                        $drawingRecord->id,
+                    )
+                    ->delete();
+
+                DrawingRevision::query()
+                    ->where(
+                        'drawing_id',
+                        $drawingRecord->id,
+                    )
+                    ->delete();
+
+                $drawingRecord->forceDelete();
+            },
+        );
+
+        return to_route('trash.index')
+            ->with(
+                'success',
+                'Drawing permanently deleted.',
+            );
+    }
 }
