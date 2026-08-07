@@ -114,6 +114,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         [TrashController::class, 'restoreDrawing'],
     )->name('trash.drawings.restore');
 
+    Route::delete(
+        'trash/projects/{project}/permanent',
+        [TrashController::class, 'destroyProject'],
+    )->name('trash.projects.destroy');
+
     Route::post(
         'projects/{project}/drawings/{drawing}/issues',
         [SiteIssueController::class, 'store'],

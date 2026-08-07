@@ -490,16 +490,13 @@ class TrashTest extends TestCase
             'project_code' => $code,
             'name' => $name,
 
-            'description' =>
-                'Project created by automated tests.',
+            'description' => 'Project created by automated tests.',
 
             'status' => 'active',
 
-            'start_date' =>
-                '2026-08-01',
+            'start_date' => '2026-08-01',
 
-            'end_date' =>
-                '2026-12-31',
+            'end_date' => '2026-12-31',
 
             'created_by' => $this->user->id,
         ]);
@@ -517,8 +514,7 @@ class TrashTest extends TestCase
             'discipline' => 'mechanical',
             'status' => 'active',
 
-            'description' =>
-                'Drawing created by automated tests.',
+            'description' => 'Drawing created by automated tests.',
 
             'created_by' => $this->user->id,
         ]);
@@ -536,5 +532,36 @@ class TrashTest extends TestCase
     ): string {
         return "/trash/drawings/{$drawing->id}"
             .'/restore';
+    }
+
+    public function test_deleted_project_can_be_permanently_deleted(): void
+    {
+        $project = $this->createProject();
+
+        $drawing = $this->createDrawing(
+            project: $project,
+        );
+
+        $project->delete();
+
+        $this->actingAs($this->user)
+            ->delete(
+                "/trash/projects/{$project->id}/permanent",
+            )
+            ->assertRedirect();
+
+        $this->assertDatabaseMissing(
+            'projects',
+            [
+                'id' => $project->id,
+            ],
+        );
+
+        $this->assertDatabaseMissing(
+            'drawings',
+            [
+                'id' => $drawing->id,
+            ],
+        );
     }
 }

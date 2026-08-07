@@ -33,6 +33,33 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
+const permanentlyDeleteProject = (
+    project: DeletedProject,
+) => {
+    const confirmed = window.confirm(
+        `Permanently delete ${project.project_code} — ${project.name}?\n\n`
+            + 'This will permanently remove:\n'
+            + '• The project\n'
+            + '• All drawings\n'
+            + '• All revisions\n'
+            + '• Uploaded drawing files\n'
+            + '• Autodesk APS files\n'
+            + '• Site issues and photos\n\n'
+            + 'This action cannot be undone.',
+    );
+
+    if (!confirmed) {
+        return;
+    }
+
+    router.delete(
+        `/trash/projects/${project.id}/permanent`,
+        {
+            preserveScroll: true,
+        },
+    );
+};
+
 export default function Trash({ projects, drawings }: TrashProps) {
     const restoreProject = (projectId: number) => {
         router.patch(
@@ -105,16 +132,29 @@ export default function Trash({ projects, drawings }: TrashProps) {
                                             {project.deleted_at ?? 'Unknown'}
                                         </p>
 
-                                        <Button
-                                            type="button"
-                                            variant="outline"
-                                            className="mt-5 h-11 w-full"
-                                            onClick={() =>
-                                                restoreProject(project.id)
-                                            }
-                                        >
-                                            Restore Project
-                                        </Button>
+                                        <div className="mt-5 flex flex-wrap gap-2">
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                className="h-11 flex-1"
+                                                onClick={() =>
+                                                    restoreProject(project.id)
+                                                }
+                                            >
+                                                Restore Project
+                                            </Button>
+
+                                            <Button
+                                                type="button"
+                                                variant="destructive"
+                                                className="h-11 flex-1"
+                                                onClick={() =>
+                                                    permanentlyDeleteProject(project)
+                                                }
+                                            >
+                                                Permanently Delete
+                                            </Button>
+                                        </div>
                                     </article>
                                 ))}
                             </div>
@@ -130,7 +170,7 @@ export default function Trash({ projects, drawings }: TrashProps) {
                                             <th className="px-6 py-3">
                                                 Deleted
                                             </th>
-                                            <th className="px-6 py-3">
+                                            <th className="w-[280px] px-6 py-4 text-left">
                                                 Action
                                             </th>
                                         </tr>
@@ -154,18 +194,28 @@ export default function Trash({ projects, drawings }: TrashProps) {
                                                     {project.deleted_at}
                                                 </td>
 
-                                                <td className="px-6 py-4">
-                                                    <Button
-                                                        size="sm"
-                                                        variant="outline"
-                                                        onClick={() =>
-                                                            restoreProject(
-                                                                project.id,
-                                                            )
-                                                        }
-                                                    >
-                                                        Restore
-                                                    </Button>
+                                                <td className="w-[280px] px-6 py-4">
+                                                    <div className="flex flex-wrap items-center gap-2">
+                                                        <Button
+                                                            type="button"
+                                                            variant="outline"
+                                                            onClick={() =>
+                                                                restoreProject(project.id)
+                                                            }
+                                                        >
+                                                            Restore
+                                                        </Button>
+
+                                                        <Button
+                                                            type="button"
+                                                            variant="destructive"
+                                                            onClick={() =>
+                                                                permanentlyDeleteProject(project)
+                                                            }
+                                                        >
+                                                            Permanently Delete
+                                                        </Button>
+                                                    </div>
                                                 </td>
                                             </tr>
                                         ))}
@@ -256,7 +306,7 @@ export default function Trash({ projects, drawings }: TrashProps) {
                                             <th className="px-6 py-3">
                                                 Deleted
                                             </th>
-                                            <th className="px-6 py-3">
+                                            <th className="w-[280px] px-6 py-3">
                                                 Action
                                             </th>
                                         </tr>
@@ -290,7 +340,7 @@ export default function Trash({ projects, drawings }: TrashProps) {
                                                     {drawing.deleted_at}
                                                 </td>
 
-                                                <td className="px-6 py-4">
+                                                <td className="w-[280px] px-6 py-4">
                                                     <Button
                                                         size="sm"
                                                         variant="outline"
