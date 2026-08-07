@@ -58,11 +58,11 @@ export default function Trash({ projects, drawings }: TrashProps) {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Trash" />
 
-            <div className="flex flex-1 flex-col gap-6 px-3 py-4 sm:px-5 md:p-6">
+            <div className="flex flex-1 flex-col gap-6 px-3 py-4 sm:p-6">
                 <header>
                     <h1 className="text-2xl font-semibold">Deleted Items</h1>
 
-                    <p className="mt-1 text-sm text-muted-foreground">
+                    <p className="mt-1 hidden text-sm text-muted-foreground sm:block">
                         Restore projects and drawings that were deleted
                         accidentally.
                     </p>

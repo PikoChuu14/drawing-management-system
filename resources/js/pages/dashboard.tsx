@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
+import MobileDashboardOverview from '@/components/mobile-dashboard-overview';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
 import InstallPwaButton from '@/components/install-pwa-button';
@@ -156,14 +157,24 @@ export default function Dashboard({
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Dashboard" />
 
-            <div className="flex flex-1 flex-col gap-6 px-3 py-4 sm:px-5 md:p-6">
+            <div className="mobile-dashboard-only px-3 py-4 sm:p-6">
+                <MobileDashboardOverview
+                    totalProjects={summary.total_projects}
+                    totalDrawings={summary.total_drawings}
+                    uploadedRevisions={summary.total_revisions}
+                    statusCounts={drawingStatusCounts}
+                />
+            </div>
+
+            <div className="desktop-dashboard-only">
+                <div className="flex flex-1 flex-col gap-6 px-3 py-4 sm:p-6">
                 <header className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
                     <div>
                         <h1 className="text-2xl font-semibold">
                             Dashboard
                         </h1>
 
-                        <p className="mt-1 text-sm text-muted-foreground">
+                        <p className="mt-1 hidden text-sm text-muted-foreground sm:block">
                             Overview of projects, drawings and recent
                             revision activity.
                         </p>
@@ -512,6 +523,7 @@ export default function Dashboard({
                         </>
                     )}
                 </section>
+                </div>
             </div>
         </AppLayout>
     );

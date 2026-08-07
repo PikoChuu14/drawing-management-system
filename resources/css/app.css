@@ -141,3 +141,22 @@
         @apply bg-background text-foreground;
     }
 }
+
+.mobile-dashboard-only {
+    display: none;
+}
+
+.desktop-dashboard-only {
+    display: block;
+}
+
+@media (max-width: 767px),
+    (hover: none) and (pointer: coarse) {
+    .mobile-dashboard-only {
+        display: block;
+    }
+
+    .desktop-dashboard-only {
+        display: none;
+    }
+}

@@ -55,7 +55,7 @@ export default function FormModal({
             role="dialog"
             aria-modal="true"
             aria-label={title}
-            className="fixed inset-0 z-[200] flex items-center justify-center bg-black/70 p-2 sm:p-6"
+            className="fixed inset-0 z-[200] flex items-end justify-center bg-black/70 p-0 sm:items-center sm:p-6"
             onMouseDown={(event) => {
                 if (event.target === event.currentTarget) {
                     onClose();
@@ -64,7 +64,8 @@ export default function FormModal({
         >
             <div
                 className={cn(
-                    'flex max-h-[94dvh] w-full max-w-2xl flex-col overflow-hidden rounded-xl border bg-background shadow-2xl',
+                    'flex max-h-[92dvh] w-full max-w-2xl flex-col overflow-hidden border bg-background shadow-2xl',
+                    'rounded-t-2xl sm:rounded-xl',
                     panelClassName,
                 )}
             >

@@ -123,13 +123,13 @@ export default function ProjectsIndex({
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Projects" />
 
-            <div className="flex h-full flex-1 flex-col gap-6 overflow-x-auto rounded-xl p-4">
+            <div className="flex h-full flex-1 flex-col gap-6 overflow-x-auto rounded-xl px-3 py-4 sm:p-6">
                 <div>
                     <h1 className="text-2xl font-semibold">
                         Project Management
                     </h1>
 
-                    <p className="mt-1 text-sm text-muted-foreground">
+                    <p className="mt-1 hidden text-sm text-muted-foreground sm:block">
                         Create projects and organise their engineering drawings.
                     </p>
                 </div>
