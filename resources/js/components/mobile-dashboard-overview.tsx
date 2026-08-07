@@ -9,6 +9,7 @@ type Props = {
     totalProjects: number;
     totalDrawings: number;
     uploadedRevisions: number;
+    openIssues: number;
     statusCounts: StatusCounts;
 };
 
@@ -16,6 +17,7 @@ export default function MobileDashboardOverview({
     totalProjects,
     totalDrawings,
     uploadedRevisions,
+    openIssues,
     statusCounts,
 }: Props) {
     const statuses = [
@@ -58,8 +60,8 @@ export default function MobileDashboardOverview({
         total > 0 ? `conic-gradient(${segments.join(', ')})` : 'var(--muted)';
 
     return (
-        <div className="space-y-4">
-            <section className="grid grid-cols-3 divide-x rounded-xl border bg-card">
+        <div className="mobile-dashboard-layout space-y-4">
+            <section className="mobile-kpi-grid grid grid-cols-3 divide-x overflow-hidden rounded-xl border bg-card">
                 <div className="p-4 text-center">
                     <p className="text-2xl font-semibold">{totalProjects}</p>
                     <p className="mt-1 text-xs text-muted-foreground">
@@ -82,12 +84,20 @@ export default function MobileDashboardOverview({
                         Revisions
                     </p>
                 </div>
+
+                <div className="ipad-extra-kpi hidden p-4 text-center">
+                    <p className="text-2xl font-semibold">{openIssues}</p>
+
+                    <p className="mt-1 text-xs text-muted-foreground">
+                        Open Issues
+                    </p>
+                </div>
             </section>
 
-            <section className="rounded-xl border bg-card p-5">
+            <section className="mobile-dashboard-chart flex min-h-0 flex-1 flex-col rounded-xl border bg-card p-5">
                 <h2 className="font-semibold">Drawing Overview</h2>
 
-                <div className="mt-5 flex items-center gap-6">
+                <div className="mobile-chart-content mt-4 flex min-h-0 flex-1 items-center justify-center gap-6">
                     <div
                         className="relative size-36 shrink-0 rounded-full"
                         style={{

@@ -1,13 +1,12 @@
-import { Button } from '@/components/ui/button';
 import {
     Download,
-    Share2,
     X,
 } from 'lucide-react';
 import {
     useEffect,
     useState,
 } from 'react';
+import { Button } from '@/components/ui/button';
 
 type BeforeInstallPromptEvent =
     Event & {
@@ -22,7 +21,28 @@ type BeforeInstallPromptEvent =
         }>;
     };
 
-export default function InstallPwaButton() {
+type Props = {
+    compact?: boolean;
+};
+
+export default function InstallPwaButton({
+    compact = false,
+}: Props) {
+    const getIsInstalled = () => {
+        if (typeof window === 'undefined') {
+            return false;
+        }
+
+        const navigatorWithStandalone = navigator as Navigator & {
+            standalone?: boolean;
+        };
+
+        return (
+            window.matchMedia('(display-mode: standalone)').matches ||
+            navigatorWithStandalone.standalone === true
+        );
+    };
+
     const [
         installPrompt,
         setInstallPrompt,
@@ -39,32 +59,62 @@ export default function InstallPwaButton() {
     const [
         isInstalled,
         setIsInstalled,
-    ] = useState(false);
+    ] = useState(getIsInstalled);
 
-    const isAppleMobile =
-        typeof navigator !== 'undefined' &&
-        /iPad|iPhone|iPod/.test(
-            navigator.userAgent,
+    const userAgent =
+        typeof navigator !== 'undefined'
+            ? navigator.userAgent
+            : '';
+
+    const isIPad =
+        /iPad/.test(userAgent) ||
+        (
+            typeof navigator !== 'undefined' &&
+            navigator.platform === 'MacIntel' &&
+            navigator.maxTouchPoints > 1
         );
+
+    const isIPhone = /iPhone|iPod/.test(userAgent);
+
+    const iPadSteps = [
+        {
+            title: 'Open the Share menu',
+            description:
+                'Tap the Share button in the top-right Safari toolbar.',
+        },
+        {
+            title: 'Select Add to Home Screen',
+            description:
+                'Scroll through the Share actions when it is not immediately visible.',
+        },
+        {
+            title: 'Tap Add',
+            description:
+                'Drawing DMS will appear on the iPad Home Screen.',
+        },
+    ];
+
+    const iPhoneSteps = [
+        {
+            title: 'Show the Safari toolbar',
+            description:
+                'Tap the page once when the browser controls are hidden.',
+        },
+        {
+            title: 'Tap Share',
+            description:
+                'Use the Share button in the iPhone Safari toolbar.',
+        },
+        {
+            title: 'Choose Add to Home Screen',
+            description:
+                'Scroll down when necessary, then tap Add.',
+        },
+    ];
+
+    const appleSteps = isIPad ? iPadSteps : iPhoneSteps;
 
     useEffect(() => {
-        const standaloneMedia =
-            window.matchMedia(
-                '(display-mode: standalone)',
-            );
-
-        const appleStandalone =
-            (
-                navigator as Navigator & {
-                    standalone?: boolean;
-                }
-            ).standalone === true;
-
-        setIsInstalled(
-            standaloneMedia.matches ||
-                appleStandalone,
-        );
-
         const handleInstallPrompt = (
             event: Event,
         ) => {
@@ -133,11 +183,14 @@ export default function InstallPwaButton() {
             <Button
                 type="button"
                 variant="outline"
-                className="h-11 gap-2"
+                size={compact ? 'icon' : 'default'}
+                className={compact ? 'size-10' : 'h-11 gap-2'}
                 onClick={handleInstall}
+                aria-label="Install Drawing DMS"
             >
                 <Download className="size-4" />
-                Install App
+
+                {!compact && <span>Install App</span>}
             </Button>
 
             {instructionsOpen && (
@@ -191,77 +244,35 @@ export default function InstallPwaButton() {
                         </div>
 
                         <div className="space-y-5 p-5">
-                            {isAppleMobile ? (
-                                <>
-                                    <div className="flex gap-4">
-                                        <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
-                                            1
+                            {isIPad || isIPhone ? (
+                                <div className="space-y-5">
+                                    <p className="text-sm font-medium">
+                                        {isIPad
+                                            ? 'Install on iPad'
+                                            : 'Install on iPhone'}
+                                    </p>
+
+                                    {appleSteps.map((step, index) => (
+                                        <div
+                                            key={step.title}
+                                            className="flex gap-4"
+                                        >
+                                            <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                                                {index + 1}
+                                            </div>
+
+                                            <div>
+                                                <p className="font-medium">
+                                                    {step.title}
+                                                </p>
+
+                                                <p className="mt-1 text-sm text-muted-foreground">
+                                                    {step.description}
+                                                </p>
+                                            </div>
                                         </div>
-
-                                        <div>
-                                            <p className="font-medium">
-                                                Open the
-                                                Share
-                                                menu
-                                            </p>
-
-                                            <p className="mt-1 text-sm text-muted-foreground">
-                                                Tap the
-                                                Share
-                                                button in
-                                                Safari.
-                                            </p>
-                                        </div>
-
-                                        <Share2 className="size-5 shrink-0" />
-                                    </div>
-
-                                    <div className="flex gap-4">
-                                        <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
-                                            2
-                                        </div>
-
-                                        <div>
-                                            <p className="font-medium">
-                                                Select Add
-                                                to Home
-                                                Screen
-                                            </p>
-
-                                            <p className="mt-1 text-sm text-muted-foreground">
-                                                Scroll the
-                                                Share menu
-                                                when the
-                                                option is
-                                                not
-                                                immediately
-                                                visible.
-                                            </p>
-                                        </div>
-                                    </div>
-
-                                    <div className="flex gap-4">
-                                        <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
-                                            3
-                                        </div>
-
-                                        <div>
-                                            <p className="font-medium">
-                                                Tap Add
-                                            </p>
-
-                                            <p className="mt-1 text-sm text-muted-foreground">
-                                                Launch
-                                                Drawing
-                                                DMS from
-                                                its new
-                                                Home
-                                                Screen
-                                                icon.
-                                            </p>
-                                        </div>
-                                    </div>
-                                </>
+                                    ))}
+                                </div>
                             ) : (
                                 <p className="text-sm text-muted-foreground">
                                     Open your browser

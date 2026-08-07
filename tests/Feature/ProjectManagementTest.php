@@ -469,4 +469,46 @@ class ProjectManagementTest extends TestCase
         return "/trash/projects/{$project->id}"
             .'/restore';
     }
+
+    public function test_archived_projects_are_hidden_from_active_projects(): void
+    {
+        $project = $this->createProject();
+
+        $project->update([
+            'status' => 'archived',
+        ]);
+
+        $response = $this
+            ->actingAs($this->user)
+            ->get('/projects');
+
+        $response->assertInertia(
+            fn ($page) => $page
+                ->has('projects', 0),
+        );
+    }
+
+    public function test_archived_project_can_be_returned_to_active(): void
+    {
+        $project = $this->createProject();
+
+        $project->update([
+            'status' => 'archived',
+        ]);
+
+        $this
+            ->actingAs($this->user)
+            ->patch(
+                "/archived/projects/{$project->id}/restore",
+            )
+            ->assertRedirect();
+
+        $this->assertDatabaseHas(
+            'projects',
+            [
+                'id' => $project->id,
+                'status' => 'active',
+            ],
+        );
+    }
 }

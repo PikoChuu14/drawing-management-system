@@ -219,8 +219,9 @@ export default function ApsViewer({
 
     return (
         <div
+            data-aps-viewer
             className={cn(
-                'relative w-full overflow-hidden bg-neutral-900',
+                'relative w-full overflow-hidden',
                 className,
             )}
         >

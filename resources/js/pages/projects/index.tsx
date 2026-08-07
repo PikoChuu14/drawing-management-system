@@ -501,7 +501,7 @@ export default function ProjectsIndex({
                             )}
                         </div>
 
-                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+                            <div className="project-date-grid grid grid-cols-2 gap-4">
                                 <div className="min-w-0 space-y-2">
                                     <Label htmlFor="start_date">
                                         Start Date
@@ -510,7 +510,7 @@ export default function ProjectsIndex({
                                     <Input
                                         id="start_date"
                                         type="date"
-                                        className="w-full min-w-0"
+                                        className="block w-full min-w-0 max-w-full"
                                         value={form.data.start_date}
                                         onChange={(event) =>
                                             form.setData(
@@ -535,7 +535,7 @@ export default function ProjectsIndex({
                                     <Input
                                         id="end_date"
                                         type="date"
-                                        className="w-full min-w-0"
+                                        className="block w-full min-w-0 max-w-full"
                                         value={form.data.end_date}
                                         onChange={(event) =>
                                             form.setData(

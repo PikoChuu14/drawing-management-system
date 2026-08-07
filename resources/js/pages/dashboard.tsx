@@ -18,6 +18,7 @@ type DashboardSummary = {
     total_drawings: number;
     approved_drawings: number;
     total_revisions: number;
+    open_issues: number;
 };
 
 type DrawingStatusCounts = {
@@ -157,67 +158,74 @@ export default function Dashboard({
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Dashboard" />
 
+            <div className="px-3 pt-4 sm:px-6 sm:pt-6">
+                <div className="flex items-center justify-between gap-4">
+                    <h1 className="text-xl font-semibold sm:text-2xl">
+                        Dashboard
+                    </h1>
+
+                    <div className="hidden sm:block">
+                        <InstallPwaButton />
+                    </div>
+
+                    <div className="sm:hidden">
+                        <InstallPwaButton compact />
+                    </div>
+                </div>
+            </div>
+
             <div className="mobile-dashboard-only px-3 py-4 sm:p-6">
                 <MobileDashboardOverview
                     totalProjects={summary.total_projects}
                     totalDrawings={summary.total_drawings}
                     uploadedRevisions={summary.total_revisions}
+                    openIssues={summary.open_issues}
                     statusCounts={drawingStatusCounts}
                 />
             </div>
 
             <div className="desktop-dashboard-only">
                 <div className="flex flex-1 flex-col gap-6 px-3 py-4 sm:p-6">
-                <header className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-                    <div>
-                        <h1 className="text-2xl font-semibold">
-                            Dashboard
-                        </h1>
+                    <p className="hidden text-sm text-muted-foreground sm:block">
+                        Overview of projects, drawings and recent revision
+                        activity.
+                    </p>
 
-                        <p className="mt-1 hidden text-sm text-muted-foreground sm:block">
-                            Overview of projects, drawings and recent
-                            revision activity.
-                        </p>
-                    </div>
+                    <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                        {summaryCards.map((card) => {
+                            const Icon = card.icon;
 
-                    <InstallPwaButton />
-                </header>
+                            return (
+                                <div
+                                    key={card.label}
+                                    className="rounded-xl border bg-card p-5 shadow-sm"
+                                >
+                                    <div className="flex items-start justify-between gap-4">
+                                        <div>
+                                            <p className="text-sm text-muted-foreground">
+                                                {card.label}
+                                            </p>
 
-                <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                    {summaryCards.map((card) => {
-                        const Icon = card.icon;
+                                            <p className="mt-2 text-3xl font-semibold">
+                                                {card.value}
+                                            </p>
 
-                        return (
-                            <div
-                                key={card.label}
-                                className="rounded-xl border bg-card p-5 shadow-sm"
-                            >
-                                <div className="flex items-start justify-between gap-4">
-                                    <div>
-                                        <p className="text-sm text-muted-foreground">
-                                            {card.label}
-                                        </p>
+                                            <p className="mt-1 text-xs text-muted-foreground">
+                                                {card.secondary}
+                                            </p>
+                                        </div>
 
-                                        <p className="mt-2 text-3xl font-semibold">
-                                            {card.value}
-                                        </p>
-
-                                        <p className="mt-1 text-xs text-muted-foreground">
-                                            {card.secondary}
-                                        </p>
-                                    </div>
-
-                                    <div className="rounded-lg bg-muted p-3">
-                                        <Icon className="size-5" />
+                                        <div className="rounded-lg bg-muted p-3">
+                                            <Icon className="size-5" />
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        );
-                    })}
-                </section>
+                            );
+                        })}
+                    </section>
 
-                <section className="grid gap-6 xl:grid-cols-[1fr_1.5fr]">
-                    <div className="rounded-xl border bg-card p-6 shadow-sm">
+                    <section className="grid gap-6 xl:grid-cols-[1fr_1.5fr]">
+                        <div className="rounded-xl border bg-card p-6 shadow-sm">
                         <div>
                             <h2 className="text-lg font-semibold">
                                 Drawing Status
