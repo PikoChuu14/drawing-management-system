@@ -216,8 +216,7 @@ html.pwa-standalone [data-aps-viewer] {
     display: block;
 }
 
-@media (max-width: 767px),
-    (hover: none) and (pointer: coarse) {
+@media (max-width: 767px), (hover: none) and (pointer: coarse) {
     .mobile-dashboard-only {
         display: block;
     }

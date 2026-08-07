@@ -134,7 +134,9 @@ export default function MobileDashboardOverview({
                                     </span>
                                 </div>
 
-                                <span className="font-medium">{status.value}</span>
+                                <span className="font-medium">
+                                    {status.value}
+                                </span>
                             </div>
                         ))}
                     </div>

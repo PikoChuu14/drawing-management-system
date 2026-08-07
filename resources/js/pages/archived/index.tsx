@@ -1,10 +1,7 @@
+import { Head, router } from '@inertiajs/react';
+import { ArchiveRestore } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
-import {
-    Head,
-    router,
-} from '@inertiajs/react';
-import { ArchiveRestore } from 'lucide-react';
 
 type ArchivedProject = {
     id: number;
@@ -20,12 +17,8 @@ type Props = {
     projects: ArchivedProject[];
 };
 
-export default function ArchivedIndex({
-    projects,
-}: Props) {
-    const restoreProject = (
-        project: ArchivedProject,
-    ) => {
+export default function ArchivedIndex({ projects }: Props) {
+    const restoreProject = (project: ArchivedProject) => {
         if (
             !window.confirm(
                 `Return ${project.project_code} to active projects?`,
@@ -49,9 +42,7 @@ export default function ArchivedIndex({
 
             <div className="flex flex-1 flex-col gap-6 px-3 py-4 sm:p-6">
                 <div>
-                    <h1 className="text-2xl font-semibold">
-                        Archived
-                    </h1>
+                    <h1 className="text-2xl font-semibold">Archived</h1>
 
                     <p className="mt-1 text-sm text-muted-foreground">
                         Projects hidden from the active project register.
@@ -61,9 +52,7 @@ export default function ArchivedIndex({
                 <section className="overflow-hidden rounded-xl border bg-card">
                     {projects.length === 0 ? (
                         <div className="p-10 text-center">
-                            <p className="font-medium">
-                                No archived projects
-                            </p>
+                            <p className="font-medium">No archived projects</p>
                         </div>
                     ) : (
                         <div className="divide-y">
@@ -100,11 +89,7 @@ export default function ArchivedIndex({
                                         type="button"
                                         variant="outline"
                                         className="mt-5 h-11 gap-2"
-                                        onClick={() =>
-                                            restoreProject(
-                                                project,
-                                            )
-                                        }
+                                        onClick={() => restoreProject(project)}
                                     >
                                         <ArchiveRestore className="size-4" />
                                         Return to Active

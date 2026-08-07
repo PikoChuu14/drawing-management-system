@@ -501,57 +501,53 @@ export default function ProjectsIndex({
                             )}
                         </div>
 
-                            <div className="project-date-grid grid grid-cols-2 gap-4">
-                                <div className="min-w-0 space-y-2">
-                                    <Label htmlFor="start_date">
-                                        Start Date
-                                    </Label>
+                        <div className="project-date-grid grid grid-cols-2 gap-4">
+                            <div className="min-w-0 space-y-2">
+                                <Label htmlFor="start_date">Start Date</Label>
 
-                                    <Input
-                                        id="start_date"
-                                        type="date"
-                                        className="block w-full min-w-0 max-w-full"
-                                        value={form.data.start_date}
-                                        onChange={(event) =>
-                                            form.setData(
-                                                'start_date',
-                                                event.target.value,
-                                            )
-                                        }
-                                    />
+                                <Input
+                                    id="start_date"
+                                    type="date"
+                                    className="block w-full max-w-full min-w-0"
+                                    value={form.data.start_date}
+                                    onChange={(event) =>
+                                        form.setData(
+                                            'start_date',
+                                            event.target.value,
+                                        )
+                                    }
+                                />
 
-                                    {form.errors.start_date && (
-                                        <p className="text-sm text-destructive">
-                                            {form.errors.start_date}
-                                        </p>
-                                    )}
-                                </div>
-
-                                <div className="min-w-0 space-y-2">
-                                    <Label htmlFor="end_date">
-                                        End Date
-                                    </Label>
-
-                                    <Input
-                                        id="end_date"
-                                        type="date"
-                                        className="block w-full min-w-0 max-w-full"
-                                        value={form.data.end_date}
-                                        onChange={(event) =>
-                                            form.setData(
-                                                'end_date',
-                                                event.target.value,
-                                            )
-                                        }
-                                    />
-
-                                    {form.errors.end_date && (
-                                        <p className="text-sm text-destructive">
-                                            {form.errors.end_date}
-                                        </p>
-                                    )}
-                                </div>
+                                {form.errors.start_date && (
+                                    <p className="text-sm text-destructive">
+                                        {form.errors.start_date}
+                                    </p>
+                                )}
                             </div>
+
+                            <div className="min-w-0 space-y-2">
+                                <Label htmlFor="end_date">End Date</Label>
+
+                                <Input
+                                    id="end_date"
+                                    type="date"
+                                    className="block w-full max-w-full min-w-0"
+                                    value={form.data.end_date}
+                                    onChange={(event) =>
+                                        form.setData(
+                                            'end_date',
+                                            event.target.value,
+                                        )
+                                    }
+                                />
+
+                                {form.errors.end_date && (
+                                    <p className="text-sm text-destructive">
+                                        {form.errors.end_date}
+                                    </p>
+                                )}
+                            </div>
+                        </div>
 
                         <div className="flex flex-col-reverse gap-3 border-t pt-5 sm:flex-row sm:justify-end">
                             <Button

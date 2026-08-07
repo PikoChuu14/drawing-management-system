@@ -244,20 +244,17 @@ export default function DrawingShow({
 
     const deleteDrawing = () => {
         const confirmed = window.confirm(
-            `Move ${drawing.drawing_number} — ${drawing.title} to Trash?\n\n`
-                + 'The drawing, revisions, files and site issues will remain recoverable.',
+            `Move ${drawing.drawing_number} — ${drawing.title} to Trash?\n\n` +
+                'The drawing, revisions, files and site issues will remain recoverable.',
         );
 
         if (!confirmed) {
             return;
         }
 
-        router.delete(
-            `/projects/${project.id}/drawings/${drawing.id}`,
-            {
-                preserveScroll: false,
-            },
-        );
+        router.delete(`/projects/${project.id}/drawings/${drawing.id}`, {
+            preserveScroll: false,
+        });
     };
 
     const [processingRevisionId, setProcessingRevisionId] = useState<

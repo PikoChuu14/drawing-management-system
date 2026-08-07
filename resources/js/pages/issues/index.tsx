@@ -1,12 +1,6 @@
+import { Head, Link } from '@inertiajs/react';
+import { CircleAlert, MapPin } from 'lucide-react';
 import AppLayout from '@/layouts/app-layout';
-import {
-    Head,
-    Link,
-} from '@inertiajs/react';
-import {
-    CircleAlert,
-    MapPin,
-} from 'lucide-react';
 
 type Issue = {
     id: number;
@@ -32,18 +26,12 @@ type Props = {
     issues: Issue[];
 };
 
-const formatStatus = (
-    value: string,
-): string =>
+const formatStatus = (value: string): string =>
     value
         .replace(/_/g, ' ')
-        .replace(/\b\w/g, (character) =>
-            character.toUpperCase(),
-        );
+        .replace(/\b\w/g, (character) => character.toUpperCase());
 
-export default function IssuesIndex({
-    issues,
-}: Props) {
+export default function IssuesIndex({ issues }: Props) {
     return (
         <AppLayout>
             <Head title="Issues" />
@@ -53,14 +41,11 @@ export default function IssuesIndex({
                     <div className="flex items-center gap-3">
                         <CircleAlert className="size-6" />
 
-                        <h1 className="text-2xl font-semibold">
-                            Issues
-                        </h1>
+                        <h1 className="text-2xl font-semibold">Issues</h1>
                     </div>
 
                     <p className="mt-1 text-sm text-muted-foreground">
-                        Unresolved site issues requiring
-                        attention.
+                        Unresolved site issues requiring attention.
                     </p>
                 </div>
 
@@ -83,23 +68,17 @@ export default function IssuesIndex({
                             </p>
 
                             <p className="mt-1 text-sm text-muted-foreground">
-                                All reported site issues
-                                have been resolved.
+                                All reported site issues have been resolved.
                             </p>
                         </div>
                     ) : (
                         <div className="divide-y">
                             {issues.map((issue) => (
-                                <article
-                                    key={issue.id}
-                                    className="p-5 sm:p-6"
-                                >
+                                <article key={issue.id} className="p-5 sm:p-6">
                                     <div className="flex items-start justify-between gap-4">
                                         <div className="min-w-0">
                                             <p className="font-mono text-sm text-muted-foreground">
-                                                {
-                                                    issue.issue_number
-                                                }
+                                                {issue.issue_number}
                                             </p>
 
                                             <Link
@@ -112,24 +91,18 @@ export default function IssuesIndex({
 
                                         <div className="flex shrink-0 flex-wrap gap-2">
                                             <span className="rounded-full border px-2.5 py-1 text-xs capitalize">
-                                                {formatStatus(
-                                                    issue.priority,
-                                                )}
+                                                {formatStatus(issue.priority)}
                                             </span>
 
                                             <span className="rounded-full border px-2.5 py-1 text-xs">
-                                                {formatStatus(
-                                                    issue.status,
-                                                )}
+                                                {formatStatus(issue.status)}
                                             </span>
                                         </div>
                                     </div>
 
                                     {issue.description && (
                                         <p className="mt-3 line-clamp-2 text-sm text-muted-foreground">
-                                            {
-                                                issue.description
-                                            }
+                                            {issue.description}
                                         </p>
                                     )}
 
@@ -138,26 +111,16 @@ export default function IssuesIndex({
                                             href={`/projects/${issue.project_id}`}
                                             className="hover:underline"
                                         >
-                                            {
-                                                issue.project_code
-                                            }{' '}
-                                            —{' '}
-                                            {
-                                                issue.project_name
-                                            }
+                                            {issue.project_code} —{' '}
+                                            {issue.project_name}
                                         </Link>
 
                                         <Link
                                             href={`/projects/${issue.project_id}/drawings/${issue.drawing_id}`}
                                             className="hover:underline"
                                         >
-                                            {
-                                                issue.drawing_number
-                                            }{' '}
-                                            —{' '}
-                                            {
-                                                issue.drawing_title
-                                            }
+                                            {issue.drawing_number} —{' '}
+                                            {issue.drawing_title}
                                         </Link>
                                     </div>
 
@@ -165,11 +128,7 @@ export default function IssuesIndex({
                                         <div className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
                                             <MapPin className="size-4" />
 
-                                            <span>
-                                                {
-                                                    issue.location
-                                                }
-                                            </span>
+                                            <span>{issue.location}</span>
                                         </div>
                                     )}
                                 </article>

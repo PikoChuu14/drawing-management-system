@@ -66,20 +66,14 @@ createInertiaApp({
     },
 });
 
-if (
-    'serviceWorker' in navigator &&
-    import.meta.env.PROD
-) {
+if ('serviceWorker' in navigator && import.meta.env.PROD) {
     window.addEventListener('load', () => {
         navigator.serviceWorker
             .register('/sw.js', {
                 scope: '/',
             })
             .catch((error: unknown) => {
-                console.error(
-                    'Service worker registration failed:',
-                    error,
-                );
+                console.error('Service worker registration failed:', error);
             });
     });
 }

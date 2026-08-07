@@ -33,57 +33,47 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-const permanentlyDeleteProject = (
-    project: DeletedProject,
-) => {
+const permanentlyDeleteProject = (project: DeletedProject) => {
     const confirmed = window.confirm(
-        `Permanently delete ${project.project_code} — ${project.name}?\n\n`
-            + 'This will permanently remove:\n'
-            + '• The project\n'
-            + '• All drawings\n'
-            + '• All revisions\n'
-            + '• Uploaded drawing files\n'
-            + '• Autodesk APS files\n'
-            + '• Site issues and photos\n\n'
-            + 'This action cannot be undone.',
+        `Permanently delete ${project.project_code} — ${project.name}?\n\n` +
+            'This will permanently remove:\n' +
+            '• The project\n' +
+            '• All drawings\n' +
+            '• All revisions\n' +
+            '• Uploaded drawing files\n' +
+            '• Autodesk APS files\n' +
+            '• Site issues and photos\n\n' +
+            'This action cannot be undone.',
     );
 
     if (!confirmed) {
         return;
     }
 
-    router.delete(
-        `/trash/projects/${project.id}/permanent`,
-        {
-            preserveScroll: true,
-        },
-    );
+    router.delete(`/trash/projects/${project.id}/permanent`, {
+        preserveScroll: true,
+    });
 };
 
-const permanentlyDeleteDrawing = (
-    drawing: DeletedDrawing,
-) => {
+const permanentlyDeleteDrawing = (drawing: DeletedDrawing) => {
     const confirmed = window.confirm(
-        `Permanently delete ${drawing.drawing_number} — ${drawing.title}?\n\n`
-            + 'This will permanently remove:\n'
-            + '• The drawing\n'
-            + '• All revisions\n'
-            + '• Uploaded drawing files\n'
-            + '• Autodesk APS files\n'
-            + '• Site issues and photos\n\n'
-            + 'This action cannot be undone.',
+        `Permanently delete ${drawing.drawing_number} — ${drawing.title}?\n\n` +
+            'This will permanently remove:\n' +
+            '• The drawing\n' +
+            '• All revisions\n' +
+            '• Uploaded drawing files\n' +
+            '• Autodesk APS files\n' +
+            '• Site issues and photos\n\n' +
+            'This action cannot be undone.',
     );
 
     if (!confirmed) {
         return;
     }
 
-    router.delete(
-        `/trash/drawings/${drawing.id}/permanent`,
-        {
-            preserveScroll: true,
-        },
-    );
+    router.delete(`/trash/drawings/${drawing.id}/permanent`, {
+        preserveScroll: true,
+    });
 };
 
 export default function Trash({ projects, drawings }: TrashProps) {
@@ -175,7 +165,9 @@ export default function Trash({ projects, drawings }: TrashProps) {
                                                 variant="destructive"
                                                 className="h-11 flex-1"
                                                 onClick={() =>
-                                                    permanentlyDeleteProject(project)
+                                                    permanentlyDeleteProject(
+                                                        project,
+                                                    )
                                                 }
                                             >
                                                 Permanently Delete
@@ -226,7 +218,9 @@ export default function Trash({ projects, drawings }: TrashProps) {
                                                             type="button"
                                                             variant="outline"
                                                             onClick={() =>
-                                                                restoreProject(project.id)
+                                                                restoreProject(
+                                                                    project.id,
+                                                                )
                                                             }
                                                         >
                                                             Restore
@@ -236,7 +230,9 @@ export default function Trash({ projects, drawings }: TrashProps) {
                                                             type="button"
                                                             variant="destructive"
                                                             onClick={() =>
-                                                                permanentlyDeleteProject(project)
+                                                                permanentlyDeleteProject(
+                                                                    project,
+                                                                )
                                                             }
                                                         >
                                                             Permanently Delete
@@ -304,7 +300,9 @@ export default function Trash({ projects, drawings }: TrashProps) {
                                                 type="button"
                                                 variant="outline"
                                                 className="h-11 flex-1"
-                                                disabled={drawing.project_deleted}
+                                                disabled={
+                                                    drawing.project_deleted
+                                                }
                                                 onClick={() =>
                                                     restoreDrawing(drawing.id)
                                                 }

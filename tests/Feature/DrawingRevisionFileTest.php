@@ -37,8 +37,7 @@ class DrawingRevisionFileTest extends TestCase
         $this->project = Project::create([
             'project_code' => 'FILE-TEST-001',
             'name' => 'Revision File Test Project',
-            'description' =>
-                'Project used for private-file tests.',
+            'description' => 'Project used for private-file tests.',
             'status' => 'active',
             'start_date' => now()->toDateString(),
             'end_date' => null,
@@ -51,8 +50,7 @@ class DrawingRevisionFileTest extends TestCase
             'title' => 'Main Conveyor Layout',
             'discipline' => 'mechanical',
             'status' => 'active',
-            'description' =>
-                'Drawing used for private-file tests.',
+            'description' => 'Drawing used for private-file tests.',
             'created_by' => $this->user->id,
         ]);
     }
@@ -400,8 +398,7 @@ class DrawingRevisionFileTest extends TestCase
             code: $code,
             extension: 'pdf',
             mimeType: 'application/pdf',
-            originalFilename:
-                "revision-{$code}.pdf",
+            originalFilename: "revision-{$code}.pdf",
             archived: $archived,
         );
     }
@@ -414,8 +411,7 @@ class DrawingRevisionFileTest extends TestCase
             code: $code,
             extension: 'pdf',
             mimeType: 'application/pdf',
-            originalFilename:
-                "revision-{$code}.pdf",
+            originalFilename: "revision-{$code}.pdf",
             drawing: $drawing,
         );
     }
@@ -448,16 +444,13 @@ class DrawingRevisionFileTest extends TestCase
             'uploaded_by' => $this->user->id,
             'revision_code' => $code,
             'file_path' => $filePath,
-            'original_filename' =>
-                $originalFilename,
+            'original_filename' => $originalFilename,
             'mime_type' => $mimeType,
             'file_extension' => $extension,
             'file_size' => strlen($contents),
-            'revision_notes' =>
-                "Revision {$code} test file.",
+            'revision_notes' => "Revision {$code} test file.",
             'issued_at' => now()->toDateString(),
-            'archived_at' =>
-                $archived ? now() : null,
+            'archived_at' => $archived ? now() : null,
         ]);
     }
 

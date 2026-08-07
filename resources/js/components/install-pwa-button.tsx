@@ -1,33 +1,22 @@
-import {
-    Download,
-    X,
-} from 'lucide-react';
-import {
-    useEffect,
-    useState,
-} from 'react';
+import { Download, X } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 
-type BeforeInstallPromptEvent =
-    Event & {
-        prompt: () => Promise<void>;
+type BeforeInstallPromptEvent = Event & {
+    prompt: () => Promise<void>;
 
-        userChoice: Promise<{
-            outcome:
-                | 'accepted'
-                | 'dismissed';
+    userChoice: Promise<{
+        outcome: 'accepted' | 'dismissed';
 
-            platform: string;
-        }>;
-    };
+        platform: string;
+    }>;
+};
 
 type Props = {
     compact?: boolean;
 };
 
-export default function InstallPwaButton({
-    compact = false,
-}: Props) {
+export default function InstallPwaButton({ compact = false }: Props) {
     const getIsInstalled = () => {
         if (typeof window === 'undefined') {
             return false;
@@ -43,36 +32,21 @@ export default function InstallPwaButton({
         );
     };
 
-    const [
-        installPrompt,
-        setInstallPrompt,
-    ] =
-        useState<BeforeInstallPromptEvent | null>(
-            null,
-        );
+    const [installPrompt, setInstallPrompt] =
+        useState<BeforeInstallPromptEvent | null>(null);
 
-    const [
-        instructionsOpen,
-        setInstructionsOpen,
-    ] = useState(false);
+    const [instructionsOpen, setInstructionsOpen] = useState(false);
 
-    const [
-        isInstalled,
-        setIsInstalled,
-    ] = useState(getIsInstalled);
+    const [isInstalled, setIsInstalled] = useState(getIsInstalled);
 
     const userAgent =
-        typeof navigator !== 'undefined'
-            ? navigator.userAgent
-            : '';
+        typeof navigator !== 'undefined' ? navigator.userAgent : '';
 
     const isIPad =
         /iPad/.test(userAgent) ||
-        (
-            typeof navigator !== 'undefined' &&
+        (typeof navigator !== 'undefined' &&
             navigator.platform === 'MacIntel' &&
-            navigator.maxTouchPoints > 1
-        );
+            navigator.maxTouchPoints > 1);
 
     const isIPhone = /iPhone|iPod/.test(userAgent);
 
@@ -89,8 +63,7 @@ export default function InstallPwaButton({
         },
         {
             title: 'Tap Add',
-            description:
-                'Drawing DMS will appear on the iPad Home Screen.',
+            description: 'Drawing DMS will appear on the iPad Home Screen.',
         },
     ];
 
@@ -102,27 +75,21 @@ export default function InstallPwaButton({
         },
         {
             title: 'Tap Share',
-            description:
-                'Use the Share button in the iPhone Safari toolbar.',
+            description: 'Use the Share button in the iPhone Safari toolbar.',
         },
         {
             title: 'Choose Add to Home Screen',
-            description:
-                'Scroll down when necessary, then tap Add.',
+            description: 'Scroll down when necessary, then tap Add.',
         },
     ];
 
     const appleSteps = isIPad ? iPadSteps : iPhoneSteps;
 
     useEffect(() => {
-        const handleInstallPrompt = (
-            event: Event,
-        ) => {
+        const handleInstallPrompt = (event: Event) => {
             event.preventDefault();
 
-            setInstallPrompt(
-                event as BeforeInstallPromptEvent,
-            );
+            setInstallPrompt(event as BeforeInstallPromptEvent);
         };
 
         const handleInstalled = () => {
@@ -131,15 +98,9 @@ export default function InstallPwaButton({
             setInstructionsOpen(false);
         };
 
-        window.addEventListener(
-            'beforeinstallprompt',
-            handleInstallPrompt,
-        );
+        window.addEventListener('beforeinstallprompt', handleInstallPrompt);
 
-        window.addEventListener(
-            'appinstalled',
-            handleInstalled,
-        );
+        window.addEventListener('appinstalled', handleInstalled);
 
         return () => {
             window.removeEventListener(
@@ -147,10 +108,7 @@ export default function InstallPwaButton({
                 handleInstallPrompt,
             );
 
-            window.removeEventListener(
-                'appinstalled',
-                handleInstalled,
-            );
+            window.removeEventListener('appinstalled', handleInstalled);
         };
     }, []);
 
@@ -158,13 +116,9 @@ export default function InstallPwaButton({
         if (installPrompt) {
             await installPrompt.prompt();
 
-            const result =
-                await installPrompt.userChoice;
+            const result = await installPrompt.userChoice;
 
-            if (
-                result.outcome ===
-                'accepted'
-            ) {
+            if (result.outcome === 'accepted') {
                 setInstallPrompt(null);
             }
 
@@ -199,16 +153,9 @@ export default function InstallPwaButton({
                     aria-modal="true"
                     aria-label="Install application"
                     className="fixed inset-0 z-[300] flex items-center justify-center bg-black/70 p-4"
-                    onMouseDown={(
-                        event,
-                    ) => {
-                        if (
-                            event.target ===
-                            event.currentTarget
-                        ) {
-                            setInstructionsOpen(
-                                false,
-                            );
+                    onMouseDown={(event) => {
+                        if (event.target === event.currentTarget) {
+                            setInstructionsOpen(false);
                         }
                     }}
                 >
@@ -216,15 +163,11 @@ export default function InstallPwaButton({
                         <div className="flex items-start justify-between gap-4 border-b p-5">
                             <div>
                                 <h2 className="text-lg font-semibold">
-                                    Install Drawing
-                                    DMS
+                                    Install Drawing DMS
                                 </h2>
 
                                 <p className="mt-1 text-sm text-muted-foreground">
-                                    Add the system
-                                    to this
-                                    device’s Home
-                                    Screen.
+                                    Add the system to this device’s Home Screen.
                                 </p>
                             </div>
 
@@ -233,11 +176,7 @@ export default function InstallPwaButton({
                                 size="icon"
                                 variant="ghost"
                                 aria-label="Close"
-                                onClick={() =>
-                                    setInstructionsOpen(
-                                        false,
-                                    )
-                                }
+                                onClick={() => setInstructionsOpen(false)}
                             >
                                 <X className="size-5" />
                             </Button>
@@ -275,21 +214,15 @@ export default function InstallPwaButton({
                                 </div>
                             ) : (
                                 <p className="text-sm text-muted-foreground">
-                                    Open your browser
-                                    menu and select
-                                    Install App or Add
-                                    to Home Screen.
+                                    Open your browser menu and select Install
+                                    App or Add to Home Screen.
                                 </p>
                             )}
 
                             <Button
                                 type="button"
                                 className="h-11 w-full"
-                                onClick={() =>
-                                    setInstructionsOpen(
-                                        false,
-                                    )
-                                }
+                                onClick={() => setInstructionsOpen(false)}
                             >
                                 Done
                             </Button>
