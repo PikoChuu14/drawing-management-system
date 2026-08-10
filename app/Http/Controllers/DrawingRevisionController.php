@@ -21,6 +21,15 @@ use Throwable;
 class DrawingRevisionController extends Controller
 {
     /**
+     * @var list<string>
+     */
+    private const APS_PREVIEW_EXTENSIONS = [
+        'dwg',
+        'dxf',
+        'dwf',
+    ];
+
+    /**
      * Upload a new revision file.
      */
     public function store(
@@ -69,10 +78,7 @@ class DrawingRevisionController extends Controller
                 'max:51200',
 
                 // User-supplied file extension
-                'extensions:pdf,dwg,dxf',
-
-                // Content MIME types commonly returned for these files
-                'mimetypes:application/pdf,application/acad,application/x-acad,application/autocad,application/dwg,image/vnd.dwg,application/octet-stream,text/plain',
+                'extensions:pdf,dwg,dxf,dwf',
             ],
         ]);
 
@@ -258,12 +264,18 @@ class DrawingRevisionController extends Controller
             $revision,
         );
 
+        $extension = strtolower(
+            (string) $revision->file_extension,
+        );
+
         abort_unless(
-            strtolower(
-                (string) $revision->file_extension,
-            ) === 'dwg',
+            in_array(
+                $extension,
+                self::APS_PREVIEW_EXTENSIONS,
+                true,
+            ),
             422,
-            'Only DWG files can use APS processing.',
+            'Only DWG, DXF, and DWF files can use APS processing.',
         );
 
         $disk = Storage::disk('local');
@@ -271,7 +283,7 @@ class DrawingRevisionController extends Controller
         abort_unless(
             $disk->exists($revision->file_path),
             404,
-            'The original DWG file could not be found.',
+            'The original CAD file could not be found.',
         );
 
         if ($revision->translation_status === 'ready') {
@@ -297,10 +309,6 @@ class DrawingRevisionController extends Controller
                     'translation_progress' => null,
                     'translation_error' => null,
                 ]);
-
-                $extension = strtolower(
-                    (string) $revision->file_extension,
-                );
 
                 $objectKey = sprintf(
                     'drawing-%d-revision-%d-%s.%s',
@@ -384,9 +392,13 @@ class DrawingRevisionController extends Controller
         );
 
         abort_unless(
-            strtolower(
-                (string) $revision->file_extension,
-            ) === 'dwg',
+            in_array(
+                strtolower(
+                    (string) $revision->file_extension,
+                ),
+                self::APS_PREVIEW_EXTENSIONS,
+                true,
+            ),
             422,
         );
 

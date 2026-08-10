@@ -45,6 +45,7 @@ type Revision = {
     translation_completed_at: string | null;
 
     can_view_dwg: boolean;
+    can_process_with_aps: boolean;
     aps_urn: string | null;
 
     lifecycle_status: 'current' | 'superseded' | 'archived';
@@ -278,7 +279,7 @@ export default function DrawingShow({
 
                 onError: (errors) => {
                     setApsError(
-                        errors.aps ?? 'The DWG could not be processed.',
+                        errors.aps ?? 'The CAD file could not be processed.',
                     );
                 },
 
@@ -657,7 +658,7 @@ export default function DrawingShow({
                     '• The revision record\n' +
                     '• The locally uploaded file\n' +
                     '• The APS processing copy\n' +
-                    '• The translated DWG viewer files\n\n' +
+                    '• The translated CAD viewer files\n\n' +
                     'This action cannot be undone.',
             )
         ) {
@@ -974,8 +975,9 @@ export default function DrawingShow({
                                         </p>
 
                                         <p className="mt-2 max-w-md text-sm text-neutral-400">
-                                            Upload a PDF or process a DWG
-                                            revision to display it here.
+                                            Upload a PDF or process a
+                                            DWG, DXF, or DWF revision to
+                                            display it here.
                                         </p>
                                     </div>
                                 </div>
@@ -1341,7 +1343,7 @@ export default function DrawingShow({
                         </h2>
 
                         <p className="mt-1 text-sm text-muted-foreground">
-                            Add a PDF, DWG or DXF revision file.
+                            Add a PDF, DWG, DXF, or DWF revision file.
                         </p>
 
                         <form onSubmit={submit} className="mt-6 space-y-5">
@@ -1398,7 +1400,7 @@ export default function DrawingShow({
                                     ref={fileInput}
                                     id="file"
                                     type="file"
-                                    accept=".pdf,.dwg,.dxf"
+                                    accept=".pdf,.dwg,.dxf,.dwf"
                                     onChange={(event) =>
                                         form.setData(
                                             'file',
@@ -1408,7 +1410,7 @@ export default function DrawingShow({
                                 />
 
                                 <p className="text-xs text-muted-foreground">
-                                    PDF, DWG or DXF. Maximum 50 MB.
+                                    PDF, DWG, DXF, or DWF. Maximum 50 MB.
                                 </p>
 
                                 {form.errors.file && (
@@ -1583,8 +1585,7 @@ export default function DrawingShow({
                                                         )}
                                                     </p>
 
-                                                    {revision.file_extension?.toLowerCase() ===
-                                                        'dwg' && (
+                                                    {revision.can_process_with_aps && (
                                                         <div className="mt-2 text-xs">
                                                             <p className="capitalize">
                                                                 APS:{' '}
@@ -1727,8 +1728,7 @@ export default function DrawingShow({
                                                             </Button>
                                                         )}
 
-                                                        {revision.file_extension?.toLowerCase() ===
-                                                            'dwg' &&
+                                                        {revision.can_process_with_aps &&
                                                             revision.translation_status ===
                                                                 'ready' &&
                                                             revision.can_view_dwg &&
@@ -1771,13 +1771,12 @@ export default function DrawingShow({
                                                                 >
                                                                     {dwgPreviewRevision?.id ===
                                                                     revision.id
-                                                                        ? 'Viewing DWG'
-                                                                        : 'Preview DWG'}
+                                                                        ? 'Viewing CAD'
+                                                                        : 'Preview CAD'}
                                                                 </Button>
                                                             )}
 
-                                                        {revision.file_extension?.toLowerCase() ===
-                                                            'dwg' &&
+                                                        {revision.can_process_with_aps &&
                                                             (revision.translation_status ===
                                                                 'not_started' ||
                                                                 revision.translation_status ===
@@ -1806,8 +1805,7 @@ export default function DrawingShow({
                                                                 </Button>
                                                             )}
 
-                                                        {revision.file_extension?.toLowerCase() ===
-                                                            'dwg' &&
+                                                        {revision.can_process_with_aps &&
                                                             (revision.translation_status ===
                                                                 'processing' ||
                                                                 revision.translation_status ===
@@ -2205,7 +2203,7 @@ export default function DrawingShow({
                             ref={tabletRevisionFileInput}
                             id="tablet_revision_file"
                             type="file"
-                            accept=".pdf,.dwg,.dxf"
+                            accept=".pdf,.dwg,.dxf,.dwf"
                             onChange={(event) =>
                                 form.setData(
                                     'file',
@@ -2215,7 +2213,7 @@ export default function DrawingShow({
                         />
 
                         <p className="text-xs text-muted-foreground">
-                            PDF, DWG or DXF. Maximum 50 MB.
+                            PDF, DWG, DXF, or DWF. Maximum 50 MB.
                         </p>
 
                         {form.errors.file && (

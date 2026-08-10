@@ -40,6 +40,7 @@ test('drawing show response exposes translation metadata for revisions', functio
         'file_extension' => 'dwg',
         'file_size' => 1024,
         'revision_notes' => 'Initial revision',
+        'aps_urn' => 'urn:adsk.objects:os.object:test/sample.dwg',
         'issued_at' => now()->subDay()->toDateString(),
         'translation_status' => 'ready',
         'translation_progress' => 'Completed',
@@ -58,7 +59,58 @@ test('drawing show response exposes translation metadata for revisions', functio
         ->where('drawing.revisions.0.translation_status', 'ready')
         ->where('drawing.revisions.0.translation_progress', 'Completed')
         ->where('drawing.revisions.0.translation_error', null)
+        ->where('drawing.revisions.0.can_process_with_aps', true)
+        ->where('drawing.revisions.0.can_view_dwg', true)
         ->where('drawing.revisions.0.translation_requested_at', $requestedAt->format('Y-m-d H:i'))
         ->where('drawing.revisions.0.translation_completed_at', $completedAt->format('Y-m-d H:i'))
+    );
+});
+
+test('drawing show marks dxf revisions as aps-compatible', function () {
+    $user = User::factory()->create();
+
+    $project = Project::create([
+        'created_by' => $user->id,
+        'project_code' => 'PRJ-002',
+        'name' => 'DXF Project',
+        'description' => 'DXF compatibility test',
+        'status' => 'active',
+    ]);
+
+    $drawing = Drawing::create([
+        'project_id' => $project->id,
+        'created_by' => $user->id,
+        'drawing_number' => 'D-200',
+        'title' => 'DXF Drawing',
+        'discipline' => 'Architectural',
+        'status' => 'draft',
+        'description' => 'A dxf drawing',
+    ]);
+
+    DrawingRevision::create([
+        'drawing_id' => $drawing->id,
+        'uploaded_by' => $user->id,
+        'revision_code' => 'R1',
+        'file_path' => 'drawings/sample.dxf',
+        'original_filename' => 'sample.dxf',
+        'mime_type' => 'text/plain',
+        'file_extension' => 'dxf',
+        'file_size' => 1024,
+        'revision_notes' => 'DXF revision',
+        'issued_at' => now()->subDay()->toDateString(),
+        'translation_status' => 'not_started',
+        'translation_progress' => null,
+        'translation_error' => null,
+    ]);
+
+    $response = $this->actingAs($user)
+        ->get(route('drawings.show', [$project, $drawing]));
+
+    $response->assertOk();
+
+    $response->assertInertia(fn (Assert $page) => $page
+        ->where('drawing.revisions.0.file_extension', 'dxf')
+        ->where('drawing.revisions.0.can_process_with_aps', true)
+        ->where('drawing.revisions.0.can_view_dwg', false)
     );
 });

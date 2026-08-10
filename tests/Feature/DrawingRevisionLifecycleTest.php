@@ -91,6 +91,70 @@ class DrawingRevisionLifecycleTest extends TestCase
         );
     }
 
+    public function test_dxf_revision_upload_is_allowed(): void
+    {
+        $response = $this
+            ->actingAs($this->user)
+            ->post(
+                $this->revisionStoreUrl(),
+                [
+                    'revision_code' => 'DXF-1',
+                    'issued_at' => now()->toDateString(),
+                    'revision_notes' => 'DXF file upload test.',
+                    'file' => UploadedFile::fake()->create(
+                        'layout.dxf',
+                        400,
+                        'text/plain',
+                    ),
+                ],
+            );
+
+        $response->assertRedirect();
+
+        $revision = DrawingRevision::query()
+            ->where('drawing_id', $this->drawing->id)
+            ->where('revision_code', 'DXF-1')
+            ->firstOrFail();
+
+        $this->assertSame('dxf', $revision->file_extension);
+
+        Storage::disk('local')->assertExists(
+            $revision->file_path,
+        );
+    }
+
+    public function test_dwf_revision_upload_is_allowed(): void
+    {
+        $response = $this
+            ->actingAs($this->user)
+            ->post(
+                $this->revisionStoreUrl(),
+                [
+                    'revision_code' => 'DWF-1',
+                    'issued_at' => now()->toDateString(),
+                    'revision_notes' => 'DWF file upload test.',
+                    'file' => UploadedFile::fake()->create(
+                        'layout.dwf',
+                        400,
+                        'application/octet-stream',
+                    ),
+                ],
+            );
+
+        $response->assertRedirect();
+
+        $revision = DrawingRevision::query()
+            ->where('drawing_id', $this->drawing->id)
+            ->where('revision_code', 'DWF-1')
+            ->firstOrFail();
+
+        $this->assertSame('dwf', $revision->file_extension);
+
+        Storage::disk('local')->assertExists(
+            $revision->file_path,
+        );
+    }
+
     public function test_new_upload_replaces_the_previous_current_revision(): void
     {
         $revisionZero = $this->createRevision('0');

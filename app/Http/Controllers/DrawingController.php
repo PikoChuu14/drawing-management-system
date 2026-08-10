@@ -141,6 +141,16 @@ class DrawingController extends Controller
                             $isArchived =
                                 $revision->archived_at !== null;
 
+                            $normalizedExtension = strtolower(
+                                (string) $revision->file_extension,
+                            );
+
+                            $canProcessWithAps = in_array(
+                                $normalizedExtension,
+                                ['dwg', 'dxf', 'dwf'],
+                                true,
+                            );
+
                             $lifecycleStatus = match (true) {
                                 $isArchived => 'archived',
                                 $isCurrent => 'current',
@@ -180,10 +190,7 @@ class DrawingController extends Controller
                                     ?->format('Y-m-d H:i'),
 
                                 'can_view_dwg' => (
-                                    strtolower(
-                                        (string) $revision
-                                            ->file_extension,
-                                    ) === 'dwg'
+                                    $canProcessWithAps
                                     && $revision
                                         ->translation_status ===
                                         'ready'
@@ -192,6 +199,8 @@ class DrawingController extends Controller
                                     )
                                     && $revision->aps_urn !== ''
                                 ),
+
+                                'can_process_with_aps' => $canProcessWithAps,
 
                                 'aps_urn' => (
                                     $revision
